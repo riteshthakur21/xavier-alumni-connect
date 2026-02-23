@@ -4,8 +4,8 @@ const sendEmail = async (options) => {
   // 1. Create a transporter (Gmail configuration)
   const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465,
-  secure: true, // Use SSL
+  port: 587,
+  secure: false, // Use TLS instead of SSL
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS, // Ye 16-digit ka App Password hona chahiye
