@@ -1,0 +1,18 @@
+# Dependencies (Inko upload nahi karna hai, bohot heavy hote hain)
+node_modules/
+frontend/node_modules/
+backend/node_modules/
+
+# Next.js Build files
+.next/
+out/
+build/
+
+# Security / Secrets (Inme tumhare passwords hain!)
+.env
+.env.local
+.env.*
+
+# Uploaded Files (Local testing wali photos)
+uploads/
+backend/uploads/

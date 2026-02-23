@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(STUDENT)
+  rollNo       String   @unique  
+  isVerified   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  
+  // Relations...
+  alumniProfile AlumniProfile?
+  jobs          Job[]
+  events        Event[]
+  registrations EventRegistration[]
+  
+  @@map("users")
+}
+
+model AlumniProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  batchYear     Int
+  department    String
+  rollNo        String?
+  company       String?
+  jobTitle      String?
+  linkedinUrl   String?
+  photoUrl      String?
+  bio           String?
+  location      String?
+  skills        String[]
+  contactPublic Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("alumni_profiles")
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  date        DateTime
+  location    String?
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+
+  // 👇 Ye wali line add karni hai (Audience ke liye)
+  targetAudience String @default("ALL") 
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // 👇 Ye Naya Connection Hai (Jo pehle se tha)
+  postedBy    User     @relation(fields: [postedById], references: [id])
+  postedById  String
+
+  registrations EventRegistration[]
+   
+  @@map("events")
+}
+
+model Connection {
+  id         String           @id @default(uuid())
+  alumniId   String
+  studentId  String
+  status     ConnectionStatus @default(PENDING)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  
+  @@map("connections")
+}
+
+enum Role {
+  ADMIN
+  ALUMNI
+  STUDENT
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+// --- Job Model ---
+model Job {
+  id          String   @id @default(uuid())
+  title       String
+  company     String
+  location    String
+  type        String   // Full-time, Internship, etc.
+  description String
+  applyLink   String?  // Agar koi Google Form link hai
+  postedBy    User     @relation(fields: [postedById], references: [id])
+  postedById  String
+  createdAt   DateTime @default(now())
+}
+
+// --- Event Registration Model (New) ---
+model EventRegistration {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  event     Event    @relation(fields: [eventId], references: [id])
+  eventId   String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, eventId]) // Taaki ek banda do baar register na kare
+}
+
