@@ -325,6 +325,7 @@ interface User {
   id: string;
   name: string;
   email: string;
+  rollNo?: string;
   role: string;
   isVerified: boolean;
   createdAt: string;
@@ -526,7 +527,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Pending Tab */}
-        {activeTab === 'pending' && (
+        {/* {activeTab === 'pending' && (
           <div className="card bg-white p-6 rounded-2xl shadow-sm border border-slate-100 animate-in slide-in-from-bottom-4 duration-500">
             <h3 className="text-xl font-bold text-secondary-900 mb-6">Pending Verifications</h3>
             {pendingAlumni.length === 0 ? (
@@ -560,6 +561,98 @@ export default function AdminDashboard() {
                           Reject
                         </button>
                       </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )} */}
+
+        {/* Pending Tab */}
+        {activeTab === 'pending' && (
+          <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100 animate-in slide-in-from-bottom-4 duration-500">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-800">Pending Verifications</h3>
+              <span className="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                {pendingAlumni.length} Pending
+              </span>
+            </div>
+
+            {pendingAlumni.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-slate-50/50 rounded-xl border-2 border-dashed border-slate-200">
+                <span className="text-5xl mb-4">✨</span>
+                <h4 className="text-lg font-bold text-slate-700">All Caught Up!</h4>
+                <p className="text-slate-500 font-medium mt-1">No pending verifications at the moment.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {pendingAlumni.map((alumnus) => (
+                  <div
+                    key={alumnus.id}
+                    className="group border border-slate-200 rounded-2xl p-4 sm:p-5 bg-white hover:border-blue-300 hover:shadow-lg hover:shadow-blue-50 transition-all duration-300 relative overflow-hidden"
+                  >
+                    {/* Decorative Side Accent */}
+                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-orange-400 group-hover:bg-blue-500 transition-colors"></div>
+
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5 pl-2 sm:pl-3">
+
+                      {/* Profile Info Section */}
+                      <div className="flex items-start gap-4 w-full md:w-auto">
+                        {/* Auto-generated Avatar */}
+                        <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-black text-xl sm:text-2xl shrink-0 border border-blue-100 shadow-sm">
+                          {alumnus.name.charAt(0).toUpperCase()}
+                        </div>
+
+                        <div className="flex-1">
+                          <div className="flex items-center flex-wrap gap-2 mb-1">
+                            <h4 className="font-bold text-slate-900 text-lg sm:text-xl leading-tight">{alumnus.name}</h4>
+                            <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded uppercase tracking-wider font-bold border border-slate-200">
+                              {alumnus.role}
+                            </span>
+                          </div>
+                          <p className="text-sm text-slate-500 font-medium mb-3">{alumnus.email}</p>
+
+                          {/* Enhanced College Details Grid (Roll No Added) */}
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] sm:text-xs text-slate-700 font-bold uppercase tracking-wider bg-slate-50 p-2 sm:p-2.5 rounded-lg border border-slate-100">
+                            <span className="flex items-center gap-1.5 whitespace-nowrap bg-white px-2 py-1 rounded border border-slate-200 shadow-sm">
+                              <span className="text-sm">🆔</span> ROLL: {alumnus.rollNo || 'N/A'}
+                            </span>
+
+                            {alumnus.alumniProfile ? (
+                              <>
+                                <span className="flex items-center gap-1.5 whitespace-nowrap bg-white px-2 py-1 rounded border border-slate-200 shadow-sm">
+                                  <span className="text-sm">🎓</span> {alumnus.alumniProfile.department}
+                                </span>
+                                <span className="flex items-center gap-1.5 whitespace-nowrap bg-white px-2 py-1 rounded border border-slate-200 shadow-sm">
+                                  <span className="text-sm">📅</span> {alumnus.alumniProfile.batchYear}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-red-400 font-medium ml-1 flex items-center gap-1">
+                                ⚠️ Profile Incomplete
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons (Mobile Adaptive) */}
+                      <div className="flex flex-row w-full md:w-auto gap-2 sm:gap-3 mt-2 md:mt-0">
+                        <button
+                          onClick={() => handleVerify(alumnus.id, 'approve')}
+                          className="flex-1 md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white text-xs sm:text-sm font-black rounded-xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-200 transition-all uppercase flex items-center justify-center gap-2 active:scale-95"
+                        >
+                          <span className="text-base leading-none">✅</span> Approve
+                        </button>
+                        <button
+                          onClick={() => handleVerify(alumnus.id, 'reject')}
+                          className="flex-1 md:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-red-50 text-red-600 text-xs sm:text-sm font-black rounded-xl hover:bg-red-100 hover:text-red-700 transition-all uppercase flex items-center justify-center gap-2 active:scale-95 border border-red-100 hover:border-red-200"
+                        >
+                          <span className="text-base leading-none">❌</span> Reject
+                        </button>
+                      </div>
+
                     </div>
                   </div>
                 ))}
