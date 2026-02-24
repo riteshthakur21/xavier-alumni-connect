@@ -1,6 +1,7 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
+const sendEmail = require('../utils/email');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -29,36 +30,48 @@ router.get('/pending', authMiddleware, adminMiddleware, async (req, res) => {
   }
 });
 
+
 // // 2. Verify User (Approve/Reject) ✅❌
 // router.post('/verify/:id', authMiddleware, adminMiddleware, async (req, res) => {
 //   try {
 //     const { id } = req.params;
-//     const { action } = req.body; // 'approve' or 'reject'
-
-//     if (!['approve', 'reject'].includes(action)) {
-//       return res.status(400).json({ error: 'Invalid action' });
-//     }
+//     const { action } = req.body;
 
 //     if (action === 'approve') {
-//       // Approve User
 //       await prisma.user.update({
 //         where: { id },
 //         data: { isVerified: true }
 //       });
+//       return res.json({ message: 'User approved successfully' });
+//     } 
+    
+//     else if (action === 'reject') {
+//       // --- 💣 SAB KUCH SAAF KARO PEHLE ---
+      
+//       // 1. Delete Event Registrations (Jo user ne join kiye hain)
+//       await prisma.eventRegistration.deleteMany({ where: { userId: id } });
 
-//       res.json({ message: 'User approved successfully' });
-//     } else {
-//       // Reject User - delete (cascade will delete profile)
+//       // 2. Delete Jobs (Jo user ne post ki hain)
+//       await prisma.job.deleteMany({ where: { postedById: id } });
+
+//       // 3. Delete Events (Jo user ne create kiye hain)
+//       await prisma.event.deleteMany({ where: { postedById: id } });
+
+//       // 4. Delete Alumni Profile (Wese schema mein cascade hai, par double safety ke liye)
+//       await prisma.alumniProfile.deleteMany({ where: { userId: id } });
+
+//       // 5. Final Step: Delete User Account
 //       await prisma.user.delete({
 //         where: { id }
 //       });
 
-//       res.json({ message: 'User registration rejected' });
+//       return res.json({ message: 'User registration rejected and all traces removed!' });
 //     }
 
+//     res.status(400).json({ error: 'Invalid action' });
 //   } catch (error) {
-//     console.error('Error verifying user:', error);
-//     res.status(500).json({ error: 'Failed to verify user' });
+//     console.error('REJECT ERROR:', error);
+//     res.status(500).json({ error: 'Database constraint failed. Still linked to other data.' });
 //   }
 // });
 
@@ -68,16 +81,34 @@ router.post('/verify/:id', authMiddleware, adminMiddleware, async (req, res) => 
     const { id } = req.params;
     const { action } = req.body;
 
+    // --- NAYA JADOO 1: Pehle user ka data nikalo taaki mail bhej sakein ---
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      return res.status(404).json({ error: 'User nahi mila' });
+    }
+
     if (action === 'approve') {
+      // 1. Database mein Verify karo
       await prisma.user.update({
         where: { id },
         data: { isVerified: true }
       });
-      return res.json({ message: 'User approved successfully' });
+
+      // --- NAYA JADOO 2: Approve hone par Congratulations Mail Bhejo ---
+      const message = `
+        <h2>Congratulations ${user.name}! 🎉🎓</h2>
+        <p>Your profile on Xavier AlumniConnect has been <b>approved</b> by the admin.</p>
+        <p>You can now login to your dashboard, connect with batchmates, and explore job opportunities.</p>
+        <br>
+        <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Login to your Account</a>
+      `;
+      await sendEmail({ email: user.email, subject: "Account Verified! Welcome to Xavier AlumniConnect 🎓", message });
+
+      return res.json({ message: 'User approved successfully and email sent' });
     } 
     
     else if (action === 'reject') {
-      // --- 💣 SAB KUCH SAAF KARO PEHLE ---
+      // --- 💣 SAB KUCH SAAF KARO PEHLE (Tera Original Safe Code) ---
       
       // 1. Delete Event Registrations (Jo user ne join kiye hain)
       await prisma.eventRegistration.deleteMany({ where: { userId: id } });
@@ -96,7 +127,15 @@ router.post('/verify/:id', authMiddleware, adminMiddleware, async (req, res) => 
         where: { id }
       });
 
-      return res.json({ message: 'User registration rejected and all traces removed!' });
+      // --- NAYA JADOO 3: Reject hone par Rejection Mail Bhejo ---
+      const message = `
+        <h2>Registration Update ⚠️</h2>
+        <p>Hi ${user.name}, unfortunately your profile verification on Xavier AlumniConnect was rejected by the admin.</p>
+        <p>This usually happens if your Roll Number or Batch details do not match college records. Please try registering again with your correct details.</p>
+      `;
+      await sendEmail({ email: user.email, subject: "Action Required: Registration Rejected", message });
+
+      return res.json({ message: 'User registration rejected, all traces removed, and email sent!' });
     }
 
     res.status(400).json({ error: 'Invalid action' });

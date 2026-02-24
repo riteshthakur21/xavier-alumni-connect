@@ -380,22 +380,54 @@ export default function AdminDashboard() {
     }
   };
 
+  // const handleVerify = async (userId: string, action: 'approve' | 'reject') => {
+  //   try {
+  //     await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/verify/${userId}`, {
+  //       action: action
+  //     });
+
+  //     if (action === 'approve') {
+  //       toast.success('User Verified Successfully! 🎉');
+  //     } else {
+  //       toast.success('User Rejected ❌');
+  //     }
+
+  //     fetchAdminData();
+  //   } catch (error) {
+  //     console.error('Error verifying user:', error);
+  //     toast.error('Operation failed');
+  //   }
+  // };
   const handleVerify = async (userId: string, action: 'approve' | 'reject') => {
+    // 1. Galti se click rokne ke liye confirmation box
+    const confirmMsg = action === 'approve'
+      ? "Are you sure you want to APPROVE this User?"
+      : "Are you sure you want to REJECT and delete this registration?";
+
+    if (!window.confirm(confirmMsg)) return;
+
     try {
-      await axios.post(`http://localhost:5000/api/admin/verify/${userId}`, {
+      // 2. Smart API URL (Internet par process.env chalega, warna localhost)
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+      // 3. Axios se POST request
+      await axios.post(`${apiUrl}/api/admin/verify/${userId}`, {
         action: action
       });
 
+      // 4. Success Message (Toast)
       if (action === 'approve') {
         toast.success('User Verified Successfully! 🎉');
       } else {
         toast.success('User Rejected ❌');
       }
 
+      // 5. List ko automatically refresh karne ke liye tera function call
       fetchAdminData();
+
     } catch (error) {
-      console.error('Error verifying user:', error);
-      toast.error('Operation failed');
+      console.error(`Error verifying user:`, error);
+      toast.error('Operation failed! Please check console.');
     }
   };
 

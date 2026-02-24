@@ -293,7 +293,7 @@ router.post('/reset-password', async (req, res) => {
         </div>
 
         <div style="text-align: center; margin: 30px 0;">
-          <a href="http://localhost:3000/login" style="background-color: #2563eb; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+          <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" style="background-color: #2563eb; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
             Go to Login
           </a>
         </div>
