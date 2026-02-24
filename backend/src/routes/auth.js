@@ -27,7 +27,7 @@ const registerValidation = [
 
   body('company').optional().trim(),
   body('jobTitle').optional().trim(),
-  body('linkedinUrl').optional().isURL().withMessage('Valid LinkedIn URL required'),
+  body('linkedinUrl').optional({ checkFalsy: true }).isURL().withMessage('Valid LinkedIn URL required'),
   body('bio').optional().trim().isLength({ max: 500 }).withMessage('Bio must be less than 500 characters')
 ];
 
