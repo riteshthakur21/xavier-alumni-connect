@@ -61,24 +61,89 @@ AlumniConnect is a full-stack application that enables colleges to:
 ## 📁 Project Structure
 
 ```
-alumni-management-system/
+xavier-alumni-connect/
+├── .github/
+│   └── workflows/
+│       └── node.js.yml
 ├── backend/
+│   ├── .env.example
+│   ├── node_modules/ (ignored)
+│   ├── package.json
+│   ├── prisma/
+│   │   ├── migrations/
+│   │   │   └── ...
+│   │   └── schema.prisma
 │   ├── src/
-│   │   ├── controllers/     # Route controllers
-│   │   ├── middleware/      # Authentication & validation
-│   │   ├── models/          # Database models
-│   │   ├── routes/          # API routes
-│   │   └── utils/           # Utility functions
-│   ├── prisma/              # Database schema
-│   └── uploads/             # File storage
+│   │   ├── app.js
+│   │   ├── config/
+│   │   │   ├── db.js
+│   │   │   └── auth.js
+│   │   ├── controllers/
+│   │   │   ├── authController.js
+│   │   │   ├── alumniController.js
+│   │   │   ├── eventController.js
+│   │   │   ├── jobController.js
+│   │   │   └── ...
+│   │   ├── middlewares/
+│   │   │   ├── authMiddleware.js
+│   │   │   └── uploadMiddleware.js
+│   │   ├── routes/
+│   │   │   ├── authRoutes.js
+│   │   │   ├── alumniRoutes.js
+│   │   │   ├── eventRoutes.js
+│   │   │   ├── jobRoutes.js
+│   │   │   └── index.js
+│   │   ├── utils/
+│   │   │   ├── tokenUtils.js
+│   │   │   └── fileUtils.js
+│   │   └── server.js
+│   ├── .gitignore
+│   └── README.md
 ├── frontend/
+│   ├── .env.local (ignored)
+│   ├── node_modules/ (ignored)
+│   ├── package.json
+│   ├── next.config.js
+│   ├── public/
+│   │   ├── logo.png
+│   │   └── favicon.ico
 │   ├── src/
-│   │   ├── app/             # Next.js app router
-│   │   ├── components/      # Reusable components
-│   │   ├── contexts/        # React contexts
-│   │   └── utils/           # Frontend utilities
-│   └── public/              # Static assets
-└── docs/                    # Documentation
+│   │   ├── app/
+│   │   │   ├── layout.tsx
+│   │   │   ├── page.tsx
+│   │   │   ├── dashboard/
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── profile/
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   └── edit.tsx
+│   │   │   │   ├── events/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── jobs/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── alumni/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── settings/
+│   │   │   │       └── page.tsx
+│   │   │   ├── auth/
+│   │   │   │   ├── login.tsx
+│   │   │   │   └── signup.tsx
+│   │   │   └── styles/
+│   │   │       └── globals.css
+│   │   ├── components/
+│   │   │   ├── Navbar.tsx
+│   │   │   ├── Footer.tsx
+│   │   │   ├── Card.tsx
+│   │   │   └── ...
+│   │   ├── services/
+│   │   │   ├── api.js
+│   │   │   └── authService.js
+│   │   └── utils/
+│   │       └── helpers.js
+│   ├── .gitignore
+│   └── README.md
+├── .gitignore
+├── README.md
+└── setup.sh                 
 ```
 
 ## 🚀 Getting Started
