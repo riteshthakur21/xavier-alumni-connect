@@ -443,7 +443,7 @@ export default function App() {
       <div className="max-w-5xl mx-auto bg-white rounded-[2rem] sm:rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-100/80 overflow-hidden relative">
         
         {/* Modern Cover Section */}
-        <div className="relative h-40 sm:h-56 lg:h-64 w-full bg-gradient-to-br from-blue-200 via-indigo-450 to-blue-900 overflow-hidden">
+        <div className="relative h-40 sm:h-56 lg:h-64 w-full bg-gradient-to-br from-blue-900 via-indigo-450 to-purple-200 overflow-hidden">
           {/* Subtle overlay pattern */}
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>

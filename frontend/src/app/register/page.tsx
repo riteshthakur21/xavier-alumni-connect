@@ -403,7 +403,7 @@ export default function Register() {
               </div>
 
               {/* Batch Year */}
-              <div>
+              {/* <div>
                 <label htmlFor="batchYear" className="form-label">Batch Year *</label>
                 <input
                   type="number"
@@ -416,6 +416,27 @@ export default function Register() {
                   value={formData.batchYear}
                   onChange={handleChange}
                 />
+              </div> */}
+
+              {/* Batch Year */}
+              <div>
+                <label htmlFor="batchYear" className="form-label">Batch Year *</label>
+                <select
+                  id="batchYear"
+                  name="batchYear"
+                  required
+                  className="form-input"
+                  value={formData.batchYear}
+                  onChange={handleChange}
+                >
+                  <option value="" disabled>Select Batch Year</option>
+                  {/* Generates years from currentYear down to 2013 */}
+                  {Array.from({ length: currentYear - 2013 + 1 }, (_, i) => currentYear - i).map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Department */}
