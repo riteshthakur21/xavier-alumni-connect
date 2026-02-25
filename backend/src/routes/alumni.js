@@ -242,13 +242,13 @@ router.get('/stats/overview', async (req, res) => {
     const totalByDepartment = await prisma.alumniProfile.groupBy({
       by: ['department'],
       _count: true,
-      orderBy: { _count: 'desc' }
+      orderBy: { department: 'desc' }
     });
 
     const totalByCompany = await prisma.alumniProfile.groupBy({
       by: ['company'],
       _count: true,
-      orderBy: { _count: 'desc' },
+      orderBy: { company: 'desc' },
       take: 10
     });
 

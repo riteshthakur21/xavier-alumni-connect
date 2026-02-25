@@ -26,7 +26,7 @@ const nextConfig = {
   swcMinify: true,
   images: {
     // Purana localhost aur naya cloudinary dono allow kar diye
-    domains: ['localhost', 'res.cloudinary.com'], 
+    //domains: ['localhost', 'res.cloudinary.com'], 
     remotePatterns: [
       {
         protocol: 'http',
