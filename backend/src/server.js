@@ -93,6 +93,8 @@ const exportRoutes = require('./routes/export'); // New export route
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+app.set('trust proxy', 1);
+
 // 3. Security & Global Middlewares
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
