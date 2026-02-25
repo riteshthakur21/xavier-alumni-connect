@@ -133,6 +133,11 @@ app.get('/api/health', (req, res) => {
   res.json({ message: 'Alumni Management System API is running' });
 });
 
+// Simple route for cron job to keep the server awake
+app.get('/ping', (req, res) => {
+  res.status(200).send('Server is awake!');
+});
+
 // 5. Error & 404 Handlers
 app.use((err, req, res, next) => {
   console.error(err.stack);
