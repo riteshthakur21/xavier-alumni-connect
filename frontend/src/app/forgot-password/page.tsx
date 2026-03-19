@@ -1,52 +1,3 @@
-// 'use client';
-// import React, { useState } from 'react';
-// import axios from 'axios';
-// import { toast } from 'react-hot-toast';
-
-// export default function ForgotPassword() {
-//   const [email, setEmail] = useState('');
-//   const [loading, setLoading] = useState(false);
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     setLoading(true);
-//     try {
-//       await axios.post('http://localhost:5000/api/auth/forgot-password', { email });
-//       toast.success('Check your email for the reset link! 📧');
-//     } catch (err: any) {
-//       toast.error(err.response?.data?.error || 'Failed to send link');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center bg-slate-50">
-//       <div className="card max-w-md w-full p-8 bg-white rounded-3xl shadow-xl">
-//         <h2 className="text-2xl font-black text-slate-900 mb-2">Forgot Password? 🔑</h2>
-//         <p className="text-sm text-slate-500 mb-6">Enter your email and we'll send you a recovery link.</p>
-        
-//         <form onSubmit={handleSubmit} className="space-y-4">
-//           <input 
-//             type="email" 
-//             placeholder="your-email@gmail.com"
-//             className="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none focus:ring-4 focus:ring-blue-100 font-bold"
-//             value={email}
-//             onChange={(e) => setEmail(e.target.value)}
-//             required
-//           />
-//           <button 
-//             type="submit" 
-//             disabled={loading}
-//             className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg"
-//           >
-//             {loading ? 'Sending...' : 'Send Reset Link'}
-//           </button>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// }
 'use client';
 
 import React, { useState } from 'react';
@@ -75,7 +26,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8 relative overflow-hidden">
       
       {/* Background Subtle Glows (Premium Feel) */}
       {/* <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>

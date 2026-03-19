@@ -1,360 +1,372 @@
-# Alumni Management System
+# Xavier AlumniConnect
 
-A comprehensive web-based platform for managing alumni relationships, networking, and community engagement.
+> **Next-generation alumni networking platform for St. Xavier's College, Patna**  
+> Est. 1953 · Full-stack · Production-ready
+
+---
 
 ## 🎓 Project Overview
 
-AlumniConnect is a full-stack application that enables colleges to:
-- Maintain comprehensive alumni records
-- Manage alumni events and networking opportunities
-- Facilitate connections between alumni and students
-- Provide administrative oversight and verification
-- Generate reports and analytics
+Xavier AlumniConnect is a full-stack alumni management and networking platform. It supports alumni/student onboarding, admin-driven verification, directory browsing, connections, real-time chat, stories, events, jobs, and CSV exports.
 
-## ✨ Key Features
+**Target Users:**
+- **Students** — Browse alumni directory, join events, request connections, read stories, chat with connected users
+- **Alumni** — All student capabilities + job posting and richer career networking
+- **Admin** — User verification/rejection, story moderation, stats and CSV export reports
 
-### 🔐 Multi-Role Authentication System
-- **Admin**: Full system management and oversight
-- **Alumni**: Profile management and networking
-- **Students**: Limited access to alumni directory
+**Current Status:**
+- Core platform live on Vercel (frontend) + Render (backend)
+- Registration includes **Email OTP Verification** → then **Admin Approval** before login access
+- Real-time encrypted chat with connection-gated messaging
+- Jobs and events fully implemented
+- ⚠️ Some frontend pages still hardcode `http://localhost:5000` — needs `NEXT_PUBLIC_API_URL` migration
 
-### 👥 Alumni Management
-- Registration with comprehensive profile details
-- Admin verification system
-- Advanced search and filtering
-- Profile management and updates
+---
 
-### 📅 Event Management
-- Create and manage alumni events
-- Public event listing with registration
-- Event categorization and filtering
+## 🛠️ Tech Stack
 
-### 📊 Reports & Analytics
-- CSV export functionality
-- Batch-wise alumni reports
-- Company-based alumni tracking
-- Verification status reports
+| Layer | Technology | Version / Notes |
+|---|---|---|
+| Frontend | Next.js App Router | `14.0.3`, TypeScript, React 18 |
+| Styling | Tailwind CSS | lucide-react, react-hot-toast |
+| HTTP Client | Axios | + react-query installed |
+| Real-time (client) | socket.io-client | `4.8.3` |
+| Backend | Express.js | `4.18.2` |
+| ORM | Prisma Client | `5.1.1` |
+| Database | PostgreSQL | Neon DB (hosted) |
+| Validation | express-validator | + zod |
+| Security | helmet, cors | express-rate-limit, bcryptjs, jsonwebtoken |
+| Uploads | multer | multer-storage-cloudinary |
+| Real-time (server) | Socket.io | Room-based conversations |
+| Auth | JWT + RBAC | Roles: `ADMIN`, `ALUMNI`, `STUDENT` |
+| Email | Brevo API | `https://api.brevo.com/v3/smtp/email` |
+| Storage | Cloudinary | Profile + event images |
+| Encryption | AES-256-GCM | `backend/src/utils/encryption.js` |
+| Frontend Deploy | Vercel | Auto-deploy from `main` |
+| Backend Deploy | Render | + cron-job.org anti-sleep |
 
-### 🔒 Security Features
-- JWT-based authentication
-- Password hashing with bcrypt
-- API rate limiting
-- Role-based access control
-- Input validation and sanitization
+---
 
-## 🛠️ Technology Stack
-
-### Backend
-- **Node.js** with Express.js
-- **PostgreSQL** with Prisma ORM
-- **JWT** for authentication
-- **Multer** for file uploads
-- **Bcrypt** for password hashing
-
-### Frontend
-- **Next.js 14** with App Router
-- **TypeScript** for type safety
-- **Tailwind CSS** for styling
-- **Axios** for API communication
-- **React Query** for data management
-
-## 📁 Project Structure
+## 🔐 Authentication & User Flow
 
 ```
-xavier-alumni-connect/
-├── .github/
-│   └── workflows/
-│       └── node.js.yml
-├── backend/
-│   ├── .env.example
-│   ├── node_modules/ (ignored)
-│   ├── package.json
-│   ├── prisma/
-│   │   ├── migrations/
-│   │   │   └── ...
-│   │   └── schema.prisma
-│   ├── src/
-│   │   ├── app.js
-│   │   ├── config/
-│   │   │   ├── db.js
-│   │   │   └── auth.js
-│   │   ├── controllers/
-│   │   │   ├── authController.js
-│   │   │   ├── alumniController.js
-│   │   │   ├── eventController.js
-│   │   │   ├── jobController.js
-│   │   │   └── ...
-│   │   ├── middlewares/
-│   │   │   ├── authMiddleware.js
-│   │   │   └── uploadMiddleware.js
-│   │   ├── routes/
-│   │   │   ├── authRoutes.js
-│   │   │   ├── alumniRoutes.js
-│   │   │   ├── eventRoutes.js
-│   │   │   ├── jobRoutes.js
-│   │   │   └── index.js
-│   │   ├── utils/
-│   │   │   ├── tokenUtils.js
-│   │   │   └── fileUtils.js
-│   │   └── server.js
-│   ├── .gitignore
-│   └── README.md
-├── frontend/
-│   ├── .env.local (ignored)
-│   ├── node_modules/ (ignored)
-│   ├── package.json
-│   ├── next.config.js
-│   ├── public/
-│   │   ├── logo.png
-│   │   └── favicon.ico
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── layout.tsx
-│   │   │   ├── page.tsx
-│   │   │   ├── dashboard/
-│   │   │   │   ├── page.tsx
-│   │   │   │   ├── profile/
-│   │   │   │   │   ├── page.tsx
-│   │   │   │   │   └── edit.tsx
-│   │   │   │   ├── events/
-│   │   │   │   │   └── page.tsx
-│   │   │   │   ├── jobs/
-│   │   │   │   │   └── page.tsx
-│   │   │   │   ├── alumni/
-│   │   │   │   │   └── page.tsx
-│   │   │   │   └── settings/
-│   │   │   │       └── page.tsx
-│   │   │   ├── auth/
-│   │   │   │   ├── login.tsx
-│   │   │   │   └── signup.tsx
-│   │   │   └── styles/
-│   │   │       └── globals.css
-│   │   ├── components/
-│   │   │   ├── Navbar.tsx
-│   │   │   ├── Footer.tsx
-│   │   │   ├── Card.tsx
-│   │   │   └── ...
-│   │   ├── services/
-│   │   │   ├── api.js
-│   │   │   └── authService.js
-│   │   └── utils/
-│   │       └── helpers.js
-│   ├── .gitignore
-│   └── README.md
-├── .gitignore
-├── README.md
-└── setup.sh                 
+Register (form)
+  → OTP email sent (Brevo)
+  → /verify-email (enter 6-digit OTP, 10 min expiry)
+  → status: PENDING  ← admin can now see user
+  → Admin Approves
+  → status: APPROVED + welcome email
+  → User can Login ✅
 ```
+
+**Key rules:**
+- `UNVERIFIED` users are **invisible to admin** — appear only after OTP verification
+- `emailVerified: false` → login blocked with `EMAIL_NOT_VERIFIED` → redirect to `/verify-email`
+- OTP expires in 10 minutes · Resend available (rate limited: max 3 per 15 min)
+- JWT issued on login → `Authorization: Bearer <token>`
+
+---
+
+## ✨ Features
+
+| Feature | Status |
+|---|---|
+| Email OTP Verification on Registration | ✅ Live |
+| Admin Verification (Approve / Reject + emails) | ✅ Live |
+| LinkedIn-style Connection System | ✅ Live |
+| Real-time Encrypted Chat (AES-256-GCM) | ✅ Live |
+| Alumni Directory (Search + Filter) | ✅ Live |
+| Alumni Stories (Submit → Review → Publish) | ✅ Live |
+| Events (Create, Register, Participants list) | ✅ Live |
+| Jobs Board (Post + Browse) | ✅ Live |
+| Dashboard + Profile Edit + Photo Upload | ✅ Live |
+| Admin Analytics + CSV Export | ✅ Live |
+| Password Reset via Email | ✅ Live |
+| Anti-sleep `/ping` endpoint | ✅ Live |
+
+---
+
+## 🗄️ Database Schema
+
+### Enums
+- `Role` — `ADMIN` · `ALUMNI` · `STUDENT`
+- `UserStatus` — `UNVERIFIED` → `PENDING` → `APPROVED` | `REJECTED`
+- `ConnectionStatus` — `PENDING` · `ACCEPTED` · `REJECTED`
+- `StoryStatus` — `PENDING` · `APPROVED` · `REJECTED`
+
+### Key Models
+
+**`User`** (`users` table)
+```
+id, name, email, passwordHash, role, rollNo (unique)
+status          UserStatus  @default(UNVERIFIED)
+isVerified      Boolean     @default(false)
+emailVerified   Boolean     @default(false)   ← OTP verification
+emailOtp        String?                        ← OTP verification
+emailOtpExpiry  DateTime?                      ← OTP verification
+resetToken, resetTokenExpiry
+createdAt, updatedAt
+```
+
+**`AlumniProfile`** (`alumni_profiles`)
+```
+userId (unique), batchYear, department
+company?, jobTitle?, linkedinUrl?, photoUrl?, bio?, location?
+skills String[], contactPublic (default: true)
+```
+
+**`Message`** (`messages`)
+```
+conversationId, senderId
+content  ← AES-256-GCM encrypted at rest
+isSeen, isDeleted, createdAt
+@@index([conversationId, createdAt])
+```
+
+**`ConnectionRequest`** (`connection_requests`)
+```
+senderId, receiverId, status (default: PENDING)
+@@unique([senderId, receiverId])
+```
+
+**`UserConnection`** (`user_connections`) — composite PK `[userId, connectionId]`
+
+**`Story`** (`stories`) — `title, content (Text), status (default: PENDING), authorId`
+
+**`Job`** — `title, company, location, type, description, applyLink?, postedById`
+
+**`Event`** — `title, description, date, location?, imageUrl?, targetAudience, isActive, postedById`
+
+**`EventRegistration`** — `@@unique([userId, eventId])`
+
+---
+
+## 📡 API Routes Reference
+
+**Base URL:** `http://localhost:5000/api` (local) · `https://<render-domain>/api` (production)
+
+All protected routes require: `Authorization: Bearer <token>`
+
+### Auth — `/api/auth`
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/register` | No | Register + create profile + send OTP email |
+| POST | `/verify-email` | No | Verify OTP → status becomes `PENDING` |
+| POST | `/resend-otp` | No | Resend OTP (max 3 / 15 min per IP) |
+| POST | `/login` | No | Login — checks `emailVerified` + `status` |
+| GET | `/me` | Yes | Current user from JWT |
+| POST | `/forgot-password` | No | Send password reset email |
+| POST | `/reset-password` | No | Submit new password via token |
+
+### Alumni — `/api/alumni`
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/` | Yes | Directory — search + filter by dept/batch |
+| GET | `/:id` | Yes | Single alumni profile |
+| PUT | `/:id` | Yes (own) | Update profile |
+| POST | `/upload-photo` | Yes | Upload photo to Cloudinary |
+| GET | `/stats/overview` | Yes | groupBy stats (dept, batch, company) |
+
+### Connections — `/api/connections`
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/request` | Yes | Send connection request |
+| PUT | `/:id/respond` | Yes | Accept or reject request |
+| GET | `/` | Yes | All connections + pending requests |
+| GET | `/status/:userId` | Yes | Check connection status with a user |
+
+### Chat — `/api/chat`
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/conversations` | Yes | All conversations |
+| GET | `/messages/:convId` | Yes | Paginated messages (auto-decrypted) |
+| POST | `/messages` | Yes | Send message (encrypted before DB save) |
+| DELETE | `/messages/:id` | Yes | Soft delete message |
+
+**Socket events:** `joinConversation` · `sendMessage` · `typing` · `messageSeen` · `deleteMessage`
+
+### Stories — `/api/stories`
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/` | No | Public approved stories |
+| GET | `/:id` | No | Story detail |
+| POST | `/` | Yes | Submit story (status: `PENDING`) |
+| GET | `/pending` | Admin | Stories awaiting review |
+| PUT | `/:id/approve` | Admin | Approve story |
+| PUT | `/:id/reject` | Admin | Reject story |
+
+### Admin — `/api/admin`
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/pending-users` | Admin | Only `PENDING` users (never `UNVERIFIED`) |
+| PUT | `/approve/:id` | Admin | Approve → welcome email sent |
+| DELETE | `/reject/:id` | Admin | Delete user + all linked data → rejection email |
+| GET | `/stats` | Admin | Analytics by dept/batch/company |
+
+### Other Routes
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/ping` | No | Health check — pinged every 5 min by cron-job.org |
+| GET | `/events` | Yes | Events listing |
+| POST | `/events` | Admin | Create event with image upload |
+| GET | `/events/:id/participants` | Yes | Participants list + filters |
+| GET | `/jobs` | Yes | Jobs board |
+| POST | `/jobs` | Alumni/Admin | Post a job |
+| GET | `/export/alumni` | Admin | CSV export with filters |
+
+---
+
+## 📁 Frontend Pages
+
+| Route | Auth | Description |
+|---|---|---|
+| `/` | No | Landing page — hero, stories preview, CTA |
+| `/register` | No | Registration form → redirects to `/verify-email` on success |
+| `/verify-email` | No | 6-box OTP input + resend + countdown timer |
+| `/login` | No | Login + `EMAIL_NOT_VERIFIED` handling + verified banner |
+| `/forgot-password` | No | Password reset request |
+| `/reset-password` | No | New password via reset token |
+| `/dashboard` | Yes | Stats, quick actions, connection request inbox |
+| `/dashboard/profile` | Yes | Profile edit — photo, skills, privacy toggle |
+| `/directory` | Yes | Alumni directory — search, filter, connect actions |
+| `/alumni/[id]` | Yes | Alumni profile — connect/chat actions |
+| `/profile/[id]` | Yes | Profile variant — connect/chat actions |
+| `/connections` | Yes | My Connections page |
+| `/chat` | Yes | Real-time encrypted chat UI |
+| `/stories` | Yes | Stories feed + submission form |
+| `/stories/[id]` | Yes | Story detail + author profile navigation |
+| `/stories/new` | Yes | New story submission |
+| `/events` | Yes | Events listing + registration |
+| `/events/create` | Admin | Create new event |
+| `/events/[id]/participants` | Yes | Participants list |
+| `/jobs` | Yes | Jobs board |
+| `/jobs/create` | Alumni/Admin | Post a job (students are redirected out) |
+| `/admin` | Admin only | Pending users, stories moderation, CSV export |
+
+---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- PostgreSQL 14+
-- npm or yarn package manager
+- Node.js v18+
+- PostgreSQL connection string (Neon DB recommended)
+- Brevo account + API key
+- Cloudinary account
 
-### Backend Setup
+### 1. Clone
+```bash
+git clone https://github.com/riteshthakur21/xavier-alumni-connect.git
+cd xavier-alumni-connect
+```
 
-1. Navigate to backend directory:
+### 2. Backend Setup
 ```bash
 cd backend
-```
-
-2. Install dependencies:
-```bash
 npm install
+cp .env.example .env    # fill all required values
+npx prisma db push      # DO NOT use prisma migrate
+npm run dev             # → http://localhost:5000
 ```
 
-3. Configure environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your database credentials
-```
-
-4. Setup database:
-```bash
-npx prisma generate
-npx prisma db push
-```
-
-5. Start the server:
-```bash
-npm run dev
-```
-
-### Frontend Setup
-
-1. Navigate to frontend directory:
+### 3. Frontend Setup
 ```bash
 cd frontend
-```
-
-2. Install dependencies:
-```bash
 npm install
+# create .env.local and set NEXT_PUBLIC_API_URL
+npm run dev             # → http://localhost:3000
 ```
-
-3. Configure environment variables:
-```bash
-cp .env.local.example .env.local
-```
-
-4. Start the development server:
-```bash
-npm run dev
-```
-
-## 🔗 API Documentation
-
-### Authentication Endpoints
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `GET /api/auth/me` - Get current user
-
-### Alumni Endpoints
-- `GET /api/alumni` - List alumni (with search/filter)
-- `GET /api/alumni/:id` - Get single alumni profile
-- `PUT /api/alumni/:id` - Update alumni profile
-
-### Admin Endpoints
-- `GET /api/admin/pending` - Get pending verifications
-- `POST /api/admin/verify/:id` - Verify/reject alumni
-- `DELETE /api/admin/alumni/:id` - Delete alumni
-- `GET /api/admin/stats` - Get system statistics
-
-### Events Endpoints
-- `GET /api/events` - List events
-- `POST /api/events` - Create event (admin only)
-- `PUT /api/events/:id` - Update event (admin only)
-- `DELETE /api/events/:id` - Delete event (admin only)
-
-### Reports Endpoints
-- `GET /api/export/alumni` - Export alumni data (CSV)
-- `GET /api/export/batch/:year` - Export batch-specific data
-- `GET /api/export/company/:company` - Export company-specific data
-
-## 🎨 User Interface
-
-### Pages
-- **Home** - Landing page with features and statistics
-- **Login** - Authentication page
-- **Register** - Alumni registration form
-- **Dashboard** - User dashboard with quick actions
-- **Directory** - Alumni search and browsing
-- **Profile** - Individual alumni profiles
-- **Events** - Event listings and management
-- **Admin** - Administrative dashboard
-
-### Design System
-- Modern, clean interface with professional aesthetics
-- Responsive design for all device sizes
-- Consistent color scheme and typography
-- Accessible UI components
-- Smooth animations and transitions
-
-## 🔐 Security Considerations
-
-- All passwords are hashed using bcrypt with salt rounds
-- JWT tokens with 7-day expiration
-- Rate limiting on API endpoints
-- Input validation on all forms
-- File upload restrictions (images only, size limits)
-- Role-based access control throughout the application
-- CORS configuration for cross-origin requests
-
-## 📊 Database Schema
-
-### Users Table
-- id, name, email, passwordHash, role, isVerified, createdAt
-
-### AlumniProfiles Table
-- id, userId, batchYear, department, rollNo, company, jobTitle, linkedinUrl, photoUrl, bio, location, skills, contactPublic
-
-### Events Table
-- id, title, description, date, location, imageUrl, isActive, createdAt
-
-## 🚀 Deployment
-
-### Backend Deployment
-- Support for Railway, Render, Heroku
-- Environment variable configuration
-- Database migration scripts
-- Health check endpoints
-
-### Frontend Deployment
-- Optimized for Vercel deployment
-- Static generation for performance
-- Environment-specific configurations
-- CDN integration for assets
-
-## 🔧 Configuration
-
-### Environment Variables
-```env
-# Backend
-PORT=5000
-DATABASE_URL="postgresql://..."
-JWT_SECRET="your-secret-key"
-NODE_ENV="production"
-FRONTEND_URL="https://your-frontend-url"
-
-# Frontend
-NEXT_PUBLIC_API_URL="https://your-backend-url/api"
-```
-
-## 📈 Performance Optimizations
-
-- Database indexing for search queries
-- Image optimization and compression
-- API response caching
-- Frontend code splitting
-- Lazy loading for images
-- Debounced search inputs
-
-## 🧪 Testing
-
-- Unit tests for API endpoints
-- Integration tests for authentication
-- Frontend component testing
-- End-to-end testing workflows
-
-## 📱 Mobile Responsiveness
-
-- Mobile-first design approach
-- Touch-friendly interface elements
-- Optimized forms for mobile input
-- Responsive image handling
-- Progressive web app features
-
-## 🎯 Future Enhancements
-
-- Real-time chat system
-- Mentorship matching
-- Job posting board
-- AI-powered alumni suggestions
-- Mobile application
-- Advanced analytics dashboard
-- Integration with social media platforms
-- Email notification system
-- Event RSVP management
-- Alumni donation tracking
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 👥 Support
-
-For support, please contact the development team or create an issue in the repository.
 
 ---
 
-**Built with ❤️ for the alumni community**
+## 🔑 Environment Variables
+
+### Backend (`backend/.env`)
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | ✅ | PostgreSQL connection string |
+| `JWT_SECRET` | ✅ | JWT signing key |
+| `MESSAGE_SECRET_KEY` | ✅ | **Exactly 64 hex chars** — AES-256-GCM chat encryption |
+| `FRONTEND_URL` | ✅ | CORS origin + links in emails |
+| `BREVO_API_KEY` | ✅ | Brevo API key for sending emails |
+| `EMAIL_USER` | ✅ | Verified sender email in Brevo |
+| `CLOUDINARY_CLOUD_NAME` | ✅ | |
+| `CLOUDINARY_API_KEY` | ✅ | |
+| `CLOUDINARY_API_SECRET` | ✅ | |
+| `PORT` | No | Default: 5000 |
+| `NODE_ENV` | No | Set `production` on Render |
+
+### Frontend (`frontend/.env.local`)
+
+| Variable | Required | Description |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | ✅ | Backend base URL — used by ALL pages + socket layer |
+
+---
+
+## 🚢 Deployment
+
+### Vercel (Frontend)
+1. Connect GitHub repo → root directory: `frontend`
+2. Add env var: `NEXT_PUBLIC_API_URL=https://<your-render-domain>`
+3. Push to `main` → auto-deploys in ~2-3 min
+
+### Render (Backend)
+1. New Web Service → root: `backend` → start command: `npm run dev`
+2. Add all backend env variables in Render dashboard
+3. Push to `main` → auto-deploys in ~5-10 min
+
+> `app.set('trust proxy', 1)` is already set in `server.js` — required for `express-rate-limit` behind Render's reverse proxy.
+
+### Anti-sleep Cron Job
+Set up [cron-job.org](https://cron-job.org) to ping `https://<render-domain>/ping` every **5 minutes** — prevents Render free tier from spinning down.
+
+---
+
+## ⚠️ Known Issues & Developer Notes
+
+| Issue | Cause | Fix |
+|---|---|---|
+| Email not sent after `.env` change | Nodemon doesn't watch `.env` files | `Ctrl+C` → restart server manually |
+| Prisma `groupBy` crash | Invalid `orderBy: { _count: 'desc' }` syntax | Use `orderBy: { _count: { department: 'desc' } }` |
+| Foreign key error on user delete | Linked records exist in other tables | Always use Admin Dashboard delete — backend clears linked tables first |
+| `express-rate-limit` error on Render | Reverse proxy changes IP headers | `app.set('trust proxy', 1)` at top of `server.js` ✅ already done |
+| Chat crashes on deploy | `MESSAGE_SECRET_KEY` missing on Render | Add exactly 64 hex chars to Render env vars |
+| Some pages call `localhost:5000` | Hardcoded URLs in frontend pages | Migrate to `process.env.NEXT_PUBLIC_API_URL` |
+| Copilot CLI fails on Windows | PowerShell 6+ not available | Use PowerShell 7 (Core) or run commands manually in CMD |
+
+---
+
+## 🌿 Git Workflow
+
+```bash
+# New feature or fix
+git checkout -b feature/<topic>
+
+# Commit and push
+git add .
+git commit -m "feat: describe what was added"
+git push origin feature/<topic>
+# → open PR → merge to main → Vercel + Render auto-deploy
+```
+
+**Branch convention:** `feature/<n>` · `fix/<n>` · `docs/<n>`
+
+---
+
+## 🎨 Design System
+
+- **Colors:** Navy `#09192E` · Gold `#C9A84C` · Cream `#F5EFE0`
+- **Fonts:** Cormorant Garamond (serif display) + DM Sans (body)
+- **Rules:** No Inter font · No blob backgrounds · No shadcn · No framer-motion · Tailwind + CSS `@keyframes` only
+
+---
+
+*Built with ❤️ for the Xaverian community*

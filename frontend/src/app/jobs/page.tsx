@@ -101,18 +101,29 @@ export default function JobsPage() {
                                             <span className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide">
                                                 {job.type}
                                             </span>
-                                            <span className="text-slate-500 text-sm flex items-center">
+                                            <span className="text-slate-500 text-sm flex items-center flex-wrap gap-1">
                                                 Posted by
-                                                {/* 👇 FIX: Wapas 'id' (User ID) use kar rahe hain */}
-                                                {job.postedBy?.role === 'ALUMNI' && job.postedBy?.id ? (
+
+                                                {job.postedBy?.role === 'ADMIN' ? (
+                                                    // Admin has no alumni profile — render plain text + badge, no link
+                                                    <>
+                                                        <span className="font-medium text-slate-700 ml-1">
+                                                            {job.postedBy.name}
+                                                        </span>
+                                                        <span className="px-1.5 py-0.5 bg-red-50 text-red-600 border border-red-200 text-[10px] font-bold rounded uppercase tracking-wide">
+                                                            Admin
+                                                        </span>
+                                                    </>
+                                                ) : job.postedBy?.id ? (
+                                                    // Alumni / regular user — link to their public profile
                                                     <Link
-                                                        href={`/alumni/${job.postedBy.id}`}
+                                                        href={`/profile/${job.postedBy.id}`}
                                                         className="text-blue-600 hover:text-blue-800 hover:underline font-medium ml-1"
                                                     >
                                                         {job.postedBy.name}
                                                     </Link>
                                                 ) : (
-                                                    <span className="ml-1">{job.postedBy?.name || 'User'}</span>
+                                                    <span className="ml-1">{job.postedBy?.name || 'Unknown'}</span>
                                                 )}
                                             </span>
 

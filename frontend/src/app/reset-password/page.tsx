@@ -1,60 +1,3 @@
-// 'use client';
-// import React, { useState } from 'react';
-// import { useSearchParams, useRouter } from 'next/navigation';
-// import axios from 'axios';
-// import { toast } from 'react-hot-toast';
-
-// export default function ResetPassword() {
-//   const searchParams = useSearchParams();
-//   const router = useRouter();
-//   const token = searchParams.get('token'); // URL se token nikalne ke liye
-  
-//   const [newPassword, setNewPassword] = useState('');
-//   const [loading, setLoading] = useState(false);
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-//     if (!token) return toast.error('Token missing! ❌');
-    
-//     setLoading(true);
-//     try {
-//       await axios.post('http://localhost:5000/api/auth/reset-password', { token, newPassword });
-//       toast.success('Password updated! Redirecting to login... ✅');
-//       setTimeout(() => router.push('/login'), 2000);
-//     } catch (err: any) {
-//       toast.error(err.response?.data?.error || 'Reset failed');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen flex items-center justify-center bg-slate-50">
-//       <div className="card max-w-md w-full p-8 bg-white rounded-3xl shadow-xl">
-//         <h2 className="text-2xl font-black text-slate-900 mb-6">Set New Password 🆕</h2>
-//         <form onSubmit={handleSubmit} className="space-y-4">
-//           <input 
-//             type="password" 
-//             placeholder="Enter new password"
-//             className="w-full px-5 py-3 bg-slate-50 rounded-2xl border-none focus:ring-4 focus:ring-blue-100 font-bold"
-//             value={newPassword}
-//             onChange={(e) => setNewPassword(e.target.value)}
-//             required
-//             minLength={6}
-//           />
-//           <button 
-//             type="submit" 
-//             disabled={loading}
-//             className="w-full py-4 bg-green-600 text-white rounded-2xl font-bold hover:bg-green-700 transition-all shadow-lg"
-//           >
-//             {loading ? 'Updating...' : 'Reset Password'}
-//           </button>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// }
-
 'use client';
 
 import React, { useState } from 'react';
@@ -101,7 +44,7 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8 relative overflow-hidden">
       
       {/* Background Subtle Glows (Premium Feel) */}
       {/* <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div> */}

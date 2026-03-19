@@ -1,261 +1,374 @@
-// import React from 'react';
-// import Link from 'next/link';
-// import Image from 'next/image';
-
-// export default function Home() {
-//   return (
-//     <div className="min-h-screen">
-//       {/* Hero Section */}
-//       <section className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-20">
-//         <div className="container mx-auto px-4">
-//           <div className="max-w-4xl mx-auto text-center">
-//             <h1 className="text-5xl font-bold mb-6">
-//               Welcome to AlumniConnect
-//             </h1>
-//             <p className="text-xl mb-8 opacity-90">
-//               Connect with your alumni network, discover opportunities, and build lasting professional relationships
-//             </p>
-//             <div className="flex justify-center space-x-4">
-//               <Link href="/register" className="bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-secondary-100 transition-colors">
-//                 Join Now
-//               </Link>
-//               <Link href="/directory" className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-primary-600 transition-colors">
-//                 Explore Directory
-//               </Link>
-//             </div>
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Features Section */}
-//       <section className="py-16">
-//         <div className="container mx-auto px-4">
-//           <h2 className="text-3xl font-bold text-center mb-12 text-secondary-800">
-//             Why Join AlumniConnect?
-//           </h2>
-//           <div className="grid md:grid-cols-3 gap-8">
-//             <div className="card text-center">
-//               <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-//                 <svg className="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-//                 </svg>
-//               </div>
-//               <h3 className="text-xl font-semibold mb-3 text-secondary-800">Network & Connect</h3>
-//               <p className="text-secondary-600">
-//                 Build meaningful connections with alumni from your batch, department, or industry
-//               </p>
-//             </div>
-
-//             <div className="card text-center">
-//               <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-//                 <svg className="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
-//                 </svg>
-//               </div>
-//               <h3 className="text-xl font-semibold mb-3 text-secondary-800">Career Growth</h3>
-//               <p className="text-secondary-600">
-//                 Discover job opportunities and get mentorship from experienced professionals
-//               </p>
-//             </div>
-
-//             <div className="card text-center">
-//               <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-//                 <svg className="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-//                 </svg>
-//               </div>
-//               <h3 className="text-xl font-semibold mb-3 text-secondary-800">Events & Reunions</h3>
-//               <p className="text-secondary-600">
-//                 Stay updated with alumni events, reunions, and networking opportunities
-//               </p>
-//             </div>
-//           </div>
-//         </div>
-//       </section>
-
-//       {/* Statistics Section */}
-//       <section className="bg-secondary-100 py-16">
-//         <div className="container mx-auto px-4">
-//           <h2 className="text-3xl font-bold text-center mb-12 text-secondary-800">
-//             Our Growing Community
-//           </h2>
-//           <div className="grid md:grid-cols-4 gap-8 text-center">
-//             <div>
-//               <div className="text-4xl font-bold text-primary-600 mb-2">500+</div>
-//               <div className="text-secondary-600">Registered Alumni</div>
-//             </div>
-//             <div>
-//               <div className="text-4xl font-bold text-primary-600 mb-2">20+</div>
-//               <div className="text-secondary-600">Companies Represented</div>
-//             </div>
-//             <div>
-//               <div className="text-4xl font-bold text-primary-600 mb-2">10+</div>
-//               <div className="text-secondary-600">Batch Years</div>
-//             </div>
-//             <div>
-//               <div className="text-4xl font-bold text-primary-600 mb-2">5+</div>
-//               <div className="text-secondary-600">Departments</div>
-//             </div>
-//           </div>
-//         </div>
-//       </section>
-//     </div>
-//   );
-// }
-
 'use client';
 
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import StoriesFeed from '@/components/stories/StoriesFeed';
+import SeeMoreButton from '@/components/stories/SeeMoreButton';
 
+// ─── Stat Counter Card ────────────────────────────────────────────────────────
+function StatCard({ number, label, icon }) {
+  return (
+    <div className="group flex flex-col items-center gap-1 px-6 py-4
+                    bg-white/70 backdrop-blur-sm rounded-2xl border border-white/80
+                    shadow-sm hover:shadow-md hover:-translate-y-0.5
+                    transition-all duration-300 min-w-[120px]">
+      <span className="text-lg mb-0.5">{icon}</span>
+      <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+        {number}
+      </span>
+      <span className="text-xs text-slate-500 font-medium text-center leading-tight">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ─── Feature Card ─────────────────────────────────────────────────────────────
+function FeatureCard({ emoji, title, desc, accent }) {
+  const accents = {
+    blue:   { wrap: 'hover:border-blue-100',   icon: 'bg-blue-100',   text: 'group-hover:text-blue-600'   },
+    violet: { wrap: 'hover:border-violet-100', icon: 'bg-violet-100', text: 'group-hover:text-violet-600' },
+    rose:   { wrap: 'hover:border-rose-100',   icon: 'bg-rose-100',   text: 'group-hover:text-rose-600'   },
+  };
+  const a = accents[accent] || accents.blue;
+  return (
+    <div className={`group p-7 rounded-2xl bg-slate-50 border border-slate-100
+                     ${a.wrap} hover:bg-white hover:shadow-xl
+                     transition-all duration-300 cursor-default`}>
+      <div className={`w-14 h-14 ${a.icon} rounded-xl flex items-center
+                       justify-center text-2xl mb-5
+                       group-hover:scale-110 transition-transform duration-300`}>
+        {emoji}
+      </div>
+      <h3 className={`text-lg font-bold text-slate-900 mb-2 ${a.text} transition-colors`}>
+        {title}
+      </h3>
+      <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
+    </div>
+  );
+}
+
+// ─── Social Link Card ─────────────────────────────────────────────────────────
+function SocialCard({ href, icon, label, sub, hoverColor, bgColor }) {
+  return (
+    <a href={href} target={href.startsWith('mailto') ? undefined : '_blank'}
+       rel="noopener noreferrer"
+       className={`flex flex-col items-center p-6 bg-white rounded-2xl shadow-sm
+                   hover:shadow-lg transition-all duration-300 hover:-translate-y-1.5
+                   border border-slate-100 group`}>
+      <div className={`w-14 h-14 ${bgColor} rounded-full flex items-center
+                       justify-center mb-3 p-3
+                       group-hover:scale-110 transition-transform duration-300`}>
+        <img src={icon} alt={label} className="w-full h-full object-contain" />
+      </div>
+      <span className={`font-bold text-sm text-slate-700 ${hoverColor} transition-colors`}>
+        {label}
+      </span>
+      <span className="text-xs text-slate-400 mt-0.5">{sub}</span>
+    </a>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Home() {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
-      
-      {/* --- HERO SECTION --- */}
-      <section className="relative overflow-hidden pt-20 pb-32">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full z-0 pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-          <div className="absolute top-20 right-10 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute -bottom-8 left-1/2 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+    <div className="min-h-screen bg-[#f8f9fc]">
+
+      {/* ══════════════════════════════════════════════
+          HERO SECTION
+      ══════════════════════════════════════════════ */}
+      <section className="relative overflow-hidden pt-24 pb-28 sm:pt-28 sm:pb-36">
+
+        {/* Ambient blobs */}
+        <div aria-hidden className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-32 -left-32 w-[500px] h-[500px]
+                          bg-blue-300 rounded-full mix-blend-multiply
+                          filter blur-[120px] opacity-25 animate-blob" />
+          <div className="absolute -top-20 right-0 w-[400px] h-[400px]
+                          bg-indigo-300 rounded-full mix-blend-multiply
+                          filter blur-[100px] opacity-20 animate-blob animation-delay-2000" />
+          <div className="absolute bottom-0 left-1/3 w-[350px] h-[350px]
+                          bg-violet-300 rounded-full mix-blend-multiply
+                          filter blur-[100px] opacity-15 animate-blob animation-delay-4000" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-block px-4 py-1.5 mb-6 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-sm font-semibold tracking-wide shadow-sm">
-            🎓 Welcome to Xavier's Network
+        {/* Grid texture overlay */}
+        <div aria-hidden
+             className="absolute inset-0 pointer-events-none"
+             style={{
+               backgroundImage: `linear-gradient(rgba(148,163,184,0.07) 1px, transparent 1px),
+                                  linear-gradient(90deg, rgba(148,163,184,0.07) 1px, transparent 1px)`,
+               backgroundSize: '40px 40px',
+             }} />
+
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+
+          {/* Badge */}
+          <div className="animate-fade-in-up inline-flex items-center gap-2
+                          px-4 py-1.5 mb-7 rounded-full
+                          bg-gradient-to-r from-blue-50 to-indigo-50
+                          border border-blue-100 shadow-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full
+                               rounded-full bg-blue-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+            </span>
+            <span className="text-blue-600 text-sm font-semibold tracking-wide">
+              Xavier's Alumni Network — Est. 2013
+            </span>
           </div>
-          
-          <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight mb-6">
-            Connect with your <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-              Alumni Network
+
+          {/* Headline */}
+          <h1 className="animate-fade-in-up animation-delay-150
+                         text-5xl sm:text-6xl md:text-7xl font-black
+                         text-slate-900 tracking-tight leading-[1.08] mb-6">
+            Where Xaverians
+            <br />
+            <span className="relative inline-block mt-1">
+              <span className="text-transparent bg-clip-text
+                               bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-600">
+                Stay Connected
+              </span>
+              {/* Underline accent */}
+              <svg aria-hidden className="absolute -bottom-2 left-0 w-full"
+                   viewBox="0 0 300 8" preserveAspectRatio="none">
+                <path d="M0,5 Q75,0 150,5 Q225,10 300,5"
+                      fill="none" stroke="url(#uline)" strokeWidth="3"
+                      strokeLinecap="round" />
+                <defs>
+                  <linearGradient id="uline" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#3b82f6" />
+                    <stop offset="100%" stopColor="#8b5cf6" />
+                  </linearGradient>
+                </defs>
+              </svg>
             </span>
           </h1>
-          
-          <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Bridge the gap between graduation and professional success. 
-            Discover opportunities, mentorship, and lifelong friendships.
+
+          {/* Subtext */}
+          <p className="animate-fade-in-up animation-delay-300
+                        text-lg sm:text-xl text-slate-500 mb-10
+                        max-w-2xl mx-auto leading-relaxed font-light">
+            Bridge the gap between graduation and success.
+            Discover opportunities, mentorship, and lifelong friendships
+            — all in one place.
           </p>
-          
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
+
+          {/* CTA Buttons */}
+          <div className="animate-fade-in-up animation-delay-500
+                          flex flex-col sm:flex-row justify-center gap-4 mb-14">
             {user ? (
-              <Link href="/dashboard" className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-md bg-blue-600 px-8 font-medium text-white transition-all duration-300 hover:bg-blue-700 hover:scale-105 shadow-lg">
-                <span className="mr-2">Go to Dashboard</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              <Link href="/dashboard"
+                    className="group inline-flex h-13 items-center justify-center
+                               rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600
+                               px-8 py-3.5 font-semibold text-white text-base
+                               shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300
+                               hover:scale-[1.03] active:scale-[0.98]
+                               transition-all duration-200">
+                Go to Dashboard
+                <svg className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </Link>
             ) : (
-              <Link href="/register" className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-md bg-blue-600 px-8 font-medium text-white transition-all duration-300 hover:bg-blue-700 hover:scale-105 shadow-lg">
-                <span className="mr-2">Join Community</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              <Link href="/register"
+                    className="group inline-flex h-13 items-center justify-center
+                               rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600
+                               px-8 py-3.5 font-semibold text-white text-base
+                               shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300
+                               hover:scale-[1.03] active:scale-[0.98]
+                               transition-all duration-200">
+                Join the Community
+                <svg className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </Link>
             )}
-            <Link href="/directory" className="inline-flex h-12 items-center justify-center rounded-md border border-slate-200 bg-white px-8 font-medium text-slate-700 transition-all duration-300 hover:border-blue-300 hover:text-blue-600 hover:shadow-md hover:-translate-y-0.5">
+            <Link href="/directory"
+                  className="inline-flex h-13 items-center justify-center rounded-xl
+                             border-2 border-slate-200 bg-white px-8 py-3.5
+                             font-semibold text-slate-600 text-base
+                             hover:border-blue-300 hover:text-blue-600
+                             hover:shadow-md hover:-translate-y-0.5
+                             transition-all duration-200">
               Explore Directory
             </Link>
           </div>
+
+          {/* Stats Row */}
+          <div className="animate-fade-in-up animation-delay-700
+                          flex flex-wrap justify-center gap-3">
+            <StatCard number="500+" label="Alumni Connected"  icon="🎓" />
+            <StatCard number="20+" label="Events Hosted"     icon="📅" />
+            <StatCard number="5+"  label="Departments"       icon="🏛️" />
+          </div>
         </div>
       </section>
 
-      {/* --- FEATURES SECTION --- */}
-      <section className="py-20 bg-white relative">
+      {/* ══════════════════════════════════════════════
+          FEATURES SECTION
+      ══════════════════════════════════════════════ */}
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Why Join AlumniConnect?</h2>
-            <div className="w-20 h-1 bg-blue-600 mx-auto rounded-full"></div>
+
+          <div className="text-center mb-14">
+            <p className="text-blue-600 text-sm font-semibold uppercase tracking-widest mb-2">
+              Why AlumniConnect?
+            </p>
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-4">
+              Everything you need to grow
+            </h2>
+            <div className="w-14 h-1 bg-gradient-to-r from-blue-500 to-indigo-500
+                            mx-auto rounded-full" />
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="group p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-blue-100 hover:shadow-xl transition-all duration-300">
-              <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform duration-300">🤝</div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Strong Networking</h3>
-              <p className="text-slate-600">Connect with seniors and batchmates working in top companies globally.</p>
-            </div>
-            <div className="group p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-purple-100 hover:shadow-xl transition-all duration-300">
-              <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform duration-300">📅</div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Exclusive Events</h3>
-              <p className="text-slate-600">Get invited to reunions, tech talks, and career guidance workshops.</p>
-            </div>
-            <div className="group p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-pink-100 hover:shadow-xl transition-all duration-300">
-              <div className="w-14 h-14 bg-pink-100 rounded-xl flex items-center justify-center text-3xl mb-6 group-hover:scale-110 transition-transform duration-300">🚀</div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Career Growth</h3>
-              <p className="text-slate-600">Find job referrals, mentorship opportunities, and internships easily.</p>
-            </div>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <FeatureCard
+              emoji="🤝" accent="blue"
+              title="Strong Networking"
+              desc="Connect with seniors and batchmates working in top companies globally. Build relationships that last a lifetime." />
+            <FeatureCard
+              emoji="📅" accent="violet"
+              title="Exclusive Events"
+              desc="Get invited to reunions, tech talks, and career guidance workshops curated for Xaverians." />
+            <FeatureCard
+              emoji="🚀" accent="rose"
+              title="Career Growth"
+              desc="Find job referrals, mentorship opportunities, and internships — all through your trusted alumni network." />
           </div>
         </div>
       </section>
 
-      {/* ---  OFFICIAL LINKS SECTION WITH IMAGES  --- */}
-      <section className="py-16 bg-slate-50 border-t border-slate-200">
+      {/* ══════════════════════════════════════════════
+          ALUMNI STORIES SECTION
+      ══════════════════════════════════════════════ */}
+      <section className="py-20 bg-gradient-to-b from-slate-50 to-white
+                          border-t border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+          {/* Section header */}
+          <div className="flex flex-col sm:flex-row sm:items-end
+                          justify-between gap-4 mb-10">
+            <div>
+              <p className="text-blue-600 text-sm font-semibold
+                            uppercase tracking-widest mb-2">
+                Community
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-black text-slate-900
+                             leading-tight">
+                Alumni Stories
+              </h2>
+              <p className="text-slate-400 mt-2 text-sm">
+                Real journeys. Real inspiration.
+              </p>
+            </div>
+            {/* Decorative pill tags */}
+            <div className="flex gap-2 flex-wrap">
+              {['Career', 'Growth', 'Mentorship', 'Success'].map((tag) => (
+                <span key={tag}
+                      className="px-3 py-1 text-xs font-semibold rounded-full
+                                 bg-blue-50 text-blue-600 border border-blue-100">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Horizontal scroll stories feed */}
+          <StoriesFeed previewMode={true} currentUser={user} />
+
+          {/* See More */}
+          <div className="mt-10 flex justify-center">
+            <SeeMoreButton />
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
+          CONNECT WITH US SECTION
+      ══════════════════════════════════════════════ */}
+      <section className="py-16 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-slate-900 mb-2">Connect With Us</h2>
-          <p className="text-slate-500 mb-12">Follow our official channels for updates</p>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            
-            {/* 1. College Website */}
-            <a href="https://xup.ac.in/" target="_blank" rel="noopener noreferrer" 
-               className="flex flex-col items-center p-6 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-slate-100 group">
-              <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-100 transition-colors p-3">
-                {/* IMAGE TAG HERE */}
-                <img src="/icons/school.png" alt="College Logo" className="w-full h-full object-contain" />
-              </div>
-              <span className="font-bold text-slate-700 group-hover:text-blue-600">Official Website</span>
-              <span className="text-xs text-slate-400 mt-1">xavier.edu</span>
-            </a>
+          <p className="text-blue-600 text-sm font-semibold
+                        uppercase tracking-widest mb-2">
+            Stay Updated
+          </p>
+          <h2 className="text-3xl font-black text-slate-900 mb-2">
+            Connect With Us
+          </h2>
+          <p className="text-slate-400 mb-10 text-sm">
+            Follow our official channels for the latest updates
+          </p>
 
-            {/* 2. LinkedIn */}
-            <a href="https://www.linkedin.com/in/xavier-alumni-association-541846322/" target="_blank" rel="noopener noreferrer"
-               className="flex flex-col items-center p-6 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-slate-100 group">
-              <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-100 transition-colors p-3">
-                {/* IMAGE TAG HERE */}
-                <img src="/icons/linkedin.png" alt="LinkedIn" className="w-full h-full object-contain" />
-              </div>
-              <span className="font-bold text-slate-700 group-hover:text-blue-700">LinkedIn</span>
-              <span className="text-xs text-slate-400 mt-1">Professional Network</span>
-            </a>
-
-            {/* 3. Instagram */}
-            <a href="https://www.instagram.com/xavieralumniassociation/" target="_blank" rel="noopener noreferrer"
-               className="flex flex-col items-center p-6 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-slate-100 group">
-              <div className="w-16 h-16 bg-pink-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-pink-100 transition-colors p-3">
-                {/* IMAGE TAG HERE */}
-                <img src="/icons/instagram.png" alt="Instagram" className="w-full h-full object-contain" />
-              </div>
-              <span className="font-bold text-slate-700 group-hover:text-pink-600">Instagram</span>
-              <span className="text-xs text-slate-400 mt-1">@xavieralumni</span>
-            </a>
-
-            {/* 4. Contact Email */}
-            <a href="mailto:sxcmt.alumniassociation@gmail.com"
-               className="flex flex-col items-center p-6 bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-slate-100 group">
-              <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-4 group-hover:bg-green-100 transition-colors p-3">
-                {/* IMAGE TAG HERE */}
-                <img src="/icons/email.png" alt="Email" className="w-full h-full object-contain" />
-              </div>
-              <span className="font-bold text-slate-700 group-hover:text-green-600">Contact Us</span>
-              <span className="text-xs text-slate-400 mt-1">alumni@xaviers.edu</span>
-            </a>
-
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5 max-w-3xl mx-auto">
+            <SocialCard
+              href="https://xup.ac.in/" icon="/icons/school.png"
+              label="Official Website" sub="xavier.edu"
+              bgColor="bg-blue-50" hoverColor="group-hover:text-blue-600" />
+            <SocialCard
+              href="https://www.linkedin.com/in/xavier-alumni-association-541846322/"
+              icon="/icons/linkedin.png" label="LinkedIn" sub="Professional Network"
+              bgColor="bg-sky-50" hoverColor="group-hover:text-sky-700" />
+            <SocialCard
+              href="https://www.instagram.com/xavieralumniassociation/"
+              icon="/icons/instagram.png" label="Instagram" sub="@xavieralumni"
+              bgColor="bg-pink-50" hoverColor="group-hover:text-pink-600" />
+            <SocialCard
+              href="mailto:sxcmt.alumniassociation@gmail.com"
+              icon="/icons/email.png" label="Contact Us" sub="Get in touch"
+              bgColor="bg-emerald-50" hoverColor="group-hover:text-emerald-600" />
           </div>
         </div>
       </section>
 
-      {/* --- FOOTER CTA --- */}
-      <section className="py-20 bg-slate-900 text-white text-center">
-        <div className="max-w-4xl mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-6">Ready to reconnect?</h2>
-          <p className="text-slate-400 mb-8 text-lg">
-            Join thousands of alumni who are already part of this growing community.
+      {/* ══════════════════════════════════════════════
+          FOOTER CTA
+      ══════════════════════════════════════════════ */}
+      <section className="relative overflow-hidden py-24 bg-slate-950 text-white text-center">
+        {/* Glow */}
+        <div aria-hidden
+             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+                        w-[600px] h-[300px] bg-blue-600/20
+                        rounded-full filter blur-[100px] pointer-events-none" />
+        <div className="relative z-10 max-w-3xl mx-auto px-4">
+          <div className="inline-block px-4 py-1 mb-6 rounded-full
+                          bg-white/10 border border-white/10
+                          text-white/70 text-xs font-semibold tracking-widest uppercase">
+            Join the Network
+          </div>
+          <h2 className="text-4xl sm:text-5xl font-black mb-5 leading-tight">
+            Ready to reconnect
+            <span className="text-transparent bg-clip-text
+                             bg-gradient-to-r from-blue-400 to-violet-400">
+              ?
+            </span>
+          </h2>
+          <p className="text-slate-400 mb-10 text-base sm:text-lg leading-relaxed max-w-xl mx-auto">
+            Join thousands of alumni who are already part of
+            this growing community.
           </p>
           {!user && (
-            <Link href="/register" className="inline-block bg-white text-slate-900 px-8 py-3 rounded-full font-bold hover:bg-blue-50 transition-colors shadow-lg hover:shadow-xl hover:-translate-y-0.5 transform">
-              Get Started for Free
+            <Link href="/register"
+                  className="inline-flex items-center gap-2
+                             bg-white text-slate-900 px-8 py-3.5 rounded-full
+                             font-bold text-base hover:bg-blue-50
+                             transition-all duration-200 shadow-lg
+                             hover:shadow-2xl hover:-translate-y-0.5">
+              Get Started — It's Free
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round"
+                      strokeLinejoin="round"/>
+              </svg>
             </Link>
           )}
         </div>
       </section>
+
     </div>
   );
 }

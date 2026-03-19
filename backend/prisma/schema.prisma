@@ -13,20 +13,82 @@ model User {
   email        String   @unique
   passwordHash String
   role         Role     @default(STUDENT)
-  rollNo       String   @unique  
-  isVerified   Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  rollNo       String   @unique
+  isVerified   Boolean    @default(false)
+  emailVerified   Boolean   @default(false)
+  emailOtp        String?
+  emailOtpExpiry  DateTime?
+  status       UserStatus @default(UNVERIFIED)
+  createdAt    DateTime   @default(now())
   updatedAt    DateTime @updatedAt
   resetToken       String?
   resetTokenExpiry DateTime?
-  
+
   // Relations...
   alumniProfile AlumniProfile?
   jobs          Job[]
   events        Event[]
   registrations EventRegistration[]
-  
+
+  // Chat relations
+  conversations ConversationMember[]
+  sentMessages  Message[]
+
+  // Connection relations
+  sentConnectionRequests     ConnectionRequest[] @relation("SentRequests")
+  receivedConnectionRequests ConnectionRequest[] @relation("ReceivedRequests")
+  connectionsAsUser          UserConnection[]    @relation("UserConnections")
+  connectionsAsConnection    UserConnection[]    @relation("ConnectionUsers")
+
+  // Story relations
+  stories Story[]
+
   @@map("users")
+}
+
+// ─── Chat Models ──────────────────────────────────────────────────────────────
+
+model Conversation {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members  ConversationMember[]
+  messages Message[]
+
+  @@map("conversations")
+}
+
+model ConversationMember {
+  id             String   @id @default(uuid())
+  conversationId String
+  userId         String
+  joinedAt       DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([conversationId])
+  @@map("conversation_members")
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String
+  isSeen         Boolean  @default(false)
+  isDeleted      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("messages")
 }
 
 model AlumniProfile {
@@ -61,30 +123,54 @@ model Event {
   imageUrl    String?
   isActive    Boolean  @default(true)
 
-  // 👇 Ye wali line add karni hai (Audience ke liye)
+  // (Audience ke liye)
   targetAudience String @default("ALL") 
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  // 👇 Ye Naya Connection Hai (Jo pehle se tha)
-  postedBy    User     @relation(fields: [postedById], references: [id])
+  // (Jo pehle se tha)
+  postedBy    User     @relation(fields: [postedById], references: [id], onDelete: Cascade)
   postedById  String
 
   registrations EventRegistration[]
-   
+
   @@map("events")
 }
 
-model Connection {
-  id         String           @id @default(uuid())
-  alumniId   String
-  studentId  String
-  status     ConnectionStatus @default(PENDING)
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-  
-  @@map("connections")
+// ─── Connection Models ─────────────────────────────────────────────────────────
+
+/// Pending / accepted / rejected connection requests between two users.
+model ConnectionRequest {
+  id         String            @id @default(uuid())
+  senderId   String
+  receiverId String
+  status     ConnectionStatus  @default(PENDING)
+  createdAt  DateTime          @default(now())
+
+  sender   User @relation("SentRequests",      fields: [senderId],   references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedRequests",   fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId])
+  @@index([senderId])
+  @@map("connection_requests")
+}
+
+/// Bidirectional adjacency list — one row per direction (A→B and B→A).
+/// Both rows are always inserted together in a transaction on accept.
+model UserConnection {
+  userId       String
+  connectionId String
+  createdAt    DateTime @default(now())
+
+  user       User @relation("UserConnections",  fields: [userId],       references: [id], onDelete: Cascade)
+  connection User @relation("ConnectionUsers",   fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, connectionId])
+  @@index([userId])
+  @@index([connectionId])
+  @@map("user_connections")
 }
 
 enum Role {
@@ -93,9 +179,22 @@ enum Role {
   STUDENT
 }
 
+enum UserStatus {
+  UNVERIFIED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum ConnectionStatus {
   PENDING
   ACCEPTED
+  REJECTED
+}
+
+enum StoryStatus {
+  PENDING
+  APPROVED
   REJECTED
 }
 
@@ -108,7 +207,7 @@ model Job {
   type        String   // Full-time, Internship, etc.
   description String
   applyLink   String?  // Agar koi Google Form link hai
-  postedBy    User     @relation(fields: [postedById], references: [id])
+  postedBy    User     @relation(fields: [postedById], references: [id], onDelete: Cascade)
   postedById  String
   createdAt   DateTime @default(now())
 }
@@ -116,12 +215,26 @@ model Job {
 // --- Event Registration Model (New) ---
 model EventRegistration {
   id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    String
-  event     Event    @relation(fields: [eventId], references: [id])
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId   String
   createdAt DateTime @default(now())
 
   @@unique([userId, eventId]) // Taaki ek banda do baar register na kare
 }
 
+// --- Story Model ---
+model Story {
+  id        String      @id @default(uuid())
+  title     String
+  content   String      @db.Text
+  status    StoryStatus @default(PENDING)
+  authorId  String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("stories")
+}

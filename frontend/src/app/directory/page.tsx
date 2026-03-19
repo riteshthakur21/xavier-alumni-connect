@@ -1,385 +1,16 @@
-// 'use client';
-
-// import React, { useState, useEffect } from 'react';
-// import axios from 'axios';
-// import { useAuth } from '@/contexts/AuthContext';
-// import Link from 'next/link';
-
-// export default function Directory() {
-//   const [users, setUsers] = useState<any[]>([]);
-//   const [loading, setLoading] = useState(true);
-
-//   // Search & Filters State
-//   const [searchTerm, setSearchTerm] = useState('');
-//   const [selectedDept, setSelectedDept] = useState('');
-//   const [selectedRole, setSelectedRole] = useState('');
-
-//   // 1. Data lana (API Call)
-//   useEffect(() => {
-//     const fetchUsers = async () => {
-//       try {
-//         const res = await axios.get('http://localhost:5000/api/users');
-//         setUsers(res.data.users || []);
-//       } catch (error) {
-//         console.error('Error fetching directory:', error);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     fetchUsers();
-//   }, []);
-
-//   // 2. Filter Logic
-//   const filteredUsers = users.filter((u) => {
-//     // Search (Name or Company)
-//     const nameMatch = u.name ? u.name.toLowerCase().includes(searchTerm.toLowerCase()) : false;
-//     const companyMatch = u.currentCompany ? u.currentCompany.toLowerCase().includes(searchTerm.toLowerCase()) : false;
-//     const matchesSearch = nameMatch || companyMatch;
-
-//     // Dept Filter
-//     const matchesDept = selectedDept ? u.department === selectedDept : true;
-
-//     // Role Filter (Alumni/Student)
-//     const matchesRole = selectedRole ? u.role === selectedRole : true;
-
-//     return matchesSearch && matchesDept && matchesRole;
-//   });
-
-//   // --- YAHAN CHANGE KIYA HAI 👇 ---
-//   const departments = ['BBA', 'BCA', 'BCOM (P)', 'BBA (IB)', 'BA (JMC)'];
-
-//   return (
-//     <div className="min-h-screen bg-slate-50 py-8 px-4 sm:px-6 lg:px-8">
-//       <div className="max-w-7xl mx-auto">
-
-//         {/* Header Section */}
-//         <div className="text-center mb-10">
-//           <h1 className="text-3xl font-bold text-slate-900">Alumni Directory</h1>
-//           <p className="text-slate-600 mt-2">Find and connect with your batchmates and seniors</p>
-//         </div>
-
-//         {/* Search & Filters Box */}
-//         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-8 sticky top-4 z-10">
-//           <div className="grid md:grid-cols-4 gap-4">
-
-//             {/* Search Bar */}
-//             <div className="md:col-span-2">
-//               <input
-//                 type="text"
-//                 placeholder="🔍 Search by name or company..."
-//                 className="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-//                 value={searchTerm}
-//                 onChange={(e) => setSearchTerm(e.target.value)}
-//               />
-//             </div>
-
-//             {/* Department Filter */}
-//             <select
-//               className="px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-//               value={selectedDept}
-//               onChange={(e) => setSelectedDept(e.target.value)}
-//             >
-//               <option value="">All Departments</option>
-//               {departments.map(dept => (
-//                 <option key={dept} value={dept}>{dept}</option>
-//               ))}
-//             </select>
-
-//             {/* Role Filter */}
-//             <select
-//               className="px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-//               value={selectedRole}
-//               onChange={(e) => setSelectedRole(e.target.value)}
-//             >
-//               <option value="">All Roles</option>
-//               <option value="ALUMNI">Alumni</option>
-//               <option value="STUDENT">Students</option>
-//             </select>
-//           </div>
-//         </div>
-
-//         {/* Results Grid */}
-//         {loading ? (
-//           <div className="text-center py-12">Loading directory...</div>
-//         ) : (
-//           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-//             {filteredUsers.length > 0 ? (
-//               filteredUsers.map((profile) => (
-//                 <div key={profile.id} className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-shadow">
-//                   <div className="flex items-start gap-4">
-//                     {/* Avatar */}
-//                     <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-2xl flex-shrink-0 overflow-hidden">
-//                       {profile.profileImage ? (
-//                         <img
-//                           src={`http://localhost:5000/${profile.profileImage.replace(/\\/g, '/').replace(/^\/+/, '')}`}
-//                           alt={profile.name}
-//                           className="w-full h-full object-cover"
-//                         />
-//                       ) : (
-//                         profile.name.charAt(0)
-//                       )}
-//                     </div>
-
-//                     {/* Info */}
-//                     <div className="flex-1">
-//                       <h3 className="font-bold text-lg text-slate-900">{profile.name}</h3>
-//                       <p className="text-sm text-blue-600 font-medium mb-1">{profile.role}</p>
-
-//                       <div className="text-sm text-slate-500 space-y-1">
-//                         {profile.role === 'ALUMNI' && profile.currentCompany && (
-//                           <p>🏢 {profile.currentCompany} {profile.jobTitle ? `• ${profile.jobTitle}` : ''}</p>
-//                         )}
-//                         <p>🎓 {profile.department} ({profile.batchYear})</p>
-//                       </div>
-
-//                       {/* Buttons Area */}
-//                       <div className="mt-4 flex gap-3">
-//                         {/* Primary Button: View Profile */}
-//                         <Link
-//                           href={`/profile/${profile.id}`}
-//                           className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 active:scale-95 transition-all shadow-sm hover:shadow-md"
-//                         >
-//                           View Profile
-//                         </Link>
-
-//                         {/* Secondary Button: Email Icon */}
-//                         <a
-//                           href={`mailto:${profile.email}`}
-//                           className="inline-flex items-center justify-center px-4 py-2.5 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 hover:text-slate-900 border border-slate-200 active:scale-95 transition-all"
-//                           title="Send Email"
-//                         >
-//                           {/* SVG Mail Icon (Professional Look) */}
-//                           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-//                             <rect width="20" height="16" x="2" y="4" rx="2" />
-//                             <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-//                           </svg>
-//                         </a>
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </div>
-//               ))
-//             ) : (
-//               <div className="col-span-full text-center py-12 text-slate-500">
-//                 No profiles found matching your search.
-//               </div>
-//             )}
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
-
-// 'use client';
-
-// import React, { useState, useEffect } from 'react';
-// import axios from 'axios';
-// import Link from 'next/link';
-// import { useRouter } from 'next/navigation'; // 👈 Redirect ke liye
-// import { useAuth } from '@/contexts/AuthContext'; // 👈 Auth check ke liye
-// import toast from 'react-hot-toast';
-
-// export default function Directory() {
-//   const { user } = useAuth(); // Auth status check karne ke liye
-//   const router = useRouter();
-
-//   const [users, setUsers] = useState<any[]>([]);
-//   const [loading, setLoading] = useState(true);
-
-//   const [searchTerm, setSearchTerm] = useState('');
-//   const [selectedDept, setSelectedDept] = useState('');
-//   const [selectedRole, setSelectedRole] = useState('');
-//   const [selectedYear, setSelectedYear] = useState('');
-
-//   useEffect(() => {
-//     const fetchUsers = async () => {
-//       try {
-//         const res = await axios.get('http://localhost:5000/api/users');
-//         setUsers(res.data.users || []);
-//       } catch (error) {
-//         toast.error('Failed to load directory');
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     fetchUsers();
-//   }, []);
-
-//   // --- Protected Action Helper 🛡️ ---
-//   const handleProtectedAction = (e: React.MouseEvent, targetPath?: string) => {
-//     if (!user) {
-//       e.preventDefault();
-//       toast.error('Please login first! 🔒');
-//       router.push('/login');
-//       return false;
-//     }
-//     if (targetPath) router.push(targetPath);
-//     return true;
-//   };
-
-//   const currentYear = 2026;
-//   const startYear = 2013;
-
-//   const years = Array.from(
-//     { length: currentYear - startYear + 1 },
-//     (_, i) => currentYear - i
-//   );
-
-//   const filteredUsers = users.filter((u) => {
-//     const matchesSearch =
-//       u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//       u.currentCompany?.toLowerCase().includes(searchTerm.toLowerCase());
-
-//     const matchesDept = selectedDept ? u.department === selectedDept : true;
-//     const matchesRole = selectedRole ? u.role === selectedRole : true;
-//     const matchesYear = selectedYear ? u.batchYear?.toString() === selectedYear : true;
-
-//     return matchesSearch && matchesDept && matchesRole && matchesYear;
-//   });
-
-//   const departments = ['BBA', 'BCA', 'BCOM (P)', 'BBA (IB)', 'BA (JMC)'];
-
-//   if (loading) return <div className="p-20 text-center animate-pulse font-bold text-slate-500 text-xl">Loading directory... 🔍</div>;
-
-//   return (
-//     <div className="min-h-screen bg-slate-50 py-6 px-4 sm:px-6 lg:px-8">
-//       <div className="max-w-7xl mx-auto">
-
-//         <div className="text-center mb-8">
-//           <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Alumni Directory</h1>
-//           <p className="text-slate-600 mt-2 text-sm sm:text-base">Connect with batchmates, seniors, and juniors across generations.</p>
-//         </div>
-
-//         {/* --- FILTER BAR (Intact) --- */}
-//         <div className="bg-white p-4 sm:p-6 rounded-3xl shadow-sm border border-slate-200 mb-8 sticky top-4 z-30">
-//           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-//             <div className="lg:col-span-1">
-//               <input
-//                 type="text"
-//                 placeholder="🔍 Search name/company..."
-//                 className="w-full px-4 py-3 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-50 focus:border-blue-500 outline-none transition-all text-sm font-medium"
-//                 value={searchTerm}
-//                 onChange={(e) => setSearchTerm(e.target.value)}
-//               />
-//             </div>
-
-//             <select
-//               className="px-4 py-3 rounded-2xl border border-slate-200 outline-none bg-slate-50 font-semibold text-slate-700 text-sm cursor-pointer"
-//               value={selectedDept}
-//               onChange={(e) => setSelectedDept(e.target.value)}
-//             >
-//               <option value="">All Departments</option>
-//               {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
-//             </select>
-
-//             <select
-//               className="px-4 py-3 rounded-2xl border border-slate-200 outline-none bg-slate-50 font-semibold text-slate-700 text-sm cursor-pointer"
-//               value={selectedYear}
-//               onChange={(e) => setSelectedYear(e.target.value)}
-//             >
-//               <option value="">All Batches</option>
-//               {years.map(year => (
-//                 <option key={year} value={year}>{year}</option>
-//               ))}
-//             </select>
-
-//             <select
-//               className="px-4 py-3 rounded-2xl border border-slate-200 outline-none bg-slate-50 font-semibold text-slate-700 text-sm cursor-pointer"
-//               value={selectedRole}
-//               onChange={(e) => setSelectedRole(e.target.value)}
-//             >
-//               <option value="">All Roles</option>
-//               <option value="ALUMNI">Alumni</option>
-//               <option value="STUDENT">Students</option>
-//             </select>
-
-//             <button
-//               onClick={() => { setSearchTerm(''); setSelectedDept(''); setSelectedRole(''); setSelectedYear(''); }}
-//               className="px-4 py-3 bg-red-50 text-red-600 rounded-2xl font-bold text-xs hover:bg-red-100 transition-all"
-//             >
-//               Reset Filters
-//             </button>
-//           </div>
-//         </div>
-
-//         {/* --- RESULTS GRID --- */}
-//         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-//           {filteredUsers.length > 0 ? (
-//             filteredUsers.map((profile) => (
-//               <div key={profile.id} className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col group">
-//                 <div className="flex items-start gap-4">
-//                   {/* Directory Card Profile Image Container */}
-//                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center text-blue-600 font-bold text-2xl sm:text-3xl flex-shrink-0 overflow-hidden group-hover:scale-105 transition-transform">
-//                     {profile.alumniProfile?.photoUrl ? (
-//                       <img
-//                         src={profile.alumniProfile.photoUrl} // ✅ Direct Cloudinary link (No localhost!)
-//                         alt={profile.name}
-//                         className="w-full h-full object-cover"
-//                         onError={(e) => { e.currentTarget.style.display = 'none' }}
-//                       />
-//                     ) : (
-//                       profile.name.charAt(0) // Default: Name ka pehla letter agar photo na ho
-//                     )}
-//                   </div>
-
-//                   <div className="flex-1 min-w-0">
-//                     <h3 className="font-extrabold text-lg text-slate-900 truncate group-hover:text-blue-600 transition-colors">{profile.name}</h3>
-//                     <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest mb-2 ${profile.role === 'ALUMNI' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'}`}>
-//                       {profile.role}
-//                     </span>
-//                     <div className="text-sm text-slate-500 space-y-1 font-medium">
-//                       {profile.role === 'ALUMNI' && profile.currentCompany && <p className="truncate">🏢 {profile.currentCompany}</p>}
-//                       <p className="truncate">🎓 {profile.department} • {profile.batchYear}</p>
-//                     </div>
-//                   </div>
-//                 </div>
-
-//                 {/* --- PROTECTED ACTIONS SECTION (FIXED) --- */}
-//                 <div className="mt-6 flex gap-3">
-//                   {/* View Profile Button: Pehle check karega login */}
-//                   <button
-//                     onClick={(e) => handleProtectedAction(e, `/profile/${profile.id}`)}
-//                     className="flex-1 inline-flex items-center justify-center px-4 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 active:scale-95 transition-all shadow-lg shadow-blue-100"
-//                   >
-//                     View Profile
-//                   </button>
-
-//                   {/* Email Button: Ye bhi ab protected hai */}
-//                   <button
-//                     onClick={(e) => {
-//                       if (handleProtectedAction(e)) {
-//                         window.location.href = `mailto:${profile.email}`;
-//                       }
-//                     }}
-//                     className="inline-flex items-center justify-center w-12 h-12 bg-slate-50 text-slate-600 rounded-xl hover:bg-blue-50 hover:text-blue-600 border border-slate-100 transition-all"
-//                   >
-//                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-//                       <rect width="20" height="16" x="2" y="4" rx="2" />
-//                       <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-//                     </svg>
-//                   </button>
-//                 </div>
-//               </div>
-//             ))
-//           ) : (
-//             <div className="col-span-full text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200">
-//               <p className="text-xl text-slate-400 font-bold">No results found.</p>
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { UserPlus, UserCheck, Clock, X, Check } from 'lucide-react';
+
+type ConnStatus = 'idle' | 'self' | 'not_connected' | 'pending_sent' | 'pending_received' | 'connected';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function Directory() {
   const { user } = useAuth();
@@ -390,15 +21,18 @@ export default function Directory() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDept, setSelectedDept] = useState('');
-  const [selectedRole, setSelectedRole] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
+
+  // ── Connection state (per-card) ──────────────────────────────────────────────
+  const [connStatuses, setConnStatuses] = useState<Record<string, ConnStatus>>({});
+  const [connRequestIds, setConnRequestIds] = useState<Record<string, string | null>>({});
+  const [connLoadingIds, setConnLoadingIds] = useState<Record<string, boolean>>({});
 
   // 1. Fetch Users Logic (Corrected Route & Nested Data)
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        // Backend route must match: /api/alumni
-        const res = await axios.get('http://localhost:5000/api/alumni');
+        const res = await axios.get(`${API_URL}/api/alumni`);
         setUsers(res.data.alumni || []);
       } catch (error) {
         toast.error('Failed to load directory');
@@ -409,7 +43,100 @@ export default function Directory() {
     fetchUsers();
   }, []);
 
-  // 2. Protected Action Helper (Login Check)
+  // 2. Batch-fetch connection statuses once users are loaded
+  useEffect(() => {
+    if (!user || users.length === 0) return;
+    const token = Cookies.get('token');
+    if (!token) return;
+    const fetchStatuses = async () => {
+      const results = await Promise.allSettled(
+        users.map((u) =>
+          axios.get(`${API_URL}/api/connections/status/${u.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        )
+      );
+      const newStatuses: Record<string, ConnStatus> = {};
+      const newRequestIds: Record<string, string | null> = {};
+      results.forEach((result, i) => {
+        const uid = users[i].id;
+        if (result.status === 'fulfilled') {
+          newStatuses[uid] = result.value.data.status;
+          newRequestIds[uid] = result.value.data.requestId ?? null;
+        } else {
+          newStatuses[uid] = 'not_connected';
+          newRequestIds[uid] = null;
+        }
+      });
+      setConnStatuses(newStatuses);
+      setConnRequestIds(newRequestIds);
+    };
+    fetchStatuses();
+  }, [users, user]);
+
+  // ── Connection action handlers ────────────────────────────────────────────────
+  const handleConnect = async (e: React.MouseEvent, targetId: string) => {
+    e.stopPropagation();
+    if (!user) { toast.error('Please login first!'); router.push('/login'); return; }
+    const token = Cookies.get('token');
+    setConnLoadingIds((p) => ({ ...p, [targetId]: true }));
+    try {
+      await axios.post(`${API_URL}/api/connections/send/${targetId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success('Connection request sent!');
+      setConnStatuses((p) => ({ ...p, [targetId]: 'pending_sent' }));
+    } catch (err: unknown) {
+      const msg = axios.isAxiosError(err) ? err.response?.data?.error : 'Failed to send request';
+      toast.error(msg || 'Failed to send request');
+    } finally {
+      setConnLoadingIds((p) => ({ ...p, [targetId]: false }));
+    }
+  };
+
+  const handleCancelConn = async (e: React.MouseEvent, targetId: string) => {
+    e.stopPropagation();
+    const requestId = connRequestIds[targetId];
+    if (!requestId) return;
+    const token = Cookies.get('token');
+    setConnLoadingIds((p) => ({ ...p, [targetId]: true }));
+    try {
+      await axios.post(`${API_URL}/api/connections/cancel/${requestId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success('Request cancelled');
+      setConnStatuses((p) => ({ ...p, [targetId]: 'not_connected' }));
+      setConnRequestIds((p) => ({ ...p, [targetId]: null }));
+    } catch (err: unknown) {
+      const msg = axios.isAxiosError(err) ? err.response?.data?.error : 'Failed to cancel';
+      toast.error(msg || 'Failed to cancel');
+    } finally {
+      setConnLoadingIds((p) => ({ ...p, [targetId]: false }));
+    }
+  };
+
+  const handleAcceptConn = async (e: React.MouseEvent, targetId: string) => {
+    e.stopPropagation();
+    const requestId = connRequestIds[targetId];
+    if (!requestId) return;
+    const token = Cookies.get('token');
+    setConnLoadingIds((p) => ({ ...p, [targetId]: true }));
+    try {
+      await axios.post(`${API_URL}/api/connections/accept/${requestId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success('Connected!');
+      setConnStatuses((p) => ({ ...p, [targetId]: 'connected' }));
+      setConnRequestIds((p) => ({ ...p, [targetId]: null }));
+    } catch (err: unknown) {
+      const msg = axios.isAxiosError(err) ? err.response?.data?.error : 'Failed to accept';
+      toast.error(msg || 'Failed to accept');
+    } finally {
+      setConnLoadingIds((p) => ({ ...p, [targetId]: false }));
+    }
+  };
+
+  // 3. Protected Action Helper (Login Check)
   const handleProtectedAction = (e: React.MouseEvent, targetPath?: string) => {
     if (!user) {
       e.preventDefault();
@@ -421,7 +148,7 @@ export default function Directory() {
     return true;
   };
 
-  // 3. Filter Logic (Checking Nested alumniProfile Fields)
+  // Filter Logic (Checking Nested alumniProfile Fields)
   const filteredUsers = users.filter((u) => {
     const profile = u.alumniProfile || {}; // Accessing nested data
 
@@ -430,19 +157,18 @@ export default function Directory() {
       profile.company?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesDept = selectedDept ? profile.department === selectedDept : true;
-    const matchesRole = selectedRole ? u.role === selectedRole : true;
     const matchesYear = selectedYear ? profile.batchYear?.toString() === selectedYear : true;
 
-    return matchesSearch && matchesDept && matchesRole && matchesYear;
+    return matchesSearch && matchesDept && matchesYear;
   });
 
-  const years = Array.from({ length: 2026 - 2013 + 1 }, (_, i) => 2026 - i);
+  const years = Array.from({ length: 2026 - 2009 + 1 }, (_, i) => 2026 - i);
   const departments = ['BBA', 'BCA', 'BCOM (P)', 'BBA (IB)', 'BA (JMC)'];
 
   if (loading) return <div className="p-20 text-center animate-pulse font-black text-slate-400 text-xl">Loading Xavier Alumni Directory... 🔍</div>;
 
   return (
-    <div className="min-h-screen bg-slate-50 py-6 px-4">
+    <div className="min-h-screen bg-slate-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
@@ -490,7 +216,7 @@ export default function Directory() {
           </div>
 
           {/* Filters Container (Adapts on mobile) */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full md:w-auto">
+          <div className="flex flex-row gap-2 sm:gap-4 w-full md:w-auto">
 
             {/* Department Dropdown with custom arrow */}
             <div className="relative flex-1 sm:w-44">
@@ -529,12 +255,12 @@ export default function Directory() {
             {/* Refined Reset Button */}
             <button
               onClick={() => { setSearchTerm(''); setSelectedDept(''); setSelectedYear(''); }}
-              className="flex items-center justify-center gap-2 px-6 py-3.5 sm:py-4 bg-red-50 text-red-600 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm hover:bg-red-500 hover:text-white transition-all duration-300 active:scale-95 border border-red-100 hover:border-red-500"
+              className="flex items-center justify-center gap-2 px-3 sm:px-6 py-3.5 sm:py-4 bg-red-50 text-red-600 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm hover:bg-red-500 hover:text-white transition-all duration-300 active:scale-95 border border-red-100 hover:border-red-500 flex-shrink-0"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span className="sm:hidden lg:inline">Reset</span>
+              <span className="hidden lg:inline">Reset</span>
             </button>
 
           </div>
@@ -644,10 +370,13 @@ export default function Directory() {
                     <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[1.25rem] sm:rounded-[1.5rem] bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center text-blue-600 font-black text-2xl sm:text-3xl overflow-hidden border-[3px] border-white shadow-md">
                       {profile.alumniProfile?.photoUrl ? (
                         <img
-                          src={profile.alumniProfile.photoUrl}
+                          src={
+                            profile.alumniProfile.photoUrl.startsWith('http')
+                              ? profile.alumniProfile.photoUrl
+                              : `${API_URL}/${profile.alumniProfile.photoUrl.replace(/^\/+/, '').replace(/\\/g, '/')}`
+                          }
                           alt={profile.name}
                           className="w-full h-full object-cover"
-                          // ✅ FIX: Logic untouched
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
                             e.currentTarget.parentElement!.innerHTML = `<span class="text-blue-600 font-black">${profile.name?.charAt(0) || 'X'}</span>`;
@@ -695,7 +424,7 @@ export default function Directory() {
                   )}
                 </div>
 
-                {/* --- Actions (View Profile & Fixed SVG Mail) --- */}
+                {/* --- Actions (View Profile, Connect & Email) --- */}
                 <div className="mt-5 sm:mt-6 flex gap-2 sm:gap-3 items-center">
                   <button
                     onClick={(e) => handleProtectedAction(e, `/profile/${profile.id}`)}
@@ -703,6 +432,49 @@ export default function Directory() {
                   >
                     VIEW PROFILE
                   </button>
+
+                  {/* Connection Button — adapts per status */}
+                  {(() => {
+                    const cs = connStatuses[profile.id];
+                    const isLoading = connLoadingIds[profile.id];
+                    if (!user || cs === 'self' || cs === undefined) return null;
+                    if (cs === 'connected') return (
+                      <span title="Connected" className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center bg-green-50 text-green-600 rounded-xl sm:rounded-2xl border border-green-200 flex-shrink-0">
+                        <UserCheck className="w-5 h-5" />
+                      </span>
+                    );
+                    if (cs === 'pending_sent') return (
+                      <button
+                        onClick={(e) => handleCancelConn(e, profile.id)}
+                        disabled={isLoading}
+                        title="Request sent – click to cancel"
+                        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center bg-amber-50 text-amber-600 rounded-xl sm:rounded-2xl border border-amber-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all flex-shrink-0 group/cs disabled:opacity-60 active:scale-95"
+                      >
+                        <Clock className="w-5 h-5 group-hover/cs:hidden" />
+                        <X className="w-5 h-5 hidden group-hover/cs:block" />
+                      </button>
+                    );
+                    if (cs === 'pending_received') return (
+                      <button
+                        onClick={(e) => handleAcceptConn(e, profile.id)}
+                        disabled={isLoading}
+                        title="Accept connection request"
+                        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center bg-blue-600 text-white rounded-xl sm:rounded-2xl hover:bg-blue-700 transition-all flex-shrink-0 disabled:opacity-60 active:scale-95"
+                      >
+                        <Check className="w-5 h-5" />
+                      </button>
+                    );
+                    return (
+                      <button
+                        onClick={(e) => handleConnect(e, profile.id)}
+                        disabled={isLoading}
+                        title="Send connection request"
+                        className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center bg-slate-50 text-blue-600 rounded-xl sm:rounded-2xl hover:bg-blue-600 hover:text-white border border-slate-200 hover:border-blue-600 transition-all shadow-sm hover:shadow-md flex-shrink-0 disabled:opacity-60 active:scale-95"
+                      >
+                        <UserPlus className="w-5 h-5" />
+                      </button>
+                    );
+                  })()}
 
                   <button
                     onClick={(e) => { if (handleProtectedAction(e)) window.location.href = `mailto:${profile.email}`; }}

@@ -31,12 +31,23 @@ const authMiddleware = async (req, res, next) => {
         email: true,
         name: true,
         role: true,
-        isVerified: true
+        isVerified: true,
+        status: true
       }
     });
 
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
+    }
+
+    // 4. Block non-admin accounts that are not APPROVED
+    if (user.role !== 'ADMIN') {
+      if (user.status === 'PENDING') {
+        return res.status(403).json({ error: 'Your account is pending admin approval.' });
+      }
+      if (user.status === 'REJECTED') {
+        return res.status(403).json({ error: 'Your account has been rejected. Contact admin.' });
+      }
     }
 
     req.user = user;

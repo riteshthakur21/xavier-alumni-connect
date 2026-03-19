@@ -5,6 +5,7 @@ import axios from 'axios';
 axios.defaults.baseURL = 'http://localhost:5000';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
+import { disconnectSocket } from '@/lib/socket';
 
 // 🌟 THE MAGIC INTERCEPTOR 🌟
 axios.interceptors.request.use((config) => {
@@ -86,7 +87,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchUser = async () => {
     try {
       const response = await axios.get('/api/auth/me');
-      setUser(response.data.user);
+      const fetchedUser = response.data.user;
+
+      // Safeguard: if a non-admin user is not verified, force logout
+      if (fetchedUser.role !== 'ADMIN' && !fetchedUser.isVerified) {
+        logout();
+        return;
+      }
+
+      setUser(fetchedUser);
     } catch (error) {
       console.error('Error fetching user:', error);
       logout();
@@ -99,17 +108,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const response = await axios.post('/api/auth/login', { email, password });
       const { token, user } = response.data;
-      
+
       Cookies.set('token', token, { expires: 7 });
       localStorage.setItem('token', token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
-      
+
       toast.success('Login successful!');
     } catch (error: any) {
       const message = error.response?.data?.error || 'Login failed';
-      toast.error(message);
-      throw error;
+      const code = error.response?.data?.code;
+      // Don't toast here — let the calling component handle display for richer UI
+      const enrichedError = new Error(message);
+      (enrichedError as any).code = code;
+      throw enrichedError;
     }
   };
 
@@ -122,27 +134,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       });
 
-      const response = await axios.post('/api/auth/register', formData, {
+      await axios.post('/api/auth/register', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      
-      const { token, user } = response.data;
-      
-      Cookies.set('token', token, { expires: 7 });
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(user);
-      
-      toast.success('Registration successful! Please wait for admin verification.');
+
+      // Do NOT set token or user — account requires admin approval first.
     } catch (error: any) {
-      const message = error.response?.data?.error || 'Registration failed';
+      const message = error.response?.data?.error || error.response?.data?.errors?.[0]?.msg || 'Registration failed';
       toast.error(message);
       throw error;
     }
   };
 
   const logout = () => {
+    disconnectSocket(); // Close socket connection on logout
     Cookies.remove('token');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);

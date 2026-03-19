@@ -10,10 +10,9 @@ const prisma = new PrismaClient();
 router.get('/pending', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const pendingUsers = await prisma.user.findMany({
-      where: { 
-        // 👇 FIX: Ab ye Alumni aur Student dono ko check karega
+      where: {
         role: { in: ['ALUMNI', 'STUDENT'] },
-        isVerified: false 
+        status: 'PENDING'
       },
       include: {
         alumniProfile: true
@@ -31,50 +30,6 @@ router.get('/pending', authMiddleware, adminMiddleware, async (req, res) => {
 });
 
 
-// // 2. Verify User (Approve/Reject) ✅❌
-// router.post('/verify/:id', authMiddleware, adminMiddleware, async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { action } = req.body;
-
-//     if (action === 'approve') {
-//       await prisma.user.update({
-//         where: { id },
-//         data: { isVerified: true }
-//       });
-//       return res.json({ message: 'User approved successfully' });
-//     } 
-    
-//     else if (action === 'reject') {
-//       // --- 💣 SAB KUCH SAAF KARO PEHLE ---
-      
-//       // 1. Delete Event Registrations (Jo user ne join kiye hain)
-//       await prisma.eventRegistration.deleteMany({ where: { userId: id } });
-
-//       // 2. Delete Jobs (Jo user ne post ki hain)
-//       await prisma.job.deleteMany({ where: { postedById: id } });
-
-//       // 3. Delete Events (Jo user ne create kiye hain)
-//       await prisma.event.deleteMany({ where: { postedById: id } });
-
-//       // 4. Delete Alumni Profile (Wese schema mein cascade hai, par double safety ke liye)
-//       await prisma.alumniProfile.deleteMany({ where: { userId: id } });
-
-//       // 5. Final Step: Delete User Account
-//       await prisma.user.delete({
-//         where: { id }
-//       });
-
-//       return res.json({ message: 'User registration rejected and all traces removed!' });
-//     }
-
-//     res.status(400).json({ error: 'Invalid action' });
-//   } catch (error) {
-//     console.error('REJECT ERROR:', error);
-//     res.status(500).json({ error: 'Database constraint failed. Still linked to other data.' });
-//   }
-// });
-
 // 2. Verify User (Approve/Reject) ✅❌
 router.post('/verify/:id', authMiddleware, adminMiddleware, async (req, res) => {
   try {
@@ -91,7 +46,7 @@ router.post('/verify/:id', authMiddleware, adminMiddleware, async (req, res) => 
       // 1. Database mein Verify karo
       await prisma.user.update({
         where: { id },
-        data: { isVerified: true }
+        data: { isVerified: true, status: 'APPROVED' }
       });
 
       // --- NAYA JADOO 2: Approve hone par Congratulations Mail Bhejo ---
@@ -108,34 +63,18 @@ router.post('/verify/:id', authMiddleware, adminMiddleware, async (req, res) => 
     } 
     
     else if (action === 'reject') {
-      // --- 💣 SAB KUCH SAAF KARO PEHLE (Tera Original Safe Code) ---
-      
-      // 1. Delete Event Registrations (Jo user ne join kiye hain)
-      await prisma.eventRegistration.deleteMany({ where: { userId: id } });
-
-      // 2. Delete Jobs (Jo user ne post ki hain)
-      await prisma.job.deleteMany({ where: { postedById: id } });
-
-      // 3. Delete Events (Jo user ne create kiye hain)
-      await prisma.event.deleteMany({ where: { postedById: id } });
-
-      // 4. Delete Alumni Profile (Wese schema mein cascade hai, par double safety ke liye)
-      await prisma.alumniProfile.deleteMany({ where: { userId: id } });
-
-      // 5. Final Step: Delete User Account
-      await prisma.user.delete({
-        where: { id }
-      });
-
-      // --- NAYA JADOO 3: Reject hone par Rejection Mail Bhejo ---
+      // Send rejection email BEFORE deleting so we still have user data for the template.
       const message = `
-        <h2>Registration Update ⚠️</h2>
+        <h2>Registration Update</h2>
         <p>Hi ${user.name}, unfortunately your profile verification on Xavier AlumniConnect was rejected by the admin.</p>
         <p>This usually happens if your Roll Number or Batch details do not match college records. Please try registering again with your correct details.</p>
       `;
       await sendEmail({ email: user.email, subject: "Action Required: Registration Rejected", message });
 
-      return res.json({ message: 'User registration rejected, all traces removed, and email sent!' });
+      // Delete the user record so their email/rollNo are freed for re-registration.
+      await prisma.user.delete({ where: { id } });
+
+      return res.json({ message: 'User registration rejected, email sent, and record removed.' });
     }
 
     res.status(400).json({ error: 'Invalid action' });
@@ -178,9 +117,9 @@ router.get('/stats', authMiddleware, adminMiddleware, async (req, res) => {
 
     // 👇 FIX: Stats me bhi ab Students count honge agar wo pending hain
     const pendingVerifications = await prisma.user.count({
-      where: { 
+      where: {
         role: { in: ['ALUMNI', 'STUDENT'] },
-        isVerified: false 
+        status: 'PENDING'
       }
     });
 
@@ -225,7 +164,7 @@ router.get('/users', authMiddleware, adminMiddleware, async (req, res) => {
     const { page = 1, limit = 20, search, role } = req.query;
     const skip = (page - 1) * limit;
 
-    const where = {};
+    const where = { status: { not: 'UNVERIFIED' } };
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },

@@ -1,15 +1,49 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware } = require('../middleware/auth');
-const upload = require('../utils/upload');
+const { upload } = require('../utils/cloudinary');
 const crypto = require('crypto');
 const sendEmail = require('../utils/email');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+const generateEmailOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+const buildEmailOtpTemplate = (otpCode, recipientName = 'Student') => `
+  <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; max-width: 600px; margin: auto; color: #334155;">
+    <h2 style="color: #09192E; margin-top: 0;">Xavier AlumniConnect</h2>
+    <p style="font-size: 16px; line-height: 1.6;">Hello ${recipientName},</p>
+    <p style="font-size: 16px; line-height: 1.6;">Welcome to <b>Xavier AlumniConnect</b> for <b>St. Xavier's, Patna</b>. Please verify your email address using the OTP below:</p>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <div style="display: inline-block; letter-spacing: 8px; font-size: 30px; font-weight: 700; color: #09192E; background: #FDF8ED; border: 1px solid #C9A84C; border-radius: 10px; padding: 12px 24px;">
+        ${otpCode}
+      </div>
+    </div>
+
+    <p style="font-size: 14px; line-height: 1.6; color: #475569; margin-bottom: 0;">
+      This OTP expires in <b>10 minutes</b>. If you did not initiate this registration, please ignore this email.
+    </p>
+    
+    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;" />
+    <p style="font-size: 12px; color: #94a3b8; text-align: center;">
+      &copy; ${new Date().getFullYear()} Xavier AlumniConnect, St. Xavier's, Patna
+    </p>
+  </div>
+`;
+
+const resendOtpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many OTP resend requests. Please try again later.' }
+});
 
 // Register validation
 const registerValidation = [
@@ -54,6 +88,8 @@ router.post('/register', upload.single('photo'), registerValidation, async (req,
     // Hash password
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
+    const emailOtp = generateEmailOtp();
+    const emailOtpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
     // Create user
     const user = await prisma.user.create({
@@ -66,12 +102,16 @@ router.post('/register', upload.single('photo'), registerValidation, async (req,
         // 👇 CHANGE 2: Roll Number ab User table me save hoga
         rollNo: rollNo,
 
-        isVerified: false
+        isVerified: false,
+        emailVerified: false,
+        emailOtp,
+        emailOtpExpiry,
+        status: 'UNVERIFIED'
       }
     });
 
     // Create alumni profile
-    const photoUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const photoUrl = req.file ? req.file.path : null;
 
     await prisma.alumniProfile.create({
       data: {
@@ -87,28 +127,99 @@ router.post('/register', upload.single('photo'), registerValidation, async (req,
       }
     });
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    await sendEmail({
+      email: user.email,
+      subject: 'Verify your Xavier AlumniConnect account',
+      message: buildEmailOtpTemplate(emailOtp, user.name)
+    });
 
     res.status(201).json({
-      message: 'Registration successful. Please wait for admin verification.',
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isVerified: user.isVerified
-      }
+      success: true,
+      message: 'OTP sent to your email',
+      email: user.email
     });
 
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ error: 'Registration failed' });
+  }
+});
+
+router.post('/verify-email', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.emailVerified) {
+      return res.status(400).json({ error: 'Email already verified' });
+    }
+
+    if (user.emailOtp !== otp) {
+      return res.status(400).json({ error: 'Invalid OTP' });
+    }
+
+    if (!user.emailOtpExpiry || user.emailOtpExpiry < new Date()) {
+      return res.status(400).json({ error: 'OTP expired. Please register again or request a new OTP' });
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        status: 'PENDING',
+        emailOtp: null,
+        emailOtpExpiry: null
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Email verified! Your account is pending admin approval.'
+    });
+  } catch (error) {
+    console.error('Email verification error:', error);
+    return res.status(500).json({ error: 'Email verification failed' });
+  }
+});
+
+router.post('/resend-otp', resendOtpLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.emailVerified) {
+      return res.status(400).json({ error: 'Email already verified' });
+    }
+
+    const emailOtp = generateEmailOtp();
+    const emailOtpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { emailOtp, emailOtpExpiry }
+    });
+
+    await sendEmail({
+      email: user.email,
+      subject: 'Verify your Xavier AlumniConnect account',
+      message: buildEmailOtpTemplate(emailOtp, user.name)
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'A new OTP has been sent to your email.'
+    });
+  } catch (error) {
+    console.error('Resend OTP error:', error);
+    return res.status(500).json({ error: 'Failed to resend OTP' });
   }
 });
 
@@ -133,6 +244,29 @@ router.post('/login', async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Block non-admin users whose account is not yet approved
+    if (user.role !== 'ADMIN') {
+      if (!user.emailVerified) {
+        return res.status(403).json({
+          error: 'EMAIL_NOT_VERIFIED',
+          message: 'Please verify your email first.',
+          email: user.email
+        });
+      }
+      if (user.status === 'PENDING' || !user.isVerified) {
+        return res.status(403).json({
+          error: 'Your account is pending admin approval. Please wait until an admin verifies your profile.',
+          code: 'PENDING_APPROVAL'
+        });
+      }
+      if (user.status === 'REJECTED') {
+        return res.status(403).json({
+          error: 'Your account registration was rejected. Please contact the admin or try registering again.',
+          code: 'REJECTED'
+        });
+      }
     }
 
     // Generate JWT token
