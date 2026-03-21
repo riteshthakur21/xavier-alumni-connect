@@ -39,10 +39,26 @@ export default function JobsPage() {
 
     if (!user) {
         return (
-            <div className="text-center py-20">
-                <h2 className="text-2xl font-bold">Please Login First 🔒</h2>
-                <p className="mb-6">You need an account to see Jobs.</p>
-                <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg">Login</Link>
+            <div className="min-h-[60vh] flex items-center justify-center px-4">
+                <div className="bg-white rounded-3xl border border-slate-100 shadow-xl p-10 max-w-md w-full text-center">
+                    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-5">
+                        <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-2xl font-black text-slate-900 mb-2">Login Required</h2>
+                    <p className="text-slate-500 text-sm mb-8 leading-relaxed">
+                        You need to be logged in to access this section. Join our community to discover job opportunities posted by alumni.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <Link href="/login" className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors text-sm">
+                            Login
+                        </Link>
+                        <Link href="/register" className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors text-sm">
+                            Create Account
+                        </Link>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -85,7 +101,25 @@ export default function JobsPage() {
 
                 {/* Jobs List */}
                 {loading ? (
-                    <div className="text-center py-12">Loading opportunities...</div>
+                    <div className="space-y-4">
+                        {Array.from({ length: 4 }).map((_, idx) => (
+                            <div key={idx} className="animate-pulse bg-white p-6 rounded-xl border border-slate-200">
+                                <div className="flex justify-between gap-4">
+                                    <div className="flex-1 space-y-2">
+                                        <div className="h-5 bg-slate-200 rounded w-1/2" />
+                                        <div className="h-3 bg-slate-200 rounded w-1/3" />
+                                        <div className="flex gap-2 mt-2">
+                                            <div className="h-6 w-16 bg-slate-200 rounded-full" />
+                                            <div className="h-6 w-24 bg-slate-200 rounded-full" />
+                                        </div>
+                                        <div className="h-3 bg-slate-200 rounded w-full mt-2" />
+                                        <div className="h-3 bg-slate-200 rounded w-4/5" />
+                                    </div>
+                                    <div className="h-10 w-24 bg-slate-200 rounded-lg shrink-0" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 ) : jobs.length > 0 ? (
                     <div className="space-y-4">
                         {jobs.map((job) => (

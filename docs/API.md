@@ -1,205 +1,139 @@
-# Alumni Management System - API Documentation
+# Xavier AlumniConnect — API Documentation
 
 ## Base URL
 ```
-http://localhost:5000/api
+Production:  https://xavier-alumni-connect.onrender.com/api
+Development: http://localhost:5000/api
 ```
 
 ## Authentication
-
-Most endpoints require authentication via JWT token in the Authorization header:
+Most endpoints require a JWT token in the Authorization header:
 ```
 Authorization: Bearer <token>
 ```
 
 ## Response Format
-
-All responses follow this structure:
 ```json
-{
-  "success": true,
-  "message": "Description",
-  "data": { ... }
-}
+{ "message": "Description", "data": { ... } }
 ```
-
-Error responses:
+Error:
 ```json
-{
-  "success": false,
-  "error": "Error message"
-}
+{ "error": "Error message" }
 ```
 
 ---
 
-## Authentication Endpoints
+## Rate Limits
 
-### Register User
+| Endpoint Group | Limit |
+|----------------|-------|
+| Auth endpoints | 5 req / minute |
+| Chat endpoints | 60 req / minute |
+| General API    | 100 req / 15 min |
+
+---
+
+## 1. Authentication Endpoints `/api/auth`
+
+### Register
 ```http
 POST /auth/register
+Content-Type: multipart/form-data
 ```
+**Body:** `name`, `email`, `password`, `batchYear`, `department`, `rollNo`, `role` (ALUMNI/STUDENT), `company`?, `jobTitle`?, `linkedinUrl`?, `bio`?, `photo`?
 
-**Description:** Register a new alumni user
+**Response:** `{ message, token, user: { id, name, email, role, isVerified } }`
 
-**Request Body (multipart/form-data):**
-```json
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "password123",
-  "batchYear": 2020,
-  "department": "Computer Science",
-  "rollNo": "CS202001",
-  "company": "Google",
-  "jobTitle": "Software Engineer",
-  "linkedinUrl": "https://linkedin.com/in/johndoe",
-  "bio": "Passionate developer...",
-  "photo": <file>
-}
+> After register, user must verify email via OTP before logging in.
+
+---
+
+### Verify Email (OTP)
+```http
+POST /auth/verify-email
 ```
+**Body:** `{ "email": "...", "otp": "123456" }`
 
-**Response:**
-```json
-{
-  "message": "Registration successful. Please wait for admin verification.",
-  "token": "eyJhbGciOiJIUzI1NiIs...",
-  "user": {
-    "id": "uuid",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "role": "ALUMNI",
-    "isVerified": false
-  }
-}
+**Response:** `{ message: "Email verified. Awaiting admin approval." }`
+
+---
+
+### Resend OTP
+```http
+POST /auth/resend-otp
 ```
+**Body:** `{ "email": "..." }`
 
-### Login User
+> Rate limited: 3 requests per 15 minutes.
+
+---
+
+### Login
 ```http
 POST /auth/login
 ```
+**Body:** `{ "email": "...", "password": "..." }`
 
-**Request Body:**
-```json
-{
-  "email": "john@example.com",
-  "password": "password123"
-}
-```
+**Response:** `{ message, token, user: { id, name, email, role, isVerified, alumniProfile } }`
 
-**Response:**
-```json
-{
-  "message": "Login successful",
-  "token": "eyJhbGciOiJIUzI1NiIs...",
-  "user": {
-    "id": "uuid",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "role": "ALUMNI",
-    "isVerified": true,
-    "alumniProfile": { ... }
-  }
-}
-```
+> Returns `EMAIL_NOT_VERIFIED` error if OTP not verified yet.
+
+---
 
 ### Get Current User
 ```http
 GET /auth/me
 Authorization: Bearer <token>
 ```
+**Response:** `{ user: { id, name, email, role, isVerified, alumniProfile } }`
+
+---
+
+### Forgot Password
+```http
+POST /auth/forgot-password
+```
+**Body:** `{ "email": "..." }`
+
+> Sends a password reset link to the email via Brevo.
+
+---
+
+### Reset Password
+```http
+POST /auth/reset-password
+```
+**Body:** `{ "token": "...", "newPassword": "..." }`
+
+---
+
+## 2. Alumni Endpoints `/api/alumni`
+
+### List Alumni (Directory)
+```http
+GET /alumni
+```
+**Query Params:** `search`, `batchYear`, `department`, `company`, `page` (default 1), `limit` (default 20)
 
 **Response:**
 ```json
 {
-  "user": {
-    "id": "uuid",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "role": "ALUMNI",
-    "isVerified": true,
-    "alumniProfile": { ... }
-  }
+  "alumni": [{ "id", "name", "email", "role", "createdAt", "alumniProfile": { "batchYear", "department", "company", "jobTitle", "photoUrl", "location", "contactPublic" } }],
+  "pagination": { "page", "limit", "total", "pages" }
 }
 ```
 
 ---
 
-## Alumni Endpoints
-
-### List Alumni
-```http
-GET /alumni
-```
-
-**Query Parameters:**
-- `search` - Search by name, company, or job title
-- `batchYear` - Filter by graduation year
-- `department` - Filter by department
-- `company` - Filter by company
-- `page` - Page number (default: 1)
-- `limit` - Items per page (default: 20)
-
-**Response:**
-```json
-{
-  "alumni": [
-    {
-      "id": "uuid",
-      "name": "John Doe",
-      "email": "john@example.com",
-      "role": "ALUMNI",
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "alumniProfile": {
-        "batchYear": 2020,
-        "department": "Computer Science",
-        "company": "Google",
-        "jobTitle": "Software Engineer",
-        "photoUrl": "/uploads/photo.jpg",
-        "location": "San Francisco",
-        "contactPublic": true
-      }
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 150,
-    "pages": 8
-  }
-}
-```
-
-### Get Alumni Profile
+### Get Single Alumni Profile
 ```http
 GET /alumni/:id
 ```
+**Response:** `{ alumni: { id, name, email, role, createdAt, alumniProfile: { ...allFields } } }`
 
-**Response:**
-```json
-{
-  "alumni": {
-    "id": "uuid",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "role": "ALUMNI",
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "alumniProfile": {
-      "batchYear": 2020,
-      "department": "Computer Science",
-      "rollNo": "CS202001",
-      "company": "Google",
-      "jobTitle": "Software Engineer",
-      "linkedinUrl": "https://linkedin.com/in/johndoe",
-      "photoUrl": "/uploads/photo.jpg",
-      "bio": "Passionate developer...",
-      "location": "San Francisco",
-      "skills": ["React", "Node.js", "Python"],
-      "contactPublic": true
-    }
-  }
-}
-```
+> Contact info (email, LinkedIn) hidden if `contactPublic: false`.
+
+---
 
 ### Update Alumni Profile
 ```http
@@ -207,188 +141,261 @@ PUT /alumni/:id
 Authorization: Bearer <token>
 Content-Type: multipart/form-data
 ```
+**Body:** `name`?, `company`?, `jobTitle`?, `linkedinUrl`?, `bio`?, `location`?, `skills` (JSON array string)?, `contactPublic`?, `photo`?
 
-**Request Body:**
-```json
-{
-  "name": "John Doe Updated",
-  "company": "Microsoft",
-  "jobTitle": "Senior Engineer",
-  "linkedinUrl": "https://linkedin.com/in/johndoe",
-  "bio": "Updated bio...",
-  "location": "Seattle",
-  "skills": "[\"React\", \"Node.js\", \"TypeScript\"]",
-  "contactPublic": "true",
-  "photo": <file>
-}
-```
-
-**Response:**
-```json
-{
-  "message": "Profile updated successfully",
-  "profile": { ... }
-}
-```
-
-### Get Alumni Statistics
-```http
-GET /alumni/stats/overview
-```
-
-**Response:**
-```json
-{
-  "totalAlumni": 150,
-  "byBatch": [
-    { "batchYear": 2020, "_count": 25 },
-    { "batchYear": 2021, "_count": 30 }
-  ],
-  "byDepartment": [
-    { "department": "Computer Science", "_count": 45 },
-    { "department": "Electrical", "_count": 35 }
-  ],
-  "byCompany": [
-    { "company": "Google", "_count": 15 },
-    { "company": "Microsoft", "_count": 12 }
-  ]
-}
-```
+> Only profile owner or ADMIN can update.
 
 ---
 
-## Admin Endpoints
+### Get Alumni Stats
+```http
+GET /alumni/stats/overview
+```
+**Response:** `{ totalAlumni, byBatch: [{batchYear, _count}], byDepartment: [{department, _count}], byCompany: [{company, _count}] }`
+
+---
+
+## 3. Admin Endpoints `/api/admin`
+> All require `Authorization: Bearer <token>` + ADMIN role.
 
 ### Get Pending Verifications
 ```http
 GET /admin/pending
-Authorization: Bearer <token>
 ```
+**Response:** `{ pendingAlumni: [{ id, name, email, role, rollNo, isVerified, createdAt, alumniProfile }] }`
 
-**Response:**
-```json
-{
-  "pendingAlumni": [
-    {
-      "id": "uuid",
-      "name": "Jane Doe",
-      "email": "jane@example.com",
-      "role": "ALUMNI",
-      "isVerified": false,
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "alumniProfile": { ... }
-    }
-  ]
-}
-```
+---
 
-### Verify Alumni
+### Approve / Reject User
 ```http
 POST /admin/verify/:id
-Authorization: Bearer <token>
 ```
+**Body:** `{ "action": "approve" | "reject" }`
 
-**Request Body:**
-```json
-{
-  "action": "approve"  // or "reject"
-}
-```
+> Sends email notification to user on both approve and reject.
 
-**Response:**
-```json
-{
-  "message": "Alumni approved successfully"
-}
-```
+---
 
-### Delete Alumni
+### Delete User
 ```http
 DELETE /admin/alumni/:id
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "message": "Alumni deleted successfully"
-}
-```
-
-### Get System Statistics
-```http
-GET /admin/stats
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "totalUsers": 200,
-  "totalAlumni": 150,
-  "verifiedAlumni": 120,
-  "pendingAlumni": 30,
-  "totalStudents": 50,
-  "totalEvents": 10,
-  "recentRegistrations": [ ... ]
-}
 ```
 
 ---
 
-## Events Endpoints
+### Get System Statistics
+```http
+GET /admin/stats
+```
+**Response:** `{ totalUsers, totalAlumni, verifiedAlumni, pendingAlumni, totalStudents, totalEvents, recentRegistrations }`
+
+---
+
+### Get All Users (Paginated)
+```http
+GET /admin/users?page=1&limit=20&search=...&role=ALUMNI
+```
+**Response:** `{ users: [...], pagination: { page, limit, total, pages } }`
+
+---
+
+### Get Pending Stories (Admin)
+```http
+GET /stories/pending
+Authorization: Bearer <token>  (ADMIN only)
+```
+
+---
+
+## 4. Connection Endpoints `/api/connections`
+> All require `Authorization: Bearer <token>`.
+
+### Send Connection Request
+```http
+POST /connections/send/:userId
+```
+**Response:** `{ message: "Request sent", request: { id, senderId, receiverId, status } }`
+
+---
+
+### Accept Request
+```http
+POST /connections/accept/:requestId
+```
+
+---
+
+### Reject Request
+```http
+POST /connections/reject/:requestId
+```
+
+---
+
+### Cancel Sent Request
+```http
+POST /connections/cancel/:requestId
+```
+
+---
+
+### Disconnect (Remove Connection)
+```http
+DELETE /connections/disconnect/:userId
+```
+
+---
+
+### Get Connection Status
+```http
+GET /connections/status/:userId
+```
+**Response:** `{ status: "not_connected" | "pending_sent" | "pending_received" | "connected" | "self", requestId? }`
+
+---
+
+### Get My Connections
+```http
+GET /connections/my?page=1&limit=20
+```
+**Response:** `{ data: [{ id, name, email, role, alumniProfile }], pagination }`
+
+---
+
+### Get Pending (Received) Requests
+```http
+GET /connections/pending
+```
+**Response:** `{ data: [{ id, createdAt, sender: { id, name, alumniProfile } }] }`
+
+---
+
+### Get Sent Requests
+```http
+GET /connections/sent
+```
+**Response:** `{ data: [{ id, createdAt, receiver: { id, name, alumniProfile } }] }`
+
+---
+
+### Get Mutual Connections
+```http
+GET /connections/mutual/:userId
+```
+**Response:** `{ data: [{ id, name, alumniProfile }] }`
+
+---
+
+## 5. Chat Endpoints `/api/chat`
+> All require `Authorization: Bearer <token>`. Rate limit: 60 req/min.
+
+> ⚠️ Chat is only available between **connected** users (accepted connection required).
+
+> 🔐 All message content is **AES-256-GCM encrypted** in the database.
+
+### Get All Conversations
+```http
+GET /chat/conversations
+```
+**Response:** `{ data: [{ id, createdAt, updatedAt, otherUser: { id, name, alumniProfile }, lastMessage: { content, createdAt, isSeen } }] }`
+
+---
+
+### Get Messages (Paginated)
+```http
+GET /chat/messages/:conversationId?limit=20&cursor=<ISO-datetime>
+```
+> `cursor` = fetch messages older than this timestamp (for infinite scroll).
+
+**Response:** `{ data: [{ id, content, senderId, isSeen, isDeleted, createdAt }], hasMore }`
+
+---
+
+### Create / Get Conversation
+```http
+POST /chat/create-conversation
+```
+**Body:** `{ "targetUserId": "uuid" }`
+
+> Returns existing conversation if already exists.
+
+**Response:** `{ data: { id, members } }`
+
+---
+
+### Delete Message (Soft Delete)
+```http
+DELETE /chat/messages/:messageId
+```
+> Only sender can delete. Message shows as "This message was deleted."
+
+---
+
+## 6. Stories Endpoints `/api/stories`
+
+### Submit a Story
+```http
+POST /stories
+Authorization: Bearer <token>
+```
+**Body:** `{ "title": "...", "content": "..." }`
+
+> Max: title 100 chars, content 2000 chars. Status defaults to `PENDING`.
+
+---
+
+### Get All Approved Stories
+```http
+GET /stories
+```
+**Response:** `{ stories: [{ id, title, content, status, createdAt, author: { id, name, role, alumniProfile } }] }`
+
+---
+
+### Get Single Story
+```http
+GET /stories/:id
+```
+
+---
+
+### Approve / Reject Story (Admin)
+```http
+PATCH /stories/:id/status
+Authorization: Bearer <token>  (ADMIN only)
+```
+**Body:** `{ "status": "APPROVED" | "REJECTED" }`
+
+---
+
+### Delete Story
+```http
+DELETE /stories/:id
+Authorization: Bearer <token>
+```
+> Author or ADMIN can delete.
+
+---
+
+## 7. Events Endpoints `/api/events`
 
 ### List Events
 ```http
 GET /events
+Authorization: Bearer <token>
 ```
+> Filters by `targetAudience` based on user role (ALUMNI, STUDENT, or ALL).
 
-**Query Parameters:**
-- `page` - Page number (default: 1)
-- `limit` - Items per page (default: 10)
+**Response:** `{ events: [{ id, title, description, date, location, imageUrl, targetAudience, registrations, postedBy }] }`
 
-**Response:**
-```json
-{
-  "events": [
-    {
-      "id": "uuid",
-      "title": "Annual Alumni Meetup",
-      "description": "Join us for our annual gathering...",
-      "date": "2024-12-15T18:00:00.000Z",
-      "location": "College Campus",
-      "imageUrl": "/uploads/event.jpg",
-      "createdAt": "2024-01-01T00:00:00.000Z"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 10,
-    "total": 5,
-    "pages": 1
-  }
-}
-```
+---
 
-### Get Event
+### Get Single Event
 ```http
 GET /events/:id
 ```
 
-**Response:**
-```json
-{
-  "event": {
-    "id": "uuid",
-    "title": "Annual Alumni Meetup",
-    "description": "Join us for our annual gathering...",
-    "date": "2024-12-15T18:00:00.000Z",
-    "location": "College Campus",
-    "imageUrl": "/uploads/event.jpg",
-    "createdAt": "2024-01-01T00:00:00.000Z"
-  }
-}
-```
+---
 
 ### Create Event (Admin Only)
 ```http
@@ -396,25 +403,9 @@ POST /events
 Authorization: Bearer <token>
 Content-Type: multipart/form-data
 ```
+**Body:** `title`, `description`, `date`, `location`, `targetAudience` (ALL/ALUMNI/STUDENT), `image`?
 
-**Request Body:**
-```json
-{
-  "title": "New Event",
-  "description": "Event description...",
-  "date": "2024-12-15T18:00:00.000Z",
-  "location": "Event Location",
-  "image": <file>
-}
-```
-
-**Response:**
-```json
-{
-  "message": "Event created successfully",
-  "event": { ... }
-}
-```
+---
 
 ### Update Event (Admin Only)
 ```http
@@ -422,6 +413,8 @@ PUT /events/:id
 Authorization: Bearer <token>
 Content-Type: multipart/form-data
 ```
+
+---
 
 ### Delete Event (Admin Only)
 ```http
@@ -431,79 +424,115 @@ Authorization: Bearer <token>
 
 ---
 
-## Reports Endpoints
-
-### Export Alumni Data
+### Register for Event
 ```http
-GET /reports/export/alumni
+POST /events/:id/register
 Authorization: Bearer <token>
 ```
+> Only verified users can register. Duplicate registration blocked.
 
-**Query Parameters:**
-- `format` - Export format (csv/json, default: csv)
-- `filter` - Filter data (all/verified/pending)
+---
 
-**Response:** CSV file download
-
-### Export Batch Data
+### Get Event Participants
 ```http
-GET /reports/export/batch/:batchYear
+GET /events/:id/participants
 Authorization: Bearer <token>
 ```
+**Response:** `{ participants: [{ id, name, role, alumniProfile }] }`
 
-**Response:** CSV file with batch-specific alumni data
+---
 
-### Export Company Data
+## 8. Jobs Endpoints `/api/jobs`
+
+### List Jobs
 ```http
-GET /reports/export/company/:company
+GET /jobs
+```
+**Response:** `{ jobs: [{ id, title, company, location, type, description, applyLink, postedBy, createdAt }] }`
+
+---
+
+### Post a Job (Alumni / Admin only)
+```http
+POST /jobs
 Authorization: Bearer <token>
 ```
+**Body:** `{ title, company, location, type, description, applyLink? }`
 
-**Response:** CSV file with company-specific alumni data
+---
+
+### Delete Job
+```http
+DELETE /jobs/:id
+Authorization: Bearer <token>
+```
+> Only job owner or ADMIN can delete.
+
+---
+
+## 9. Export Endpoints `/api/export`
+> All require ADMIN role.
+
+### Export Alumni CSV
+```http
+GET /export/alumni?type=all|verified_alumni|verified_student&batchYear=2020&department=BCA
+Authorization: Bearer <token>
+```
+> Returns CSV file download. Returns 404 if no records match filters.
+
+---
+
+## 10. WebSocket Events
+
+**Connection URL:** `wss://xavier-alumni-connect.onrender.com`
+
+> Requires JWT token passed during socket handshake (via `auth.token`).
+
+### Client → Server Events
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `joinConversation` | `{ conversationId }` | Join a chat room |
+| `sendMessage` | `{ conversationId, content }` | Send a message |
+| `markSeen` | `{ conversationId }` | Mark messages as read |
+| `typing` | `{ conversationId, isTyping }` | Typing indicator |
+
+### Server → Client Events
+
+| Event | Payload | Description |
+|-------|---------|-------------|
+| `joinedConversation` | `{ conversationId }` | Joined room confirmation |
+| `newMessage` | `{ id, content, senderId, createdAt, isSeen }` | Incoming message |
+| `messageSeen` | `{ conversationId, seenBy }` | Messages marked seen |
+| `userTyping` | `{ conversationId, userId, isTyping }` | Typing indicator |
+| `userOnline` | `{ userId }` | User came online |
+| `userOffline` | `{ userId }` | User went offline |
+| `messageDeleted` | `{ messageId, conversationId }` | Message soft-deleted |
+| `error` | `{ event, message, code? }` | Error response |
+
+### Special Error Codes
+
+| Code | Meaning |
+|------|---------|
+| `CHAT_NOT_CONNECTED` | Users are not connected — cannot chat |
 
 ---
 
 ## Error Codes
 
-| Code | Description |
-|------|-------------|
-| 400 | Bad Request - Invalid input data |
-| 401 | Unauthorized - Invalid/missing token |
-| 403 | Forbidden - Insufficient permissions |
-| 404 | Not Found - Resource doesn't exist |
-| 429 | Too Many Requests - Rate limit exceeded |
+| HTTP Code | Description |
+|-----------|-------------|
+| 400 | Bad Request — Invalid input |
+| 401 | Unauthorized — Missing/invalid token |
+| 403 | Forbidden — Insufficient permissions |
+| 404 | Not Found |
+| 429 | Rate limit exceeded |
 | 500 | Internal Server Error |
 
 ---
 
-## Rate Limits
-
-- Authentication endpoints: 5 requests per minute
-- General API endpoints: 100 requests per 15 minutes
-- File uploads: 10 requests per minute
-
----
-
 ## File Uploads
-
-**Supported Formats:**
-- Images: JPG, JPEG, PNG, GIF
-- Maximum size: 5MB
-
-**Upload Endpoint:**
-- Alumni profile photos: `/alumni/:id` (PUT)
-- Event images: `/events` (POST/PUT)
-
----
-
-## WebSocket Support
-
-The system supports real-time updates for:
-- Admin notifications
-- User status changes
-- Event updates
-
-**Connection URL:**
-```
-ws://localhost:5000
-```
+- **Formats:** JPG, JPEG, PNG (images only)
+- **Max size:** 5MB
+- **Storage:** Cloudinary (production)
+- **Endpoints:** Profile photo via `PUT /alumni/:id`, Event banner via `POST /events`

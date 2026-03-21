@@ -1,451 +1,536 @@
-# Alumni Management System - Project Report
+# Xavier AlumniConnect — Project Report
 
 ## Executive Summary
 
-The Alumni Management System is a comprehensive web-based platform designed to facilitate seamless connections between alumni, students, and college administrators. This full-stack application addresses the critical need for maintaining strong alumni relationships, organizing events, and fostering professional networking opportunities.
+Xavier AlumniConnect is a comprehensive, production-grade web platform built for St. Xavier's College, Patna. It bridges the gap between current students and alumni through a secure networking ecosystem that includes a real-time encrypted chat system, LinkedIn-style connections, alumni stories, event management, a jobs board, and a powerful admin dashboard. The platform is fully deployed on Vercel (frontend) and Render (backend) with a Neon PostgreSQL database.
+
+---
 
 ## Project Objectives
 
 ### Primary Goals
-- ✅ Create a secure, scalable alumni registration and verification system
-- ✅ Develop an intuitive alumni directory with advanced search capabilities
-- ✅ Implement comprehensive event management functionality
-- ✅ Build role-based access control for different user types
-- ✅ Provide robust reporting and data export capabilities
-- ✅ Ensure responsive design across all devices
+- ✅ Secure, role-based alumni registration with admin verification
+- ✅ Email OTP verification flow before account activation
+- ✅ Intuitive alumni directory with search and filters
+- ✅ LinkedIn-style connection request system
+- ✅ End-to-end encrypted real-time chat (AES-256-GCM)
+- ✅ Alumni Stories feature with admin moderation
+- ✅ Event management with audience targeting
+- ✅ Jobs board for alumni to post opportunities
+- ✅ Role-based access control (Admin / Alumni / Student)
+- ✅ CSV export and reporting for admin
+- ✅ Fully responsive design across all devices
 
 ### Secondary Goals
-- ✅ Implement modern security best practices
-- ✅ Create an API-first architecture for future scalability
-- ✅ Develop comprehensive documentation
-- ✅ Ensure optimal performance and user experience
+- ✅ Application-level message encryption (beyond HTTPS)
+- ✅ Email notification system via Brevo API
+- ✅ Cloudinary-based media storage
+- ✅ Anti-sleep mechanism for production server
+- ✅ Comprehensive API and project documentation
+
+---
 
 ## Technical Architecture
 
 ### Backend Architecture
 
-**Framework:** Node.js with Express.js
-- RESTful API design
-- Middleware-based architecture
-- Error handling and logging
-- CORS configuration
+**Runtime & Framework:** Node.js with Express.js
+- RESTful API design with layered architecture (Routes → Controllers → Services → Repositories)
+- Socket.io for real-time bidirectional communication
+- Middleware-based request pipeline with auth, rate-limiting, and validation
+- Helmet.js for security headers, CORS configuration
 
-**Database:** PostgreSQL with Prisma ORM
+**Database:** PostgreSQL (hosted on Neon DB) with Prisma ORM
 - Schema-first database design
 - Type-safe database queries
-- Migration management
-- Connection pooling
+- `npx prisma db push` workflow (no migration files)
+- Indexed queries for performance on large datasets
 
-**Authentication:** JWT-based system
-- Stateless authentication
-- Role-based access control
-- Token expiration and refresh
-- Secure password hashing
+**Authentication:** Custom JWT System
+- Stateless JWT tokens (7-day expiry)
+- Two-phase registration: Register → Email OTP Verify → Await Admin Approval
+- Role-based access control (ADMIN, ALUMNI, STUDENT)
+- Bcrypt password hashing (12 salt rounds)
+- Password reset via time-limited email token
+
+**Real-Time Engine:** Socket.io
+- Connection-gated chat rooms (`conv:<conversationId>`)
+- Online presence tracking via in-memory `Map<userId, socketId>`
+- Real-time: message delivery, seen receipts, typing indicators, online/offline events
+- Socket authentication via dedicated `socketAuth` middleware
 
 **Security Features:**
-- Input validation and sanitization
-- Rate limiting on API endpoints
-- File upload restrictions
-- Helmet.js for security headers
-- Environment variable configuration
+- AES-256-GCM application-level encryption for all stored chat messages
+- Rate limiting (Auth: 5/min, Chat: 60/min, General: 100/15min)
+- Input validation using express-validator and Zod
+- SQL injection prevention via Prisma ORM parameterized queries
+- XSS protection via Helmet.js
+- `trust proxy` configured for Render deployment
+
+---
 
 ### Frontend Architecture
 
 **Framework:** Next.js 14 with App Router
-- Server-side rendering for performance
-- Client-side routing
-- Image optimization
-- Static generation where applicable
+- Client-side rendering where needed, server components for static content
+- Custom `AuthContext` with JWT stored in cookies via `js-cookie`
+- Axios interceptor for automatic URL rewriting (localhost → production URL)
+
+**UI & Styling:** Tailwind CSS
+- Utility-first, fully custom components — no shadcn, no framer-motion
+- Lucide React for iconography
+- Mobile-first responsive design with `sm:`, `md:`, `lg:` breakpoints
+- CSS `@keyframes` for animations
 
 **State Management:**
-- React Context for authentication
-- Local state management with hooks
-- Optimistic UI updates
-- Error boundary implementation
+- React Context API for global auth state
+- React `useState` / `useEffect` for local page state
+- `useChatSocket` custom hook for Socket.io event management
 
-**Styling:** Tailwind CSS
-- Utility-first approach
-- Responsive design system
-- Custom component library
-- Dark mode support (future)
+---
 
 ## Database Design
 
 ### Entity Relationship Diagram
 
 ```
-┌─────────────┐     ┌─────────────────┐     ┌─────────────┐
-│    Users    │────<│ AlumniProfiles  │     │   Events    │
-├─────────────┤     ├─────────────────┤     ├─────────────┤
-│ id (PK)     │     │ id (PK)         │     │ id (PK)     │
-│ name        │     │ userId (FK)     │     │ title       │
-│ email       │     │ batchYear       │     │ description │
-│ passwordHash│     │ department      │     │ date        │
-│ role        │     │ company         │     │ location    │
-│ isVerified  │     │ jobTitle        │     │ imageUrl    │
-│ createdAt   │     │ linkedinUrl     │     │ isActive    │
-└─────────────┘     │ photoUrl        │     │ createdAt   │
-                    │ bio             │     └─────────────┘
-                    │ location        │
-                    │ skills          │
-                    │ contactPublic   │
-                    │ createdAt       │
-                    │ updatedAt       │
-                    └─────────────────┘
+┌──────────────┐     ┌──────────────────┐     ┌──────────────────────┐
+│    Users     │────<│  AlumniProfiles  │     │  ConnectionRequests  │
+├──────────────┤     ├──────────────────┤     ├──────────────────────┤
+│ id (PK)      │     │ id (PK)          │     │ id (PK)              │
+│ name         │     │ userId (FK)      │     │ senderId (FK)        │
+│ email        │     │ batchYear        │     │ receiverId (FK)      │
+│ passwordHash │     │ department       │     │ status               │
+│ role         │     │ rollNo           │     └──────────────────────┘
+│ rollNo       │     │ company          │
+│ isVerified   │     │ jobTitle         │     ┌──────────────────────┐
+│ emailVerified│     │ linkedinUrl      │     │  UserConnections     │
+│ emailOtp     │     │ photoUrl         │     ├──────────────────────┤
+│ status       │     │ bio              │     │ userId (FK)          │
+│ createdAt    │     │ location         │     │ connectionId (FK)    │
+└──────────────┘     │ skills[]         │     │ createdAt            │
+                     │ contactPublic    │     └──────────────────────┘
+                     └──────────────────┘
+
+┌──────────────┐     ┌─────────────────────┐     ┌─────────────┐
+│ Conversation │────<│ ConversationMember  │     │   Message   │
+├──────────────┤     ├─────────────────────┤     ├─────────────┤
+│ id (PK)      │     │ id (PK)             │     │ id (PK)     │
+│ createdAt    │     │ conversationId (FK) │     │ convId (FK) │
+│ updatedAt    │     │ userId (FK)         │     │ senderId    │
+└──────────────┘     │ joinedAt            │     │ content*    │
+                     └─────────────────────┘     │ isSeen      │
+                                                  │ isDeleted   │
+                                                  └─────────────┘
+                                        * AES-256-GCM encrypted at rest
+
+┌───────────┐     ┌────────────────────┐     ┌─────────────┐
+│  Events   │────<│ EventRegistration  │     │   Stories   │
+├───────────┤     ├────────────────────┤     ├─────────────┤
+│ id (PK)   │     │ userId (FK)        │     │ id (PK)     │
+│ title     │     │ eventId (FK)       │     │ title       │
+│ date      │     └────────────────────┘     │ content     │
+│ location  │                                │ status      │
+│ imageUrl  │     ┌─────────┐               │ authorId    │
+│ audience  │     │  Jobs   │               └─────────────┘
+│ postedById│     └─────────┘
+└───────────┘
 ```
 
-### Schema Details
-
-**Users Table:**
-- Primary key: UUID
-- Email-based authentication
-- Role-based permissions (ADMIN, ALUMNI, STUDENT)
-- Verification status tracking
-- Timestamp management
-
-**AlumniProfiles Table:**
-- One-to-one relationship with Users
-- Comprehensive professional information
-- Skills array for expertise tracking
-- Privacy controls for contact information
-- Media storage for photos
-
-**Events Table:**
-- Event management and tracking
-- Date and location information
-- Media support for promotional materials
-- Active status for visibility control
-
-## Features Implementation
-
-### 1. Alumni Registration System
-
-**Registration Process:**
-1. Multi-step form with validation
-2. File upload for profile photos
-3. Email uniqueness verification
-4. Automatic pending status assignment
-5. Success notification with next steps
-
-**Technical Implementation:**
-- Form validation using express-validator
-- Multer middleware for file handling
-- Bcrypt for password hashing
-- Prisma for database operations
-- JWT token generation upon success
-
-### 2. Admin Verification System
-
-**Verification Workflow:**
-1. Admin dashboard displays pending registrations
-2. Detailed view of alumni information
-3. Approve/reject functionality
-4. Automatic status updates
-5. Data persistence and audit trails
-
-**Technical Implementation:**
-- Role-based route protection
-- Admin-specific API endpoints
-- Transaction-based database updates
-- Email notification system (future)
-
-### 3. Alumni Directory
-
-**Search and Filter Capabilities:**
-- Full-text search across multiple fields
-- Batch year filtering
-- Department-based filtering
-- Company and location filters
-- Pagination for large datasets
-
-**Technical Implementation:**
-- Database indexing for performance
-- Query optimization for complex searches
-- Responsive grid layout
-- Lazy loading for images
-- Debounced search inputs
-
-### 4. Profile Management
-
-**Profile Features:**
-- Comprehensive information display
-- Edit functionality for profile owners
-- Privacy controls for contact information
-- Skills and expertise showcase
-- Professional timeline
-
-**Technical Implementation:**
-- Form pre-population with existing data
-- Image upload and replacement
-- Partial update support
-- Validation on both client and server
-- Real-time preview capabilities
-
-### 5. Event Management
-
-**Event Features:**
-- Create, edit, and delete events
-- Image upload for event promotion
-- Date and location management
-- Public listing with filtering
-- Registration interest tracking
-
-**Technical Implementation:**
-- Date validation and formatting
-- Image optimization and storage
-- Admin-only CRUD operations
-- Public read access
-- Caching for performance
-
-### 6. Reporting System
-
-**Export Capabilities:**
-- CSV export for all alumni data
-- Batch-specific reports
-- Company-based alumni tracking
-- Verification status reports
-- Custom date range filtering
-
-**Technical Implementation:**
-- CSV generation using csv-writer
-- Streaming for large datasets
-- Memory-efficient processing
-- Download management
-- Format validation
-
-## Security Implementation
-
-### Authentication & Authorization
-- JWT tokens with 7-day expiration
-- Refresh token mechanism (future)
-- Role-based access control
-- Password complexity requirements
-- Account lockout after failed attempts
-
-### Data Protection
-- Password hashing with bcrypt (12 salt rounds)
-- Input sanitization on all endpoints
-- SQL injection prevention through Prisma
-- XSS protection through Helmet.js
-- CORS configuration for cross-origin requests
-
-### File Security
-- File type validation (images only)
-- Size limitations (5MB max)
-- Secure storage with unique filenames
-- Access control for uploaded files
-- Malware scanning (future)
-
-## Performance Optimizations
-
-### Database Performance
-- Indexing on frequently queried fields
-- Connection pooling for concurrent requests
-- Query optimization for complex searches
-- Pagination for large result sets
-- Caching for static data
-
-### Frontend Performance
-- Image optimization and lazy loading
-- Code splitting for faster initial load
-- Debounced search inputs
-- Efficient re-rendering with React
-- Service worker for offline support (future)
-
-### API Performance
-- Rate limiting to prevent abuse
-- Compression for response data
-- Efficient error handling
-- Monitoring and logging
-- Load balancing (production)
-
-## User Experience Design
-
-### Design Principles
-- Clean, professional interface
-- Intuitive navigation structure
-- Consistent visual hierarchy
-- Accessible color schemes
-- Mobile-first responsive design
-
-### User Flows
-
-**Alumni Registration Flow:**
-1. Landing page → Registration form
-2. Form validation → File upload
-3. Submission → Pending verification
-4. Email confirmation → Dashboard access
-
-**Admin Verification Flow:**
-1. Admin dashboard → Pending list
-2. Review details → Approve/Reject
-3. Status update → User notification
-
-**Directory Browsing Flow:**
-1. Search/filter → Results display
-2. Profile selection → Detailed view
-3. Contact attempt → Privacy check
-4. Connection established
-
-### Accessibility Features
-- WCAG 2.1 AA compliance
-- Keyboard navigation support
-- Screen reader compatibility
-- High contrast mode support
-- Alternative text for images
-
-## Testing Strategy
-
-### Unit Testing
-- API endpoint testing
-- Database operation testing
-- Utility function testing
-- Component testing
-
-### Integration Testing
-- Authentication flow testing
-- CRUD operation testing
-- File upload testing
-- Error scenario testing
-
-### End-to-End Testing
-- User registration flow
-- Admin verification process
-- Alumni search and filtering
-- Profile update workflow
-
-## Deployment Strategy
-
-### Development Environment
-- Local PostgreSQL database
-- Hot reloading for both frontend and backend
-- Debug mode enabled
-- Detailed error messages
-
-### Production Environment
-- Cloud-based PostgreSQL (Railway/Render)
-- CDN for static assets
-- Environment-specific configurations
-- Monitoring and logging
-- SSL certificates
-
-### CI/CD Pipeline
-- Automated testing on commit
-- Build optimization
-- Deployment automation
-- Health checks
-- Rollback capabilities
-
-## Monitoring & Analytics
-
-### Application Monitoring
-- Error tracking and logging
-- Performance metrics
-- User activity tracking
-- System health monitoring
-
-### Business Analytics
-- User registration trends
-- Alumni engagement metrics
-- Event participation rates
-- Geographic distribution analysis
-
-## Future Enhancements
-
-### Phase 2 Features
-- Real-time chat system
-- Mentorship matching algorithm
-- Job posting and application system
-- Mobile application development
-- Advanced analytics dashboard
-
-### Phase 3 Features
-- AI-powered alumni suggestions
-- Integration with professional networks
-- Alumni donation management
-- Advanced event management
-- Multi-language support
-
-## Project Timeline
-
-### Phase 1: Core Development (Completed)
-- ✅ Database design and setup
-- ✅ Backend API development
-- ✅ Frontend application development
-- ✅ Authentication and authorization
-- ✅ Basic alumni management
-- ✅ Event management system
-- ✅ Admin dashboard
-- ✅ Reporting system
-
-### Phase 2: Enhanced Features (Planned)
-- 🔄 Real-time communication
-- 🔄 Mobile application
-- 🔄 Advanced analytics
-- 🔄 Integration features
-
-### Phase 3: Advanced Features (Future)
-- 📋 AI-powered features
-- 📋 Enterprise integrations
-- 📋 Advanced customization
-- 📋 Global deployment
-
-## Budget & Resources
-
-### Development Resources
-- Backend development: 40 hours
-- Frontend development: 60 hours
-- Database design: 10 hours
-- Testing and QA: 20 hours
-- Documentation: 10 hours
-- **Total: 140 hours**
-
-### Infrastructure Costs
-- Database hosting: $20/month
-- Application hosting: $25/month
-- CDN and storage: $10/month
-- **Total: $55/month**
-
-## Risk Assessment
-
-### Technical Risks
-- **Database performance** - Mitigated by indexing and optimization
-- **Security vulnerabilities** - Addressed through security best practices
-- **Scalability issues** - Designed with horizontal scaling in mind
-
-### Business Risks
-- **User adoption** - Addressed through user-friendly design
-- **Data privacy** - Compliant with privacy regulations
-- **Maintenance costs** - Optimized for cost-effective operation
-
-## Success Metrics
-
-### Technical Metrics
-- Page load time < 3 seconds
-- API response time < 200ms
-- 99.9% uptime
-- Zero security incidents
-
-### Business Metrics
-- 500+ registered alumni in first year
-- 80% profile completion rate
-- 60% monthly active users
-- 90% user satisfaction score
-
-## Conclusion
-
-The Alumni Management System successfully addresses the critical need for comprehensive alumni relationship management. With its robust technical architecture, intuitive user interface, and scalable design, the platform provides a solid foundation for building strong alumni communities.
-
-The system's modular architecture ensures easy maintenance and future enhancements, while its security-first approach protects sensitive alumni data. The comprehensive feature set meets all requirements for alumni registration, verification, networking, and event management.
-
-Moving forward, the platform is well-positioned for future enhancements including real-time communication, mobile applications, and AI-powered features that will further strengthen alumni engagement and community building.
+### Enums
+- `Role`: ADMIN, ALUMNI, STUDENT
+- `UserStatus`: UNVERIFIED, PENDING, APPROVED, REJECTED
+- `ConnectionStatus`: PENDING, ACCEPTED, REJECTED
+- `StoryStatus`: PENDING, APPROVED, REJECTED
 
 ---
 
-**Project Status:** ✅ **COMPLETED**  
-**Development Hours:** 140 hours  
-**Code Quality:** A+ (ESLint compliant, TypeScript strict mode)  
-**Security Score:** A+ (OWASP compliant)  
-**Performance Score:** A+ (Lighthouse 95+)  
+## Features Implementation
 
-**Built with ❤️ for the alumni community**
+### 1. Two-Phase Registration & Email OTP
+
+**Flow:**
+1. User submits registration form (name, email, password, rollNo, batchYear, department, role, photo)
+2. OTP generated and sent via **Brevo API** to registered email
+3. User verifies OTP on `/verify-email` page → `emailVerified = true`
+4. Account enters `PENDING` status (admin approval required)
+5. Admin approves → `isVerified = true`, welcome email sent
+6. Admin rejects → all linked data deleted (cascade), rejection email sent
+
+**Technical:**
+- `emailOtp` and `emailOtpExpiry` fields on User model
+- Brevo SMTP API for transactional email
+- Roll number format validated: regex `[A-Z]+[0-9]{7}` (e.g., `BCA2023001`)
+- Dynamic role lock: if batch year ≤ 3 years ago, role auto-set to STUDENT
+
+---
+
+### 2. LinkedIn-Style Connection System
+
+**Flow:**
+- User A sends request → User B receives notification
+- User B accepts → `UserConnection` rows inserted bidirectionally (A→B and B→A)
+- Only connected users can initiate chat
+
+**Endpoints:** send, accept, reject, cancel, disconnect, status, my-connections, pending, sent, mutual
+
+**Technical:**
+- Bidirectional adjacency list pattern in `UserConnection` model
+- Both rows always inserted in a single transaction on accept
+- Connection check enforced at both REST (create-conversation) and Socket.io layer (joinConversation)
+
+---
+
+### 3. Real-Time Encrypted Chat
+
+**Security (AES-256-GCM):**
+- Every message is encrypted **before** Prisma saves it to PostgreSQL
+- Storage format: `<ivHex>:<ciphertextHex>:<authTagHex>` (colon-delimited)
+- Fresh 16-byte IV generated per message (probabilistic encryption)
+- GCM auth tag provides tamper detection — any modification detected on decrypt
+- `MESSAGE_SECRET_KEY` = exactly 64 hex chars (256-bit key) — validated at server startup; misconfiguration crashes the process intentionally
+- Backward-compatible: `isEncrypted()` heuristic handles legacy plaintext messages
+
+**Real-Time Features:**
+- WhatsApp-style UI: message bubbles, timestamps, read receipts (double ticks)
+- Online/offline presence indicators
+- Typing indicator (debounced)
+- Soft-delete: "This message was deleted" placeholder
+- Infinite scroll with cursor-based pagination (older messages on scroll up)
+
+**Socket Events:**
+- Client → Server: `joinConversation`, `sendMessage`, `markSeen`, `typing`
+- Server → Client: `newMessage`, `messageSeen`, `userTyping`, `userOnline`, `userOffline`, `messageDeleted`, `error`
+
+---
+
+### 4. Alumni Stories
+
+**Flow:**
+1. Any logged-in user submits a story (title ≤ 100 chars, content ≤ 2000 chars)
+2. Story enters `PENDING` state
+3. Admin reviews in the admin panel → Approve or Reject
+4. Approved stories appear on the public `/stories` page
+5. Author or admin can delete at any time
+
+**Components:** `StoriesFeed`, `StoryForm`, `SeeMoreButton`
+
+---
+
+### 5. Alumni Directory
+
+**Search & Filters:** name/company full-text search, batch year, department, role (Alumni/Student)
+
+**UI:** Card grid with glassmorphism design, hover animations, protected actions (login required to view profile or email)
+
+**Technical:** Prisma `contains` + `mode: 'insensitive'` for case-insensitive search; pagination via `skip` + `take`
+
+---
+
+### 6. Event Management
+
+- Admin creates events with banner image (Cloudinary), title, description, date, location
+- `targetAudience`: ALL / ALUMNI / STUDENT — backend filters events by user role
+- Verified users can register; duplicate registration blocked via `@@unique([userId, eventId])`
+- Participants list accessible at `/events/:id/participants`
+
+---
+
+### 7. Jobs Board
+
+- Alumni and Admins can post job/internship listings
+- Students can view and apply via external link
+- Only job owner or Admin can delete listings
+- Job cards show poster's profile link
+
+---
+
+### 8. Admin Dashboard
+
+**Tabs:**
+- **Overview** — Total users, alumni, students, events, pending verifications
+- **Pending** — Review registration requests with Roll No + Department + Batch details; one-click Approve/Reject with email notification
+- **Users** — Paginated, searchable, filterable table of all users with verification status
+- **Reports** — CSV export with filters (batch year, department, role type)
+
+**Export columns (Alumni):** Name, Roll No, Dept, Batch, Location, Current Work, Company, Email, Role
+
+---
+
+## Security Implementation
+
+| Layer | Implementation |
+|-------|---------------|
+| Passwords | bcrypt, 12 salt rounds |
+| Authentication | JWT, 7-day expiry |
+| Message storage | AES-256-GCM, unique IV per message |
+| Transport | HTTPS (Render/Vercel enforce TLS) |
+| Input validation | express-validator + Zod |
+| SQL injection | Prevented by Prisma ORM |
+| XSS | Helmet.js headers |
+| Rate limiting | Per-route limits (express-rate-limit) |
+| File uploads | Images only, 5MB max, Cloudinary storage |
+| Proxy trust | `app.set('trust proxy', 1)` for Render |
+
+---
+
+## Deployment Architecture
+
+```
+User Browser
+     │
+     ├──[HTTPS]──► Vercel (Next.js Frontend)
+     │                   │
+     │                   └──[HTTPS / WSS]──► Render (Express + Socket.io)
+     │                                              │
+     │                                              ├──► Neon DB (PostgreSQL)
+     │                                              ├──► Cloudinary (Images)
+     │                                              └──► Brevo (Email)
+     │
+     └── cron-job.org ──[GET /ping every 5 min]──► Render (anti-sleep)
+```
+
+**Environment Variables (Render Backend):**
+```
+DATABASE_URL          ← Neon PostgreSQL connection string
+JWT_SECRET            ← Random string, min 32 chars
+MESSAGE_SECRET_KEY    ← Exactly 64 hex chars (32 bytes)
+BREVO_API_KEY         ← Brevo transactional email key
+EMAIL_USER            ← Verified sender email
+FRONTEND_URL          ← Vercel deployment URL
+CLOUDINARY_CLOUD_NAME
+CLOUDINARY_API_KEY
+CLOUDINARY_API_SECRET
+```
+
+---
+
+## Performance Optimizations
+
+- **Database:** Prisma indexes on `conversationId + createdAt` (messages), `userId`, `connectionId`
+- **Pagination:** Cursor-based pagination for chat; offset pagination for directory/admin
+- **Images:** Cloudinary auto-resize (500×500 limit), lazy loading on frontend
+- **Debouncing:** Search inputs and typing indicator debounced
+- **Anti-sleep:** cron-job.org pings `/ping` every 5 minutes (Render free tier)
+- **Rate limiting:** Per-route limits prevent abuse without blocking legitimate traffic
+
+---
+
+## Tech Stack Summary
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 14, React, Tailwind CSS, Lucide React |
+| Backend | Node.js, Express.js, Socket.io |
+| Database | PostgreSQL (Neon DB), Prisma ORM |
+| Auth | JWT, bcryptjs |
+| Encryption | Node.js `crypto` — AES-256-GCM |
+| Email | Brevo API (Sendinblue) |
+| Media | Cloudinary |
+| Validation | express-validator, Zod |
+| Deployment | Vercel (FE) + Render (BE) |
+| DevOps | cron-job.org (keep-alive) |
+
+---
+
+## Project Timeline
+
+### Phase 1 — Core Platform ✅
+- Database design and Prisma schema
+- JWT authentication + role-based access
+- Alumni registration and admin verification
+- Alumni directory with search/filters
+- Event management system
+- Jobs board
+- Admin dashboard with CSV export
+
+### Phase 2 — Networking & Communication ✅
+- LinkedIn-style connection request system
+- Real-time Socket.io chat infrastructure
+- AES-256-GCM end-to-end message encryption
+- WhatsApp-style chat UI with presence, typing, read receipts
+- Alumni Stories with admin moderation
+
+### Phase 3 — Production Hardening ✅
+- Email OTP verification flow
+- Brevo transactional email (approve/reject/reset/confirm)
+- Cloudinary media storage
+- Render + Vercel deployment
+- Anti-sleep cron job
+- Proxy trust configuration
+
+### Phase 4 — Future Enhancements 📋
+- AI-powered alumni suggestions and mentorship matching
+- Mobile application (React Native)
+- Push notifications
+- Donation management module
+- Multi-language support
+
+---
+
+## Risk Assessment
+
+| Risk | Mitigation |
+|------|-----------|
+| Server spin-down on free tier | cron-job.org pings `/ping` every 5 min |
+| Encryption key misconfiguration | Server crashes on startup if key invalid |
+| Stale Prisma client on Render | `postinstall: prisma generate` in package.json |
+| Foreign key constraint on delete | Admin reject flow cascades all related data first |
+| Chat without connection | Socket.io enforces connection check before `joinConversation` |
+
+---
+
+## Conclusion
+
+Xavier AlumniConnect has been successfully built as a full-featured, production-deployed platform that goes significantly beyond a basic alumni management system. The inclusion of AES-256-GCM encrypted real-time chat, a LinkedIn-style connection system, and a comprehensive admin panel makes it a genuinely useful professional networking tool for St. Xavier's College, Patna.
+
+The layered backend architecture (Routes → Controllers → Services → Repositories) ensures maintainability, while the Prisma ORM and indexed database schema ensure the platform can scale to thousands of users without performance degradation.
+
+---
+
+**Project Status:** ✅ **PRODUCTION DEPLOYED**
+**Platform:** St. Xavier's College, Patna
+**Frontend:** Vercel · **Backend:** Render · **Database:** Neon DB
+**Security:** AES-256-GCM Chat Encryption · JWT Auth · Brevo Email Notifications
+
+
+## Project struture
+avier-alumni-connect/
+│
+├── .gitignore
+├── setup.sh                                  # Local dev setup script
+│
+├── backend/                                  # Express.js Backend API
+│   ├── package.json
+│   ├── prisma/
+│   │   ├── schema.prisma                     # Full DB schema (11 models)
+│   │   └── migrations/
+│   │       ├── 20260214163601_add_target_audience/migration.sql
+│   │       └── 20260221160641_add_reset_token/migration.sql
+│   │
+│   └── src/
+│       ├── server.js                         # Express + Socket.io entry point
+│       │
+│       ├── routes/                           # REST API route definitions
+│       │   ├── auth.js                       # Register, login, OTP verify, reset password
+│       │   ├── alumni.js                     # Profile CRUD + stats
+│       │   ├── admin.js                      # Pending, verify, delete, stats, users list
+│       │   ├── chat.routes.js                # Conversations, messages, delete message
+│       │   ├── connection.routes.js          # Send, accept, reject, cancel, disconnect, status
+│       │   ├── events.js                     # Events CRUD + registration + participants
+│       │   ├── jobs.js                       # Jobs board CRUD
+│       │   ├── stories.js                    # Alumni stories + admin moderation
+│       │   ├── users.js                      # Directory listing
+│       │   ├── export.js                     # CSV export with filters (batch, dept, role)
+│       │   └── reports.js                    # Reports
+│       │
+│       ├── controllers/
+│       │   ├── chat.controller.js
+│       │   └── connection.controller.js
+│       │
+│       ├── services/
+│       │   ├── chat.service.js               # encrypt/decrypt on save/fetch
+│       │   └── connection.service.js         # isConnected check
+│       │
+│       ├── repositories/
+│       │   ├── chat.repository.js            # Prisma queries for messages
+│       │   └── connection.repository.js      # Prisma queries for connections
+│       │
+│       ├── socket/
+│       │   └── socket.js                     # Socket.io: joinConversation, sendMessage, markSeen, typing, presence
+│       │
+│       ├── middleware/
+│       │   ├── auth.js                       # JWT middleware (REST)
+│       │   └── socketAuth.js                 # JWT middleware (Socket.io)
+│       │
+│       └── utils/
+│           ├── encryption.js                 # AES-256-GCM encrypt/decrypt/isEncrypted
+│           ├── cloudinary.js                 # Cloudinary + multer-storage-cloudinary
+│           ├── email.js                      # Brevo API email sender
+│           └── upload.js                     # Local multer config
+│
+│
+├── frontend/                                 # Next.js 14 Frontend
+│   ├── next.config.js
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   ├── tsconfig.json
+│   │
+│   ├── public/
+│   │   ├── xavier-logo.png
+│   │   └── icons/
+│   │       ├── email.png
+│   │       ├── instagram.png
+│   │       ├── linkedin.png
+│   │       └── school.png
+│   │
+│   └── src/
+│       │
+│       ├── app/                              # Next.js App Router pages
+│       │   ├── layout.tsx                    # Root layout (Navbar + AuthProvider + Toaster)
+│       │   ├── globals.css
+│       │   ├── icon.png
+│       │   │
+│       │   ├── page.tsx                      # Home / Landing page
+│       │   ├── login/page.tsx
+│       │   ├── register/page.tsx             # Smart role lock by batch year
+│       │   ├── verify-email/page.tsx         # Email OTP verification
+│       │   ├── forgot-password/page.tsx
+│       │   ├── reset-password/page.tsx
+│       │   │
+│       │   ├── dashboard/
+│       │   │   ├── page.tsx                  # Stats + connection requests
+│       │   │   └── profile/page.tsx          # Edit own profile
+│       │   │
+│       │   ├── directory/page.tsx            # Alumni directory with filters
+│       │   ├── alumni/[id]/page.tsx          # Public alumni profile
+│       │   ├── profile/[id]/page.tsx         # Profile with Connect / Chat CTA
+│       │   │
+│       │   ├── connections/page.tsx          # My connections list
+│       │   │
+│       │   ├── chat/page.tsx                 # Real-time AES-encrypted chat
+│       │   │
+│       │   ├── stories/
+│       │   │   ├── page.tsx                  # Stories feed
+│       │   │   └── [id]/page.tsx             # Single story detail
+│       │   │
+│       │   ├── events/
+│       │   │   ├── page.tsx                  # Events listing + register
+│       │   │   ├── create/page.tsx           # Create event (Admin only)
+│       │   │   └── [id]/participants/page.tsx
+│       │   │
+│       │   ├── jobs/
+│       │   │   ├── page.tsx
+│       │   │   └── create/page.tsx           # Post job (Alumni/Admin only)
+│       │   │
+│       │   └── admin/page.tsx                # Overview / Pending / Users / Reports
+│       │
+│       ├── components/
+│       │   ├── Navbar.tsx
+│       │   ├── chat/
+│       │   │   ├── ChatWindow.tsx            # WhatsApp-style UI: bubbles, ticks, typing
+│       │   │   └── ConversationList.tsx
+│       │   ├── stories/
+│       │   │   ├── StoriesFeed.tsx
+│       │   │   ├── StoryForm.tsx
+│       │   │   └── SeeMoreButton.tsx
+│       │   └── admin/
+│       │       └── UsersTab.tsx              # Paginated searchable user table
+│       │
+│       ├── contexts/
+│       │   └── AuthContext.tsx               # Auth state + axios interceptor
+│       │
+│       ├── hooks/
+│       │   └── useChatSocket.ts              # Socket.io custom hook
+│       │
+│       └── lib/
+│           └── socket.ts                     # Socket.io client singleton
+│
+│
+└── docs/
+    ├── API.md                                # REST + WebSocket API reference
+    ├── PROJECT_REPORT.md                     # Technical architecture report
+    └── README.md                             # Setup and deployment guide
+```
+
+*Built with ❤️ for the Xavier alumni community*

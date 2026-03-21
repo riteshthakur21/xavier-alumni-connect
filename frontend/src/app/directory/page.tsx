@@ -165,7 +165,35 @@ export default function Directory() {
   const years = Array.from({ length: 2026 - 2009 + 1 }, (_, i) => 2026 - i);
   const departments = ['BBA', 'BCA', 'BCOM (P)', 'BBA (IB)', 'BA (JMC)'];
 
-  if (loading) return <div className="p-20 text-center animate-pulse font-black text-slate-400 text-xl">Loading Xavier Alumni Directory... 🔍</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {Array.from({ length: 6 }).map((_, idx) => (
+              <div key={idx} className="animate-pulse bg-white rounded-3xl p-5 border border-slate-100">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-16 h-16 rounded-2xl bg-slate-200" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-slate-200 rounded w-2/3" />
+                    <div className="h-3 bg-slate-200 rounded w-1/3" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-slate-200 rounded w-full" />
+                  <div className="h-3 bg-slate-200 rounded w-4/5" />
+                </div>
+                <div className="mt-5 flex gap-2">
+                  <div className="h-10 bg-slate-200 rounded-xl flex-1" />
+                  <div className="h-10 w-12 bg-slate-200 rounded-xl" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4">

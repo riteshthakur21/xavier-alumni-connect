@@ -39,10 +39,26 @@ export default function Events() {
 
   if (!user && !authLoading) {
     return (
-      <div className="text-center py-20">
-        <h2 className="text-2xl font-bold">Please Login First 🔒</h2>
-        <p className="mb-6">You need an account to see events.</p>
-        <Link href="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg">Login</Link>
+      <div className="min-h-[60vh] flex items-center justify-center px-4">
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-xl p-10 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-5">
+            <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 mb-2">Login Required</h2>
+          <p className="text-slate-500 text-sm mb-8 leading-relaxed">
+            You need to be logged in to access this section. Join our community to explore alumni events and register for them.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link href="/login" className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors text-sm">
+              Login
+            </Link>
+            <Link href="/register" className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors text-sm">
+              Create Account
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -69,7 +85,25 @@ export default function Events() {
     }
   };
 
-  if (loading) return <div className="p-8 text-center animate-pulse">Loading amazing events...</div>;
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto py-8 px-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {Array.from({ length: 3 }).map((_, idx) => (
+            <div key={idx} className="animate-pulse bg-white rounded-2xl overflow-hidden border border-slate-100">
+              <div className="h-48 bg-slate-200" />
+              <div className="p-6 space-y-3">
+                <div className="h-5 bg-slate-200 rounded w-3/4" />
+                <div className="h-3 bg-slate-200 rounded w-full" />
+                <div className="h-3 bg-slate-200 rounded w-2/3" />
+                <div className="h-10 bg-slate-200 rounded-xl mt-4" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
