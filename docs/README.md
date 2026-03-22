@@ -1,7 +1,7 @@
 # Xavier AlumniConnect
 
 > **Next-generation alumni networking platform for St. Xavier's College, Patna**  
-> Est. 1953 · Full-stack · Production-ready
+> Full-stack · Production-ready
 
 ---
 

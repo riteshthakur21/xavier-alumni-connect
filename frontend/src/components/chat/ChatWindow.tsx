@@ -141,7 +141,7 @@ export default function ChatWindow({
 
         {/* Clickable profile area — avatar + name/status */}
         <Link
-          href={participant?.id ? `/profile/${participant.id}` : '#'}
+          href={participant?.id ? `/alumni/${participant.id}` : '#'}
           className="flex items-center gap-3 flex-1 min-w-0 group"
         >
           {/* Avatar with photo */}
