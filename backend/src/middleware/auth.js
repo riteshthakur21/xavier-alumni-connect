@@ -24,17 +24,35 @@ const authMiddleware = async (req, res, next) => {
     }
 
     // 3. Fetch User from DB
+    // const user = await prisma.user.findUnique({
+    //   where: { id: userId },
+    //   select: {
+    //     id: true,
+    //     email: true,
+    //     name: true,
+    //     role: true,
+    //     isVerified: true,
+    //     status: true
+    //   }
+    // });
+
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+  where: { id: userId },
+  select: {
+    id: true,
+    email: true,
+    name: true,
+    role: true,
+    isVerified: true,
+    status: true,
+    alumniProfile: {          // ← YE ADD KARO
       select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        isVerified: true,
-        status: true
+        batchYear: true,
+        department: true
       }
-    });
+    }
+  }
+});
 
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
