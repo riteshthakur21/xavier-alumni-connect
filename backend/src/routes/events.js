@@ -356,7 +356,7 @@ router.get('/:id/participants', authMiddleware, async (req, res) => {
 // ── 2. Create Event ───────────────────────────────────────────────────────────
 router.post('/', authMiddleware, adminMiddleware, upload.single('image'), async (req, res) => {
   try {
-    const { title, description, date, location, targetAudience, targetBatches } = req.body;
+    const { title, description, date, location, targetAudience, targetBatches, registrationLink } = req.body;
 
     if (!title || !description || !date) {
       return res.status(400).json({ error: 'Missing required fields (Title, Description, or Date)' });
@@ -370,6 +370,7 @@ router.post('/', authMiddleware, adminMiddleware, upload.single('image'), async 
         location:       location || '',
         targetAudience: targetAudience || 'ALL',
         targetBatches:  targetBatches  || null,
+        registrationLink: registrationLink || null,
         imageUrl:       req.file ? req.file.path : null,
         postedById:     req.user.id
       }
@@ -406,14 +407,27 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', authMiddleware, adminMiddleware, upload.single('image'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, date, location, isActive } = req.body;
+    
+    // 1. Nayi fields ko req.body se nikalo
+    const { title, description, date, location, isActive, targetAudience, targetBatches, registrationLink } = req.body;
 
+    // 2. updateData mein naye fields add karo
     const updateData = {
-      title, description, location,
+      title, 
+      description, 
+      location,
+      targetAudience,   // <--- NAYA
+      targetBatches,    // <--- NAYA
+      registrationLink, // <--- NAYA
       isActive: isActive !== undefined ? isActive === 'true' : undefined
     };
-    if (date)     updateData.date     = new Date(date);
-    if (req.file) updateData.imageUrl = `/uploads/${req.file.filename}`;
+
+    if (date) updateData.date = new Date(date);
+    
+    // 3. Cloudinary wala sahi path lagao (purana /uploads/ wala hata diya)
+    if (req.file) {
+      updateData.imageUrl = req.file.path; 
+    }
 
     const event = await prisma.event.update({ where: { id }, data: updateData });
     res.json({ message: 'Event updated successfully', event });
@@ -422,6 +436,26 @@ router.put('/:id', authMiddleware, adminMiddleware, upload.single('image'), asyn
     res.status(500).json({ error: 'Failed to update event' });
   }
 });
+// router.put('/:id', authMiddleware, adminMiddleware, upload.single('image'), async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { title, description, date, location, isActive } = req.body;
+
+//     const updateData = {
+//       title, description, location,
+//       isActive: isActive !== undefined ? isActive === 'true' : undefined
+//     };
+//     if (date)     updateData.date     = new Date(date);
+//     if (req.file) updateData.imageUrl = `/uploads/${req.file.filename}`;
+
+//     const event = await prisma.event.update({ where: { id }, data: updateData });
+//     res.json({ message: 'Event updated successfully', event });
+//   } catch (error) {
+//     console.error('Error updating event:', error);
+//     res.status(500).json({ error: 'Failed to update event' });
+//   }
+// });
+
 
 // ── 5. Delete Event ───────────────────────────────────────────────────────────
 router.delete('/:id', authMiddleware, adminMiddleware, async (req, res) => {
