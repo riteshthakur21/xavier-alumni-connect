@@ -47,6 +47,17 @@ model User {
   @@map("users")
 }
 
+model EmailOtp {
+  id        String   @id @default(cuid())
+  email     String
+  otp       String
+  name      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("email_otps")
+}
+
 // ─── Chat Models ──────────────────────────────────────────────────────────────
 
 model Conversation {

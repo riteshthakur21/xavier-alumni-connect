@@ -45,6 +45,100 @@ const resendOtpLimiter = rateLimit({
   message: { error: 'Too many OTP resend requests. Please try again later.' }
 });
 
+router.post('/send-otp', async (req, res) => {
+  try {
+    const { name, email } = req.body;
+    const normalizedEmail = email?.trim().toLowerCase();
+
+    if (!name || !normalizedEmail) {
+      return res.status(400).json({ error: 'Name and email are required' });
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email: normalizedEmail }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    await prisma.emailOtp.deleteMany({
+      where: { email: normalizedEmail }
+    });
+
+    const otp = generateEmailOtp();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await prisma.emailOtp.create({
+      data: {
+        email: normalizedEmail,
+        otp,
+        name,
+        expiresAt
+      }
+    });
+
+    await sendEmail({
+      email: normalizedEmail,
+      subject: 'Verify your Xavier AlumniConnect account',
+      message: buildEmailOtpTemplate(otp, name)
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'OTP sent'
+    });
+  } catch (error) {
+    console.error('Send OTP error:', error);
+    return res.status(500).json({ error: 'Failed to send OTP' });
+  }
+});
+
+router.post('/verify-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const normalizedEmail = email?.trim().toLowerCase();
+
+    if (!normalizedEmail || !otp) {
+      return res.status(400).json({ error: 'Email and OTP are required' });
+    }
+
+    const otpRecord = await prisma.emailOtp.findFirst({
+      where: { email: normalizedEmail }
+    });
+
+    if (!otpRecord) {
+      return res.status(400).json({ error: 'Invalid OTP' });
+    }
+
+    if (otpRecord.expiresAt < new Date()) {
+      return res.status(400).json({ error: 'OTP expired' });
+    }
+
+    if (otpRecord.otp !== otp) {
+      return res.status(400).json({ error: 'Invalid OTP' });
+    }
+
+    await prisma.emailOtp.deleteMany({
+      where: { email: normalizedEmail }
+    });
+
+    const verifiedToken = jwt.sign(
+      { email: normalizedEmail, name: otpRecord.name, emailVerified: true },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    return res.status(200).json({
+      success: true,
+      verifiedToken
+    });
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    return res.status(500).json({ error: 'OTP verification failed' });
+  }
+});
+
 // Register validation
 const registerValidation = [
   body('name').trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
@@ -74,7 +168,37 @@ router.post('/register', upload.single('photo'), registerValidation, async (req,
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password, role, batchYear, department, rollNo, company, jobTitle, linkedinUrl, bio } = req.body;
+    const {
+      name,
+      email,
+      password,
+      role,
+      batchYear,
+      department,
+      rollNo,
+      company,
+      jobTitle,
+      linkedinUrl,
+      bio,
+      verifiedToken,
+      googleId
+    } = req.body;
+
+    if (verifiedToken) {
+      try {
+        const decoded = jwt.verify(verifiedToken, process.env.JWT_SECRET);
+        if (!decoded?.emailVerified) {
+          return res.status(400).json({ error: 'Email verification required' });
+        }
+        if (decoded.email !== email) {
+          return res.status(400).json({ error: 'Email does not match verified token' });
+        }
+      } catch (error) {
+        return res.status(400).json({ error: 'Invalid or expired verified token' });
+      }
+    } else if (!googleId) {
+      return res.status(400).json({ error: 'Email verification required' });
+    }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -88,8 +212,6 @@ router.post('/register', upload.single('photo'), registerValidation, async (req,
     // Hash password
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
-    const emailOtp = generateEmailOtp();
-    const emailOtpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
     // Create user
     const user = await prisma.user.create({
@@ -102,11 +224,10 @@ router.post('/register', upload.single('photo'), registerValidation, async (req,
         // 👇 CHANGE 2: Roll Number ab User table me save hoga
         rollNo: rollNo,
 
-        isVerified: false,
-        emailVerified: false,
-        emailOtp,
-        emailOtpExpiry,
-        status: 'UNVERIFIED'
+        isVerified: true,
+        emailVerified: true,
+        status: 'PENDING',
+        googleId: googleId || undefined
       }
     });
 
@@ -127,15 +248,9 @@ router.post('/register', upload.single('photo'), registerValidation, async (req,
       }
     });
 
-    await sendEmail({
-      email: user.email,
-      subject: 'Verify your Xavier AlumniConnect account',
-      message: buildEmailOtpTemplate(emailOtp, user.name)
-    });
-
     res.status(201).json({
       success: true,
-      message: 'OTP sent to your email',
+      message: 'Registration submitted. Your account is pending admin approval.',
       email: user.email
     });
 
