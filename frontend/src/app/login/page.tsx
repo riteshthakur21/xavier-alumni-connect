@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import GoogleAuthButton from '@/components/GoogleAuthButton';
 import toast from 'react-hot-toast';
 
 export default function Login() {
@@ -349,6 +350,14 @@ export default function Login() {
               )}
             </button>
           </div>
+
+          <div className="flex items-center gap-4">
+            <div className="h-px flex-1 bg-slate-200" />
+            <span className="text-xs font-semibold text-slate-500">or</span>
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
+
+          <GoogleAuthButton />
 
           <div className="text-center">
             <Link

@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import axios from 'axios';
+import GoogleAuthButton from '@/components/GoogleAuthButton';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -24,9 +26,30 @@ export default function Register() {
   const [registerSuccess, setRegisterSuccess] = useState(false);
   const { register } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isFromGoogle = searchParams.get('fromGoogle') === 'true';
+  const googleEmail = searchParams.get('email') || '';
+  const googleName = searchParams.get('name') || '';
+  const googleIdParam = searchParams.get('googleId') || '';
+  const googlePicture = searchParams.get('picture') || '';
+  const [googleId, setGoogleId] = useState('');
 
   // --- Smart Role Logic ---
   const currentYear = 2026;
+
+  const generateRandomPassword = () =>
+    `GX-${Math.random().toString(36).slice(2, 10)}-${Math.random().toString(36).slice(2, 10)}`;
+
+  useEffect(() => {
+    if (!isFromGoogle) return;
+    setGoogleId(googleIdParam);
+    setFormData(prev => ({
+      ...prev,
+      email: googleEmail || prev.email,
+      name: googleName || prev.name,
+      password: prev.password || generateRandomPassword(),
+    }));
+  }, [isFromGoogle, googleEmail, googleName, googleIdParam]);
 
   useEffect(() => {
     const batch = parseInt(formData.batchYear);
@@ -66,6 +89,13 @@ export default function Register() {
 
     try {
       await register({ ...formData, photo });
+      if (isFromGoogle && googleId) {
+        try {
+          await axios.post('/api/auth/google/link', { googleId, email: formData.email });
+        } catch (linkError) {
+          console.error('Google link error:', linkError);
+        }
+      }
       router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`);
     } catch (error) {
       // Error toast is already shown by AuthContext
@@ -157,6 +187,18 @@ export default function Register() {
 
         <div className="card bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {isFromGoogle && (
+              <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 flex items-center justify-between gap-3">
+                <span>Completing registration via Google. No password needed.</span>
+                {googlePicture && (
+                  <img
+                    src={googlePicture}
+                    alt="Google profile"
+                    className="h-10 w-10 rounded-full border border-blue-200"
+                  />
+                )}
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Name - with auto-capitalization */}
               <div>
@@ -176,15 +218,27 @@ export default function Register() {
               {/* Email */}
               <div>
                 <label htmlFor="email" className="form-label">Email Address *</label>
-                <input type="email" id="email" name="email" required className="form-input" value={formData.email} onChange={handleChange} />
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  required
+                  className={`form-input ${isFromGoogle ? 'bg-slate-100 cursor-not-allowed' : ''}`}
+                  value={formData.email}
+                  onChange={handleChange}
+                  readOnly={isFromGoogle}
+                  disabled={isFromGoogle}
+                />
               </div>
 
               {/* Password */}
-              <div>
-                <label htmlFor="password" className="form-label">Password *</label>
-                <input type="password" id="password" name="password" required minLength={6} className="form-input" value={formData.password} onChange={handleChange} />
-                <p className="text-xs text-slate-500 mt-1">Minimum 6 characters</p>
-              </div>
+              {!isFromGoogle && (
+                <div>
+                  <label htmlFor="password" className="form-label">Password *</label>
+                  <input type="password" id="password" name="password" required minLength={6} className="form-input" value={formData.password} onChange={handleChange} />
+                  <p className="text-xs text-slate-500 mt-1">Minimum 6 characters</p>
+                </div>
+              )}
 
               {/* Batch Year */}
               <div>
@@ -321,6 +375,14 @@ export default function Register() {
                 )}
               </button>
             </div>
+
+            <div className="flex items-center gap-4">
+              <div className="h-px flex-1 bg-slate-200" />
+              <span className="text-xs font-semibold text-slate-500">or</span>
+              <div className="h-px flex-1 bg-slate-200" />
+            </div>
+
+            <GoogleAuthButton text="Continue with Google" />
           </form>
         </div>
 
