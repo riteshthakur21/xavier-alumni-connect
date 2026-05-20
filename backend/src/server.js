@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const session = require('express-session');
+const passport = require('passport');
 const path = require('path');
 const { Server } = require('socket.io');
 require('dotenv').config();
@@ -14,6 +16,7 @@ require('./utils/encryption');
 
 // ── Route imports ──────────────────────────────────────────────────────────────
 const authRoutes    = require('./routes/auth');
+const authGoogleRoutes = require('./routes/authGoogle');
 const alumniRoutes  = require('./routes/alumni');
 const adminRoutes   = require('./routes/admin');
 const eventRoutes   = require('./routes/events');
@@ -22,6 +25,8 @@ const userRoutes    = require('./routes/users');
 const exportRoutes  = require('./routes/export');
 const chatRoutes        = require('./routes/chat.routes');       // Real-time chat REST
 const connectionRoutes  = require('./routes/connection.routes'); // LinkedIn-style connections
+
+require('./config/passport');
 
 // ── Socket.io layer ────────────────────────────────────────────────────────────
 const socketAuthMiddleware      = require('./middleware/socketAuth');
@@ -70,8 +75,26 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+app.use(session({
+  secret: process.env.JWT_SECRET,
+  resave: false,
+  saveUninitialized: false,
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser((user, done) => {
+  done(null, user?.id || null);
+});
+
+passport.deserializeUser((id, done) => {
+  done(null, id ? { id } : null);
+});
+
 // ── REST routes ────────────────────────────────────────────────────────────────
 app.use('/api/auth',    authRoutes);
+app.use('/api/auth',    authGoogleRoutes);
 app.use('/api/alumni',  alumniRoutes);
 app.use('/api/admin',   adminRoutes);
 app.use('/api/events',  eventRoutes);
