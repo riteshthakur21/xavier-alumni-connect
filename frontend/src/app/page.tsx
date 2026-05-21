@@ -289,8 +289,7 @@ export default function Home() {
                           border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-          <div className="flex flex-col sm:flex-row sm:items-end
-                          justify-between gap-4 mb-10">
+          <div className="flex flex-col items-center text-center gap-4 mb-10">
             <div>
               <p className="text-blue-600 text-sm font-semibold
                             uppercase tracking-widest mb-2">
@@ -303,7 +302,7 @@ export default function Home() {
                 Real journeys. Real inspiration.
               </p>
             </div>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap justify-center">
               {['Career', 'Growth', 'Mentorship', 'Success'].map((tag) => (
                 <span key={tag}
                   className="px-3 py-1 text-xs font-semibold rounded-full
