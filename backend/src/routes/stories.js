@@ -1,6 +1,7 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
+const notifSvc = require('../services/notification.service');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -125,10 +126,36 @@ router.patch('/:id/status', authMiddleware, adminMiddleware, async (req, res) =>
       return res.status(400).json({ error: 'Status must be APPROVED or REJECTED' });
     }
 
+    const existingStory = await prisma.story.findUnique({
+      where: { id },
+      select: { authorId: true, title: true },
+    });
+
+    if (!existingStory) {
+      return res.status(404).json({ error: 'Story not found' });
+    }
+
     const story = await prisma.story.update({
       where: { id },
       data: { status },
     });
+
+    // Notify the author
+    const io = req.app.get('io');
+    try {
+      const isApproved = status === 'APPROVED';
+      await notifSvc.push(io, {
+        userId:  existingStory.authorId,
+        type:    isApproved ? 'STORY_APPROVED' : 'STORY_REJECTED',
+        title:   isApproved ? 'Story Published! 🎉' : 'Story Not Approved',
+        message: isApproved
+          ? `Your story "${existingStory.title}" has been approved and is now live!`
+          : `Your story "${existingStory.title}" was not approved by the admin.`,
+        link: isApproved ? `/stories/${id}` : '/dashboard',
+      });
+    } catch (notifErr) {
+      console.error('[Notification] story status notification failed:', notifErr.message);
+    }
 
     res.json({ message: `Story ${status.toLowerCase()} successfully`, story });
   } catch (error) {
