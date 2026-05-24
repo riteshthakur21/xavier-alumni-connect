@@ -44,6 +44,8 @@ model User {
   // Story relations
   stories Story[]
 
+  notifications Notification[]
+
   @@map("users")
 }
 
@@ -251,4 +253,31 @@ model Story {
   author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@map("stories")
+}
+
+model Notification {
+  id        String     @id @default(uuid())
+  userId    String
+  type      NotifType
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean    @default(false)
+  createdAt DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
+
+enum NotifType {
+  CONNECTION_REQUEST
+  CONNECTION_ACCEPTED
+  STORY_APPROVED
+  STORY_REJECTED
+  JOB_POSTED
+  EVENT_REGISTERED
+  GENERAL
 }
