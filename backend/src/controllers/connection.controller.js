@@ -26,12 +26,12 @@ const handle = (fn) => async (req, res) => {
 
 // POST /connections/send/:userId
 const sendRequest = handle((req) =>
-  svc.sendRequest(req.user.id, req.params.userId)
+  svc.sendRequest(req.user.id, req.params.userId, req.app.get('io'))
 );
 
 // POST /connections/accept/:requestId
 const acceptRequest = handle((req) =>
-  svc.acceptRequest(req.params.requestId, req.user.id)
+  svc.acceptRequest(req.params.requestId, req.user.id, req.app.get('io'))
 );
 
 // POST /connections/reject/:requestId
