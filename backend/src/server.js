@@ -26,6 +26,7 @@ const exportRoutes  = require('./routes/export');
 const chatRoutes        = require('./routes/chat.routes');       // Real-time chat REST
 const connectionRoutes  = require('./routes/connection.routes'); // LinkedIn-style connections
 const notificationRoutes = require('./routes/notifications');
+const pgSession = require('connect-pg-simple')(session);
 
 require('./config/passport');
 
@@ -77,9 +78,18 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use(session({
+  store: new pgSession({
+    conString: process.env.DATABASE_URL,
+    tableName: 'session',
+    createTableIfMissing: true,   // auto table banayega
+  }),
   secret: process.env.JWT_SECRET,
   resave: false,
   saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  },
 }));
 
 app.use(passport.initialize());
