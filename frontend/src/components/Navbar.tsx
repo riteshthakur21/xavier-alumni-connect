@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import NotificationBell from '@/components/NotificationBell';
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
 const Icons = {
@@ -224,15 +225,19 @@ const Navbar: React.FC = () => {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
   const rawPhoto = user?.alumniProfile?.photoUrl;
   const photoUrl = rawPhoto
-    ? rawPhoto.startsWith('http') ? rawPhoto
-      : `${API_URL}/${rawPhoto.replace(/^\/+/, '').replace(/\\/g, '/')}`
+    ? (rawPhoto.startsWith('http')
+      ? rawPhoto
+      : `${API_URL}/${rawPhoto.replace(/^\/+/, '').replace(/\\/g, '/')}`)
     : null;
 
   return (
-    <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled
-      ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200/80'
-      : 'bg-white/80 backdrop-blur-sm border-b border-slate-100'
-      }`}>
+    <nav
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200/80'
+          : 'bg-white/80 backdrop-blur-sm border-b border-slate-100'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
 
@@ -272,64 +277,65 @@ const Navbar: React.FC = () => {
             {user && <NavLink href="/dashboard">Dashboard</NavLink>}
           </div>
 
-          {/* Desktop Actions */}
-          <div className="hidden lg:flex items-center gap-3">
-            {!loading && (
-              user ? (
-                <div className="flex items-center gap-3">
-                  <Link href="/dashboard/profile"
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl
-                                   hover:bg-slate-50 transition-colors group">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500
-                                    to-indigo-600 flex items-center justify-center
-                                    border-2 border-white shadow-sm overflow-hidden
-                                    group-hover:shadow-md transition-shadow">
-                      {photoUrl ? (
-                        <img src={photoUrl} alt={user.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-[11px] font-black text-white">{userInitial}</span>
-                      )}
-                    </div>
-                    <span className="text-sm font-semibold text-slate-700
-                                     group-hover:text-blue-600 transition-colors
-                                     max-w-[120px] truncate">
-                      {user.name}
-                    </span>
-                  </Link>
-                  <div className="w-px h-5 bg-slate-200" />
-                  <button onClick={logout}
-                    className="text-sm font-semibold text-slate-500
-                                     hover:text-red-500 hover:bg-red-50
-                                     px-3 py-1.5 rounded-lg transition-all duration-200">
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Link href="/login"
-                    className="text-sm font-semibold text-slate-600
-                                   hover:text-blue-600 px-3 py-1.5 rounded-lg
-                                   hover:bg-slate-50 transition-all duration-200">
-                    Login
-                  </Link>
-                  <Link href="/register"
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white
-                                   text-sm font-semibold px-5 py-2 rounded-full
-                                   hover:shadow-md hover:shadow-blue-200
-                                   hover:-translate-y-0.5 active:translate-y-0
-                                   transition-all duration-200 shadow-sm">
-                    Join Community
-                  </Link>
-                </div>
-              )
-            )}
-          </div>
+          {/* Actions Container */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {user && <NotificationBell isLoggedIn={true} />}
 
-          {/* Mobile Hamburger */}
-          <button onClick={() => setMenuOpen(!menuOpen)}
-            className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100
-                             focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-            aria-expanded={menuOpen} aria-label="Toggle menu">
+            {!loading && user && (
+              <div className="hidden lg:flex items-center gap-3">
+                <Link href="/dashboard/profile"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl
+                                 hover:bg-slate-50 transition-colors group">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500
+                                  to-indigo-600 flex items-center justify-center
+                                  border-2 border-white shadow-sm overflow-hidden
+                                  group-hover:shadow-md transition-shadow">
+                    {photoUrl ? (
+                      <img src={photoUrl} alt={user.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-[11px] font-black text-white">{userInitial}</span>
+                    )}
+                  </div>
+                  <span className="text-sm font-semibold text-slate-700
+                                   group-hover:text-blue-600 transition-colors
+                                   max-w-[120px] truncate">
+                    {user.name}
+                  </span>
+                </Link>
+                <div className="w-px h-5 bg-slate-200" />
+                <button onClick={logout}
+                  className="text-sm font-semibold text-slate-500
+                                   hover:text-red-500 hover:bg-red-50
+                                   px-3 py-1.5 rounded-lg transition-all duration-200">
+                  Logout
+                </button>
+              </div>
+            )}
+
+            {!loading && !user && (
+              <div className="hidden lg:flex items-center gap-2">
+                <Link href="/login"
+                  className="text-sm font-semibold text-slate-600
+                                 hover:text-blue-600 px-3 py-1.5 rounded-lg
+                                 hover:bg-slate-50 transition-all duration-200">
+                  Login
+                </Link>
+                <Link href="/register"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white
+                                 text-sm font-semibold px-5 py-2 rounded-full
+                                 hover:shadow-md hover:shadow-blue-200
+                                 hover:-translate-y-0.5 active:translate-y-0
+                                 transition-all duration-200 shadow-sm">
+                  Join Community
+                </Link>
+              </div>
+            )}
+
+            {/* Mobile Hamburger */}
+            <button onClick={() => setMenuOpen(!menuOpen)}
+              className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100
+                               focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              aria-expanded={menuOpen} aria-label="Toggle menu">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               {menuOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
@@ -342,8 +348,9 @@ const Navbar: React.FC = () => {
           </button>
         </div>
       </div>
+    </div>
 
-      {/* ══ MOBILE MENU ══════════════════════════════════════════════════════ */}
+    {/* ══ MOBILE MENU ══════════════════════════════════════════════════════ */}
 
       {/* Backdrop */}
       <div className={`lg:hidden fixed inset-0 top-16 bg-black/20 backdrop-blur-sm z-40
