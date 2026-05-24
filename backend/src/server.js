@@ -25,6 +25,7 @@ const userRoutes    = require('./routes/users');
 const exportRoutes  = require('./routes/export');
 const chatRoutes        = require('./routes/chat.routes');       // Real-time chat REST
 const connectionRoutes  = require('./routes/connection.routes'); // LinkedIn-style connections
+const notificationRoutes = require('./routes/notifications');
 
 require('./config/passport');
 
@@ -105,6 +106,7 @@ app.use('/api/export',  exportRoutes);
 app.use('/api/chat',        chatRoutes);        // Chat REST endpoints
 app.use('/api/connections', connectionRoutes);   // Connection request system
 app.use('/api/stories',     require('./routes/stories')); // Alumni stories
+app.use('/api/notifications', notificationRoutes);
 
 // ── Health / keep-alive ────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
