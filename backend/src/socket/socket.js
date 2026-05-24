@@ -102,6 +102,30 @@ const registerSocketHandlers = (io) => {
 
         const room = `conv:${conversationId}`;
         io.to(room).emit('receiveMessage', message);
+
+        try {
+          const participants = await chatRepo.getConversationParticipants(conversationId);
+          const otherUserId = participants.find(id => id !== user.id);
+          
+          if (otherUserId && onlineUsers.has(otherUserId)) {
+            const otherSocketId = onlineUsers.get(otherUserId);
+            const roomSet = io.sockets.adapter.rooms.get(room);
+            
+            if (!roomSet || !roomSet.has(otherSocketId)) {
+              io.to(otherSocketId).emit('notification', {
+                id: message.id + '_notif',
+                type: 'GENERAL',
+                title: 'New Message',
+                message: `${user.name} sent you a message`,
+                link: '/chat',
+                isRead: false,
+                createdAt: new Date().toISOString()
+              });
+            }
+          }
+        } catch (notifErr) {
+          console.error('[socket] chat notification error:', notifErr.message);
+        }
       } catch (err) {
         console.error('[socket] sendMessage error:', err.message);
         socket.emit('error', {
