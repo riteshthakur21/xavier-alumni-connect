@@ -8,6 +8,7 @@
  */
 
 const repo = require('../repositories/connection.repository');
+const notifSvc = require('./notification.service');
 const { validate: isUUID } = require('uuid');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -63,7 +64,7 @@ const requireUUID = (value, label = 'id') => {
  *   3. Existing-connection check
  *   4. Existing-request check (covers both PENDING and ACCEPTED in either direction)
  */
-const sendRequest = async (senderId, targetId) => {
+const sendRequest = async (senderId, targetId, io = null) => {
   requireUUID(targetId, 'targetId');
 
   if (senderId === targetId) fail(400, 'You cannot send a connection request to yourself');
@@ -91,7 +92,30 @@ const sendRequest = async (senderId, targetId) => {
     }
   }
 
-  return repo.createRequest(senderId, targetId);
+  const request = await repo.createRequest(senderId, targetId);
+
+  // Notify receiver in real-time
+  try {
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    const sender = await prisma.user.findUnique({
+      where: { id: senderId },
+      select: { name: true },
+    });
+    await prisma.$disconnect();
+    const displayName = sender?.name || 'Someone';
+    await notifSvc.push(io, {
+      userId:  targetId,
+      type:    'CONNECTION_REQUEST',
+      title:   'New Connection Request',
+      message: `${displayName} sent you a connection request`,
+      link:    `/profile/${senderId}`,
+    });
+  } catch (notifErr) {
+    console.error('[Notification] sendRequest failed:', notifErr.message);
+  }
+
+  return request;
 };
 
 // ─── Accept Request ───────────────────────────────────────────────────────────
@@ -103,7 +127,7 @@ const sendRequest = async (senderId, targetId) => {
  * Only PENDING requests can be accepted.
  * Transaction inside repo.acceptRequest ensures atomicity.
  */
-const acceptRequest = async (requestId, currentUserId) => {
+const acceptRequest = async (requestId, currentUserId, io = null) => {
   requireUUID(requestId, 'requestId');
 
   const request = await repo.findRequestById(requestId);
@@ -118,7 +142,23 @@ const acceptRequest = async (requestId, currentUserId) => {
     fail(409, `Cannot accept a request with status: ${request.status}`);
   }
 
-  return repo.acceptRequest(requestId, request.senderId, request.receiverId);
+  const result = await repo.acceptRequest(requestId, request.senderId, request.receiverId);
+
+  // Notify the original sender
+  try {
+    const acceptorName = request.receiver?.name || 'Someone';
+    await notifSvc.push(io, {
+      userId:  request.senderId,
+      type:    'CONNECTION_ACCEPTED',
+      title:   'Connection Accepted! 🎉',
+      message: `${acceptorName} accepted your connection request`,
+      link:    `/profile/${request.receiverId}`,
+    });
+  } catch (notifErr) {
+    console.error('[Notification] acceptRequest failed:', notifErr.message);
+  }
+
+  return result;
 };
 
 // ─── Reject Request ───────────────────────────────────────────────────────────
