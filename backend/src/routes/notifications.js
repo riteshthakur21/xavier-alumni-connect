@@ -13,11 +13,31 @@ router.get('/', async (req, res) => {
     const page  = Math.max(1, parseInt(req.query.page  || '1',  10));
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit || '20', 10)));
     const skip  = (page - 1) * limit;
-    const [notifications, unread] = await Promise.all([
-      svc.getForUser(req.user.id, { skip, take: limit }),
+
+    const { category, search, unread } = req.query;
+    let isRead = undefined;
+    if (unread === 'true') {
+      isRead = false;
+    } else if (unread === 'false') {
+      isRead = true;
+    }
+
+    const [notifications, unreadCount, total] = await Promise.all([
+      svc.getForUser(req.user.id, { skip, take: limit, category, isRead, search }),
       svc.countUnread(req.user.id),
+      svc.countTotal(req.user.id, { category, isRead, search }),
     ]);
-    res.json({ notifications, unreadCount: unread });
+
+    res.json({
+      notifications,
+      unreadCount,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      }
+    });
   } catch (err) {
     console.error('[Notification] GET /', err);
     res.status(500).json({ error: 'Failed to fetch notifications' });

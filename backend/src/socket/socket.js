@@ -68,6 +68,15 @@ const registerSocketHandlers = (io) => {
         }
 
         const room = `conv:${conversationId}`;
+
+        // Leave all other conversation rooms before joining the new one
+        for (const r of socket.rooms) {
+          if (r.startsWith('conv:') && r !== room) {
+            socket.leave(r);
+            console.log(`[socket] user=${user.id} left room=${r}`);
+          }
+        }
+
         socket.join(room);
         console.log(`[socket] user=${user.id} joined room=${room}`);
 
@@ -76,6 +85,14 @@ const registerSocketHandlers = (io) => {
         console.error('[socket] joinConversation error:', err.message);
         socket.emit('error', { event: 'joinConversation', message: 'Server error' });
       }
+    });
+
+    // ── leaveConversation ───────────────────────────────────────────────────
+    socket.on('leaveConversation', ({ conversationId } = {}) => {
+      if (!conversationId) return;
+      const room = `conv:${conversationId}`;
+      socket.leave(room);
+      console.log(`[socket] user=${user.id} left room=${room}`);
     });
 
     // ── sendMessage ─────────────────────────────────────────────────────────
@@ -107,19 +124,18 @@ const registerSocketHandlers = (io) => {
           const participants = await chatRepo.getConversationParticipants(conversationId);
           const otherUserId = participants.find(id => id !== user.id);
           
-          if (otherUserId && onlineUsers.has(otherUserId)) {
-            const otherSocketId = onlineUsers.get(otherUserId);
+          if (otherUserId) {
             const roomSet = io.sockets.adapter.rooms.get(room);
+            const otherSocketId = onlineUsers.get(otherUserId);
             
-            if (!roomSet || !roomSet.has(otherSocketId)) {
-              io.to(otherSocketId).emit('notification', {
-                id: message.id + '_notif',
-                type: 'GENERAL',
-                title: 'New Message',
-                message: `${user.name} sent you a message`,
-                link: '/chat',
-                isRead: false,
-                createdAt: new Date().toISOString()
+            if (!otherSocketId || !roomSet || !roomSet.has(otherSocketId)) {
+              const notifSvc = require('../services/notification.service');
+              await notifSvc.push(io, {
+                userId:  otherUserId,
+                type:    'NEW_MESSAGE',
+                title:   'New Message',
+                message: `${user.name} sent you a message.`,
+                link:    '/chat'
               });
             }
           }

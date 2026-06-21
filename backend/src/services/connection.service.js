@@ -108,8 +108,8 @@ const sendRequest = async (senderId, targetId, io = null) => {
       userId:  targetId,
       type:    'CONNECTION_REQUEST',
       title:   'New Connection Request',
-      message: `${displayName} sent you a connection request`,
-      link:    `/profile/${senderId}`,
+      message: `${displayName} sent you a connection request.`,
+      link:    '/connections',
     });
   } catch (notifErr) {
     console.error('[Notification] sendRequest failed:', notifErr.message);
@@ -150,9 +150,9 @@ const acceptRequest = async (requestId, currentUserId, io = null) => {
     await notifSvc.push(io, {
       userId:  request.senderId,
       type:    'CONNECTION_ACCEPTED',
-      title:   'Connection Accepted! 🎉',
-      message: `${acceptorName} accepted your connection request`,
-      link:    `/profile/${request.receiverId}`,
+      title:   'Connection Accepted',
+      message: `${acceptorName} accepted your connection request.`,
+      link:    '/connections',
     });
   } catch (notifErr) {
     console.error('[Notification] acceptRequest failed:', notifErr.message);

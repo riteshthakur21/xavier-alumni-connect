@@ -280,7 +280,9 @@ export const useChatSocket = ({
     loadInitialMessages(conversationId);
 
     return () => {
-      // No explicit leave needed — room is cleaned up on disconnect
+      if (socketRef.current && conversationId) {
+        socketRef.current.emit('leaveConversation', { conversationId });
+      }
       // But reset message state when switching conversations
       setMessages([]);
       cursorRef.current = null;
