@@ -3,24 +3,17 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { useAuth } from '@/contexts/AuthContext';
 
 import { useChatSocket, type Conversation } from '@/hooks/useChatSocket';
 import ConversationList from '@/components/chat/ConversationList';
 import ChatWindow from '@/components/chat/ChatWindow';
 
-const decodeJwt = (token: string): { userId?: string; id?: string } | null => {
-  try {
-    const payload = token.split('.')[1];
-    return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
-  } catch {
-    return null;
-  }
-};
-
 export default function ChatPage() {
   const router       = useRouter();
   const searchParams = useSearchParams();
   const convParam    = searchParams.get('conv');
+  const { user, loading } = useAuth();
 
   const [token,         setToken]         = useState<string>('');
   const [currentUserId, setCurrentUserId] = useState<string>('');
@@ -36,14 +29,16 @@ export default function ChatPage() {
   const [mobilePanel, setMobilePanel] = useState<'list' | 'chat'>('list');
 
   useEffect(() => {
-    const t = Cookies.get('token');
-    if (!t) { router.replace('/login'); return; }
-    const decoded = decodeJwt(t);
-    const uid = decoded?.userId ?? decoded?.id ?? '';
-    if (!uid) { router.replace('/login'); return; }
-    setToken(t);
-    setCurrentUserId(uid);
-  }, [router]);
+    if (!loading) {
+      if (!user) {
+        router.replace('/login');
+      } else {
+        const t = Cookies.get('token') || localStorage.getItem('token') || '';
+        setToken(t);
+        setCurrentUserId(user.id);
+      }
+    }
+  }, [user, loading, router]);
 
   const {
     connected, messages, conversations, onlineUsers,

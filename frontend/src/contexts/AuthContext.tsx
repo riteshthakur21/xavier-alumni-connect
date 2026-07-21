@@ -109,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await axios.post('/api/auth/login', { email, password });
       const { token, user } = response.data;
 
-      Cookies.set('token', token, { expires: 7 });
+      Cookies.set('token', token, { expires: 7, path: '/' });
       localStorage.setItem('token', token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
@@ -150,7 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     disconnectSocket(); // Close socket connection on logout
-    Cookies.remove('token');
+    Cookies.remove('token', { path: '/' });
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
     toast.success('Logged out successfully');
