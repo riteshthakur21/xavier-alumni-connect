@@ -76,6 +76,7 @@ function loadEncryptionKey() {
 
 // Single validated key buffer — shared across all encrypt/decrypt calls.
 // Node.js module cache ensures this executes exactly once per process.
+console.log('MESSAGE_SECRET_KEY in encryption.js (first 6 chars):', process.env.MESSAGE_SECRET_KEY ? process.env.MESSAGE_SECRET_KEY.slice(0, 6) : 'undefined');
 const ENCRYPTION_KEY = loadEncryptionKey();
 
 // ── Public API ────────────────────────────────────────────────────────────────
