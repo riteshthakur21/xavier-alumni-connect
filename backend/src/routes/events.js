@@ -218,6 +218,7 @@ const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 const { upload } = require('../utils/cloudinary');
+const notifSvc = require('../services/notification.service');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -376,6 +377,97 @@ router.post('/', authMiddleware, adminMiddleware, upload.single('image'), async 
       }
     });
 
+    // ── Generate notifications for targeted users ──────────────────────────────────
+    try {
+      const io = req.app.get('io');
+      
+      // 1. Fetch all verified students & alumni
+      const allUsers = await prisma.user.findMany({
+        where: {
+          isVerified: true,
+          role: { in: ['ALUMNI', 'STUDENT'] }
+        },
+        include: {
+          alumniProfile: {
+            select: {
+              batchYear: true,
+              department: true
+            }
+          }
+        }
+      });
+
+      // 2. Parse targetBatches safely
+      let parsedBatches = { alumni: [], students: [], departments: [], deptScope: 'BOTH' };
+      if (event.targetBatches) {
+        try {
+          parsedBatches = { ...parsedBatches, ...JSON.parse(event.targetBatches) };
+        } catch (err) {
+          console.error('Error parsing event targetBatches:', err);
+        }
+      }
+
+      // 3. Filter users who are eligible to see this event based on audience criteria
+      const eligibleUsers = allUsers.filter(user => {
+        const userRole = user.role;
+        const userBatch = user.alumniProfile?.batchYear ?? null;
+        const userDept = user.alumniProfile?.department ?? null;
+
+        if (event.targetAudience === 'ALL') {
+          return passesDeptFilter(parsedBatches, userRole, userDept);
+        }
+
+        if (event.targetAudience === 'ALUMNI') {
+          if (userRole !== 'ALUMNI') return false;
+          if (parsedBatches.alumni && parsedBatches.alumni.length > 0) {
+            if (!parsedBatches.alumni.includes(userBatch)) return false;
+          }
+          return passesDeptFilter(parsedBatches, userRole, userDept);
+        }
+
+        if (event.targetAudience === 'STUDENT') {
+          if (userRole !== 'STUDENT') return false;
+          if (parsedBatches.students && parsedBatches.students.length > 0) {
+            if (!parsedBatches.students.includes(userBatch)) return false;
+          }
+          return passesDeptFilter(parsedBatches, userRole, userDept);
+        }
+
+        if (event.targetAudience === 'CUSTOM') {
+          if (userRole === 'ALUMNI') {
+            if (!parsedBatches.alumni || parsedBatches.alumni.length === 0) return false;
+            if (!parsedBatches.alumni.includes(userBatch)) return false;
+            return passesDeptFilter(parsedBatches, userRole, userDept);
+          }
+          if (userRole === 'STUDENT') {
+            if (!parsedBatches.students || parsedBatches.students.length === 0) return false;
+            if (!parsedBatches.students.includes(userBatch)) return false;
+            return passesDeptFilter(parsedBatches, userRole, userDept);
+          }
+          return false;
+        }
+
+        return false;
+      });
+
+      // 4. Create database records & emit real-time socket updates for online users
+      for (const eligibleUser of eligibleUsers) {
+        try {
+          await notifSvc.push(io, {
+            userId: eligibleUser.id,
+            type: 'EVENT_CREATED',
+            title: 'New Event Available',
+            message: `A new event "${event.title}" has been created for your group.`,
+            link: `/events/${event.id}`
+          });
+        } catch (pushErr) {
+          console.error(`[Event Notification] Failed to push to user ${eligibleUser.id}:`, pushErr.message);
+        }
+      }
+    } catch (notifErr) {
+      console.error('[Event Notification] Overall generation failed:', notifErr.message);
+    }
+
     res.status(201).json({ message: 'Event created successfully!', event });
   } catch (error) {
     console.error('Create Event Error:', error);
@@ -430,6 +522,31 @@ router.put('/:id', authMiddleware, adminMiddleware, upload.single('image'), asyn
     }
 
     const event = await prisma.event.update({ where: { id }, data: updateData });
+
+    // Notify registered participants of the update
+    try {
+      const io = req.app.get('io');
+      const registrations = await prisma.eventRegistration.findMany({
+        where: { eventId: id },
+        select: { userId: true }
+      });
+      for (const reg of registrations) {
+        try {
+          await notifSvc.push(io, {
+            userId: reg.userId,
+            type: 'EVENT_UPDATED',
+            title: 'Event Updated',
+            message: `The event "${event.title}" has been updated.`,
+            link: `/events/${event.id}`
+          });
+        } catch (pushErr) {
+          console.error(`[Event Update Notif] Failed to notify user ${reg.userId}:`, pushErr.message);
+        }
+      }
+    } catch (notifErr) {
+      console.error('[Event Update Notif] Failed to trigger notifications:', notifErr.message);
+    }
+
     res.json({ message: 'Event updated successfully', event });
   } catch (error) {
     console.error('Error updating event:', error);
@@ -461,6 +578,37 @@ router.put('/:id', authMiddleware, adminMiddleware, upload.single('image'), asyn
 router.delete('/:id', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Fetch details & registered participants before deletion to notify them
+    try {
+      const event = await prisma.event.findUnique({
+        where: { id },
+        select: { title: true }
+      });
+      if (event) {
+        const registrations = await prisma.eventRegistration.findMany({
+          where: { eventId: id },
+          select: { userId: true }
+        });
+        const io = req.app.get('io');
+        for (const reg of registrations) {
+          try {
+            await notifSvc.push(io, {
+              userId: reg.userId,
+              type: 'EVENT_CANCELLED',
+              title: 'Event Cancelled',
+              message: `The event "${event.title}" has been cancelled.`,
+              link: '/events'
+            });
+          } catch (pushErr) {
+            console.error(`[Event Cancel Notif] Failed to notify user ${reg.userId}:`, pushErr.message);
+          }
+        }
+      }
+    } catch (notifErr) {
+      console.error('[Event Cancel Notif] Failed to process cancel notifications:', notifErr.message);
+    }
+
     await prisma.eventRegistration.deleteMany({ where: { eventId: id } });
     await prisma.event.delete({ where: { id } });
     res.json({ message: 'Event deleted successfully' });
@@ -494,6 +642,25 @@ router.post('/:id/register', authMiddleware, async (req, res) => {
     if (existing) return res.status(400).json({ error: 'Already registered!' });
 
     await prisma.eventRegistration.create({ data: { userId, eventId: id } });
+
+    // Send confirmation notification
+    try {
+      const event = await prisma.event.findUnique({
+        where: { id },
+        select: { title: true }
+      });
+      const io = req.app.get('io');
+      await notifSvc.push(io, {
+        userId,
+        type: 'EVENT_REGISTERED',
+        title: 'Event Registration Confirmed',
+        message: `You have successfully registered for the event "${event?.title || ''}".`,
+        link: '/events'
+      });
+    } catch (notifErr) {
+      console.error('[Event Register Notif] Failed to notify registration:', notifErr.message);
+    }
+
     res.json({ message: 'Successfully registered! 🎉' });
   } catch (error) {
     console.error('Registration error:', error);

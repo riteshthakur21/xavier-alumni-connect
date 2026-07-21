@@ -1,6 +1,7 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware } = require('../middleware/auth');
+const notifSvc = require('../services/notification.service');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -53,6 +54,34 @@ router.post('/', authMiddleware, async (req, res) => {
         postedById: req.user.id // Jo user logged-in hai, uska ID
       }
     });
+
+    // Notify all verified student/alumni users of the new opportunity
+    try {
+      const io = req.app.get('io');
+      const allUsers = await prisma.user.findMany({
+        where: {
+          isVerified: true,
+          id: { not: req.user.id },
+          role: { in: ['ALUMNI', 'STUDENT'] }
+        },
+        select: { id: true }
+      });
+      for (const targetUser of allUsers) {
+        try {
+          await notifSvc.push(io, {
+            userId: targetUser.id,
+            type: 'JOB_POSTED',
+            title: 'New Job Opportunity',
+            message: `A new job "${title}" at ${company} is available.`,
+            link: '/jobs'
+          });
+        } catch (pushErr) {
+          console.error(`[Job Notification] Failed to notify user ${targetUser.id}:`, pushErr.message);
+        }
+      }
+    } catch (notifErr) {
+      console.error('[Job Notification] Failed to process notifications:', notifErr.message);
+    }
 
     res.status(201).json({ message: 'Job posted successfully!', job });
 

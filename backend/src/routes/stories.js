@@ -29,6 +29,30 @@ router.post('/', authMiddleware, async (req, res) => {
       },
     });
 
+    // Notify all admins of the submission
+    try {
+      const io = req.app.get('io');
+      const admins = await prisma.user.findMany({
+        where: { role: 'ADMIN' },
+        select: { id: true }
+      });
+      for (const admin of admins) {
+        try {
+          await notifSvc.push(io, {
+            userId: admin.id,
+            type: 'GENERAL',
+            title: 'New Story Submitted',
+            message: `"${req.user.name}" has submitted a new story: "${title}".`,
+            link: '/stories'
+          });
+        } catch (pushErr) {
+          console.error(`[Story Notification] Failed to notify admin ${admin.id}:`, pushErr.message);
+        }
+      }
+    } catch (notifErr) {
+      console.error('[Story Notification] Failed to process submission notifications:', notifErr.message);
+    }
+
     res.status(201).json({ message: 'Story submitted for review!', story });
   } catch (error) {
     console.error('Error creating story:', error);
@@ -140,21 +164,51 @@ router.patch('/:id/status', authMiddleware, adminMiddleware, async (req, res) =>
       data: { status },
     });
 
-    // Notify the author
+    // Notify the author & others if approved
     const io = req.app.get('io');
     try {
       const isApproved = status === 'APPROVED';
       await notifSvc.push(io, {
         userId:  existingStory.authorId,
         type:    isApproved ? 'STORY_APPROVED' : 'STORY_REJECTED',
-        title:   isApproved ? 'Story Published! 🎉' : 'Story Not Approved',
+        title:   isApproved ? 'Story Approved 🎉' : 'Story Rejected',
         message: isApproved
-          ? `Your story "${existingStory.title}" has been approved and is now live!`
-          : `Your story "${existingStory.title}" was not approved by the admin.`,
-        link: isApproved ? `/stories/${id}` : '/dashboard',
+          ? 'Your story has been approved and published.'
+          : 'Your story was not approved by admin.',
+        link:    '/stories',
       });
+
+      // If approved, notify all other verified users about the new story (NEW_STORY category)
+      if (isApproved) {
+        const authorUser = await prisma.user.findUnique({
+          where: { id: existingStory.authorId },
+          select: { name: true }
+        });
+
+        const otherUsers = await prisma.user.findMany({
+          where: {
+            isVerified: true,
+            id: { not: existingStory.authorId }
+          },
+          select: { id: true }
+        });
+
+        for (const targetUser of otherUsers) {
+          try {
+            await notifSvc.push(io, {
+              userId: targetUser.id,
+              type: 'NEW_STORY',
+              title: 'New Alumni Story',
+              message: `${authorUser?.name || 'An alumni'} shared a new story: "${existingStory.title}".`,
+              link: `/stories`
+            });
+          } catch (pushErr) {
+            console.error(`[Story Public Notification] Failed to notify user ${targetUser.id}:`, pushErr.message);
+          }
+        }
+      }
     } catch (notifErr) {
-      console.error('[Notification] story status notification failed:', notifErr.message);
+      console.error('[Notification] story status / public notification failed:', notifErr.message);
     }
 
     res.json({ message: `Story ${status.toLowerCase()} successfully`, story });

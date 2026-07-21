@@ -40,7 +40,7 @@ function GoogleAuthSuccessInner() {
       const decodedUser = JSON.parse(atob(decodeURIComponent(encodedUser)));
 
       // Store exactly like normal login in AuthContext
-      Cookies.set('token', token, { expires: 7 });
+      Cookies.set('token', token, { expires: 7, path: '/' });
       localStorage.setItem('token', token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
