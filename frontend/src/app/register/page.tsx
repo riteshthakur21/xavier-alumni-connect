@@ -99,7 +99,7 @@ export default function Register() {
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const capitalized = value.replace(/\b\w/g, (char) => char.toUpperCase());
-    setFormData({ ...formData, name: capitalized });
+    setFormData(prev => ({ ...prev, name: capitalized }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -446,9 +446,10 @@ export default function Register() {
                     id="name"
                     name="name"
                     required
-                    className="form-input bg-slate-100 cursor-not-allowed"
+                    className="form-input"
                     value={formData.name}
-                    readOnly
+                    onChange={handleNameChange}
+                    placeholder="Enter your full name"
                   />
                 </div>
 
