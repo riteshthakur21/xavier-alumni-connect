@@ -147,7 +147,7 @@ export default function Login() {
             <span className="italic text-[#e8a93c]">stay connected.</span>
           </h1>
           <p className="text-[#bfb09a] text-sm xl:text-base leading-relaxed max-w-lg mb-6">
-            Stay in touch with mentors, recruit top talent from your alma mater, and participate in exclusive alumni initiatives worldwide.
+            Stay in touch with mentors, recruit top talent from your alumni network, and participate in exclusive alumni initiatives worldwide.
           </p>
 
           {/* Value Pillars */}
