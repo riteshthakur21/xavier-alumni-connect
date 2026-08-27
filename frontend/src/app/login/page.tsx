@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import GoogleAuthButton from '@/components/GoogleAuthButton';
-import toast from 'react-hot-toast';
 import {
   Mail,
   Lock,
@@ -130,18 +129,14 @@ export default function Login() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex flex-col lg:flex-row bg-[#f4efe6] text-[#1a1410] selection:bg-[#c4821a]/20 selection:text-[#1a1410]">
-      {/* ─── Left Brand & Showcase Panel (Desktop) ────────────────────────── */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-[#152744] text-[#f4efe6] flex-col justify-between p-8 xl:p-12 overflow-hidden">
-        {/* Subtle Ambient Background Gradients */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#c4821a]/15 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-[#1e3a6e]/40 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-[#3a5c3e]/10 rounded-full blur-2xl" />
-        </div>
+      {/* ─── Left Editorial & Heritage Panel (Desktop) ────────────────────── */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-[#1a1410] border-r border-[#3d3222]/50 text-[#f4efe6] flex-col justify-between p-8 xl:p-12 overflow-hidden">
+        {/* Architectural Subtle Watermark Frame */}
+        <div className="absolute top-0 right-0 w-96 h-96 pointer-events-none opacity-5 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#e8a93c] to-transparent" />
 
-        {/* Content Container starting at the top with Verified Alumni Network */}
+        {/* Content Container */}
         <div className="relative z-10 pt-2 pb-6">
-          {/* Stamp / Status Pill */}
+          {/* Status Stamp */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded border border-[#3a5c3e] bg-[#3a5c3e]/20 text-[#7aab7e] font-mono text-[11px] uppercase tracking-wider mb-5">
             <span className="w-2 h-2 rounded-full bg-[#7aab7e] animate-pulse" />
             <span>Verified Alumni Network</span>
@@ -151,46 +146,46 @@ export default function Login() {
             Where alumni <br />
             <span className="italic text-[#e8a93c]">stay connected.</span>
           </h1>
-          <p className="text-[#dde8f7]/90 text-sm xl:text-base leading-relaxed max-w-lg mb-6">
+          <p className="text-[#bfb09a] text-sm xl:text-base leading-relaxed max-w-lg mb-6">
             Stay in touch with mentors, recruit top talent from your alma mater, and participate in exclusive alumni initiatives worldwide.
           </p>
 
-          {/* Pillars List */}
+          {/* Value Pillars */}
           <div className="space-y-3 max-w-lg">
-            <div className="flex items-start gap-3.5 p-3 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm transition-all hover:bg-white/10">
-              <div className="w-8 h-8 rounded bg-[#c4821a]/20 text-[#e8a93c] flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="flex items-start gap-3.5 p-3.5 rounded-xl bg-[#261f15]/90 border border-[#3d3222] transition-colors hover:border-[#c4821a]/50">
+              <div className="w-8 h-8 rounded-lg bg-[#3d3222] text-[#e8a93c] flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
                 <Users className="w-4 h-4" />
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-[#f4efe6]">Global Directory Access</h2>
-                <p className="text-xs text-[#dde8f7]/80 mt-0.5">Search and connect with thousands of alumni across industries and batches.</p>
+                <p className="text-xs text-[#a08c6e] mt-0.5">Search and connect with thousands of alumni across industries and batches.</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3.5 p-3 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm transition-all hover:bg-white/10">
-              <div className="w-8 h-8 rounded bg-[#e8a93c]/20 text-[#e8a93c] flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="flex items-start gap-3.5 p-3.5 rounded-xl bg-[#261f15]/90 border border-[#3d3222] transition-colors hover:border-[#c4821a]/50">
+              <div className="w-8 h-8 rounded-lg bg-[#3d3222] text-[#e8a93c] flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
                 <Briefcase className="w-4 h-4" />
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-[#f4efe6]">Exclusive Career Board</h2>
-                <p className="text-xs text-[#dde8f7]/80 mt-0.5">Post and apply to alumni-referred job postings and collaborative ventures.</p>
+                <p className="text-xs text-[#a08c6e] mt-0.5">Post and apply to alumni-referred job postings and collaborative ventures.</p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3.5 p-3 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm transition-all hover:bg-white/10">
-              <div className="w-8 h-8 rounded bg-[#3a5c3e]/30 text-[#7aab7e] flex items-center justify-center flex-shrink-0 mt-0.5">
+            <div className="flex items-start gap-3.5 p-3.5 rounded-xl bg-[#261f15]/90 border border-[#3d3222] transition-colors hover:border-[#c4821a]/50">
+              <div className="w-8 h-8 rounded-lg bg-[#3d3222] text-[#e8a93c] flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
                 <Calendar className="w-4 h-4" />
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-[#f4efe6]">Reunions & Masterclasses</h2>
-                <p className="text-xs text-[#dde8f7]/80 mt-0.5">Register for campus homecomings, webinars, and regional chapter meets.</p>
+                <p className="text-xs text-[#a08c6e] mt-0.5">Register for campus homecomings, webinars, and regional chapter meets.</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Bottom Proof */}
-        <div className="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-[#dde8f7]/70 font-mono">
+        <div className="relative z-10 pt-4 border-t border-[#3d3222] flex items-center justify-between text-xs text-[#8a7a65] font-mono">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-[#7aab7e]" />
             <span>End-to-End Verified Profiles</span>
@@ -203,7 +198,7 @@ export default function Login() {
       <div className="w-full lg:w-1/2 flex flex-col justify-center items-center px-5 sm:px-8 md:px-12 xl:px-16 py-6 lg:py-10">
         <div className="w-full max-w-md">
           {/* Top navigation / Back link */}
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-start mb-5">
             <Link
               href="/"
               className="inline-flex items-center gap-2 text-sm font-medium text-[#5c4d37] hover:text-[#1a1410] transition-colors group"
@@ -211,18 +206,6 @@ export default function Login() {
               <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5 text-[#7d6a4f]" />
               <span>Back to home</span>
             </Link>
-
-            {/* Mobile-only logo display */}
-            <div className="flex lg:hidden items-center gap-2">
-              <div className="w-7 h-7 rounded bg-[#152744] p-1 flex items-center justify-center">
-                <img
-                  src="/xavier-logo.png"
-                  alt="Xavier Logo"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <span className="text-sm font-bold text-[#1a1410] font-serif">Xavier Connect</span>
-            </div>
           </div>
 
           {/* Form Card Container */}
@@ -283,7 +266,7 @@ export default function Login() {
                   isPendingError
                     ? 'bg-[#c4821a]/10 border-[#c4821a]/30 text-[#3d3222]'
                     : isEmailNotVerifiedError
-                    ? 'bg-[#152744]/10 border-[#152744]/25 text-[#152744]'
+                    ? 'bg-[#c4821a]/10 border-[#c4821a]/30 text-[#3d3222]'
                     : isRejectedError
                     ? 'bg-rose-50 border-rose-200 text-rose-900'
                     : 'bg-rose-50 border-rose-200 text-rose-900'
@@ -294,7 +277,7 @@ export default function Login() {
                     {isPendingError ? (
                       <Clock className="w-5 h-5 text-[#c4821a]" />
                     ) : isEmailNotVerifiedError ? (
-                      <Mail className="w-5 h-5 text-[#152744]" />
+                      <Mail className="w-5 h-5 text-[#c4821a]" />
                     ) : isRejectedError ? (
                       <XCircle className="w-5 h-5 text-rose-600" />
                     ) : (
@@ -335,7 +318,7 @@ export default function Login() {
                     {isEmailNotVerifiedError && loginError.email && (
                       <Link
                         href={`/verify-email?email=${encodeURIComponent(loginError.email)}`}
-                        className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-semibold text-[#152744] hover:text-[#c4821a] underline underline-offset-2"
+                        className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-semibold text-[#c4821a] hover:text-[#e8a93c] underline underline-offset-2"
                       >
                         <span>Complete email verification</span>
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -378,7 +361,7 @@ export default function Login() {
                     className={`block w-full pl-10 pr-3.5 py-2.5 bg-white border text-sm text-[#1a1410] rounded-xl placeholder-[#7d6a4f]/60 shadow-sm transition-all focus:outline-none focus:ring-2 ${
                       touched.email && errors.email
                         ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-200'
-                        : 'border-[#1a1410]/15 focus:border-[#152744] focus:ring-[#152744]/15 hover:border-[#1a1410]/30'
+                        : 'border-[#1a1410]/15 focus:border-[#1a1410] focus:ring-[#c4821a]/20 hover:border-[#1a1410]/30'
                     }`}
                     placeholder="name@college.edu or personal email"
                     aria-invalid={touched.email && !!errors.email}
@@ -404,7 +387,7 @@ export default function Login() {
                   </label>
                   <Link
                     href="/forgot-password"
-                    className="text-xs font-medium text-[#152744] hover:text-[#c4821a] transition-colors"
+                    className="text-xs font-medium text-[#c4821a] hover:text-[#e8a93c] transition-colors"
                     tabIndex={0}
                   >
                     Forgot password?
@@ -432,7 +415,7 @@ export default function Login() {
                     className={`block w-full pl-10 pr-11 py-2.5 bg-white border text-sm text-[#1a1410] rounded-xl placeholder-[#7d6a4f]/60 shadow-sm transition-all focus:outline-none focus:ring-2 ${
                       touched.password && errors.password
                         ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-200'
-                        : 'border-[#1a1410]/15 focus:border-[#152744] focus:ring-[#152744]/15 hover:border-[#1a1410]/30'
+                        : 'border-[#1a1410]/15 focus:border-[#1a1410] focus:ring-[#c4821a]/20 hover:border-[#1a1410]/30'
                     }`}
                     placeholder="Enter your password"
                     aria-invalid={touched.password && !!errors.password}
@@ -468,7 +451,7 @@ export default function Login() {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 accent-[#152744] border-[#1a1410]/20 rounded focus:ring-[#152744] transition"
+                    className="w-4 h-4 accent-[#1a1410] border-[#1a1410]/20 rounded focus:ring-[#c4821a]/40 transition"
                   />
                   <span className="text-xs sm:text-sm font-medium text-[#3d3222]">
                     Remember my email
@@ -480,7 +463,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading || !!loginSuccess}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-[#f4efe6] bg-[#152744] hover:bg-[#1e3a6e] active:bg-[#152744] shadow-sm hover:shadow-md hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#152744] disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer mt-2"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold text-[#f4efe6] bg-[#1a1410] hover:bg-[#3d3222] active:bg-[#1a1410] shadow-sm hover:shadow hover:-translate-y-0.5 border border-[#3d3222]/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#c4821a]/30 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer mt-2"
               >
                 {loginSuccess ? (
                   <>
@@ -542,7 +525,7 @@ export default function Login() {
               New to the alumni network?{' '}
               <Link
                 href="/register"
-                className="font-semibold text-[#152744] hover:text-[#c4821a] transition-colors inline-flex items-center gap-1 group"
+                className="font-semibold text-[#1a1410] hover:text-[#c4821a] transition-colors inline-flex items-center gap-1 group"
               >
                 <span>Create an account</span>
                 <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 text-[#c4821a]" />

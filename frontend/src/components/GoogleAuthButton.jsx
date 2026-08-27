@@ -13,7 +13,7 @@ export default function GoogleAuthButton({ text = 'Continue with Google' }) {
     <button
       type="button"
       onClick={handleClick}
-      className="w-full flex items-center justify-center gap-3 rounded-xl border border-[#1a1410]/15 bg-white py-3 px-4 text-sm font-semibold text-[#1a1410] shadow-sm hover:bg-[#f4efe6] hover:border-[#1a1410]/25 hover:shadow transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#152744]/20"
+      className="w-full flex items-center justify-center gap-3 rounded-xl border border-[#1a1410]/15 bg-white py-3 px-4 text-sm font-semibold text-[#1a1410] shadow-sm hover:bg-[#f4efe6] hover:border-[#1a1410]/25 hover:shadow transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#1a1410]/20"
     >
       <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true" className="flex-shrink-0">
         <path fill="#EA4335" d="M24 9.5c3.54 0 6.7 1.22 9.2 3.22l6.86-6.86C36.14 2.54 30.4 0 24 0 14.6 0 6.48 5.38 2.44 13.22l8.02 6.22C12.34 13.04 17.7 9.5 24 9.5z" />
