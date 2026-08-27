@@ -297,7 +297,7 @@ export default function AlumniProfilePage() {
   const namePills = [
     { icon: GraduationCap, label: alumni.role === 'ALUMNI' ? 'Alumni' : 'Student' },
     { icon: Building2,     label: profile.department },
-    { icon: Calendar,      label: `Class of ${profile.batchYear}` },
+    { icon: Calendar,      label: `Batch of ${profile.batchYear}` },
     ...(profile.location ? [{ icon: MapPin, label: profile.location }] : []),
   ];
 
@@ -620,7 +620,7 @@ export default function AlumniProfilePage() {
                                 <p className="text-gray-500 font-medium mt-0.5 text-sm">St. Xavier&apos;s College, Patna</p>
                                 <div className="flex flex-wrap gap-2 mt-3">
                                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-semibold border border-indigo-100">
-                                    <GraduationCap className="w-3 h-3" />Class of {profile.batchYear}
+                                    <GraduationCap className="w-3 h-3" />Batch of {profile.batchYear}
                                   </span>
                                   {profile.rollNo && (
                                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 text-gray-500 rounded-lg text-xs font-medium border border-gray-100">

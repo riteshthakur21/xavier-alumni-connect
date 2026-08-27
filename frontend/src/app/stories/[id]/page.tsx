@@ -221,7 +221,7 @@ export default function StoryDetailPage() {
 
                 {story.author.alumniProfile?.batchYear && (
                   <span className="text-xs px-3 py-1 rounded-md font-mono font-medium bg-[#f4efe6] text-[#c4821a] border border-[#1a1410]/10">
-                    Class of {story.author.alumniProfile.batchYear}
+                    Batch of {story.author.alumniProfile.batchYear}
                   </span>
                 )}
               </div>

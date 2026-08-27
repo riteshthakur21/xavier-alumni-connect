@@ -152,7 +152,7 @@ export default function ParticipantsList() {
                    {person.role}
                 </span>
                 <p className="text-sm font-bold text-slate-500">
-                  {person.alumniProfile?.department} • {user?.role === 'STUDENT' ? 'Current' : `Class of ${person.alumniProfile?.batchYear}`}
+                  {person.alumniProfile?.department} • {user?.role === 'STUDENT' ? 'Current' : `Batch of ${person.alumniProfile?.batchYear}`}
                 </p>
               </div>
               
