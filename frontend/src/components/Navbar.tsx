@@ -2,107 +2,55 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import NotificationBell from '@/components/NotificationBell';
+import {
+  Users,
+  Briefcase,
+  Calendar,
+  MessageSquare,
+  BookOpen,
+  Shield,
+  LayoutDashboard,
+  LogOut,
+  ChevronDown,
+  Menu,
+  X,
+  User as UserIcon,
+  ArrowRight,
+} from 'lucide-react';
 
-// ─── SVG Icons ────────────────────────────────────────────────────────────────
-const Icons = {
-  profile: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
-  ),
-  admin: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-  ),
-  dashboard: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="7" height="7" rx="1" />
-    </svg>
-  ),
-  directory: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  ),
-  jobs: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="2" y="7" width="20" height="14" rx="2" />
-      <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
-    </svg>
-  ),
-  events: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  ),
-  messages: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
-  ),
-  logout: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
-    </svg>
-  ),
-  chevron: (
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="2.5">
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  ),
-};
-
-// ─── Explore dropdown items — add future features here ───────────────────────
+// ─── Explore Dropdown Items ──────────────────────────────────────────────────
 const EXPLORE_ITEMS = [
   {
     href: '/jobs',
-    label: 'Jobs & Careers',
-    desc: 'Opportunities & referrals',
-    icon: Icons.jobs,
+    label: 'Career & Referrals',
+    desc: 'Job openings, internships & alumni referrals',
+    icon: Briefcase,
   },
   {
     href: '/events',
-    label: 'Events',
-    desc: 'Reunions, talks & workshops',
-    icon: Icons.events,
+    label: 'Events & Reunions',
+    desc: 'Campus meets, webinars & chapter reunions',
+    icon: Calendar,
+  },
+  {
+    href: '/stories',
+    label: 'Alumni Stories',
+    desc: 'Journeys, reflections & career insights',
+    icon: BookOpen,
   },
   {
     href: '/chat',
-    label: 'Messages',
-    desc: 'Chat with alumni & students',
-    icon: Icons.messages,
+    label: 'Community Messages',
+    desc: 'Direct discussions with alumni & seniors',
+    icon: MessageSquare,
     authRequired: true,
   },
-  // Add new features here ↓
 ];
 
-// ─── NavLink ──────────────────────────────────────────────────────────────────
+// ─── NavLink Component ───────────────────────────────────────────────────────
 interface NavLinkProps {
   href: string;
   children: React.ReactNode;
@@ -116,23 +64,30 @@ const NavLink: React.FC<NavLinkProps> = ({ href, children, className, onClick, m
   const isActive = pathname === href || pathname.startsWith(href + '/');
 
   const base = mobile
-    ? 'flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors text-sm'
+    ? 'flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-sm'
     : 'text-sm font-semibold transition-all duration-200 px-3 py-1.5 rounded-lg';
-  const active = mobile ? 'bg-blue-50 text-blue-600' : 'text-blue-700 bg-blue-50';
+
+  const active = mobile
+    ? 'bg-[#1a1410] text-[#f4efe6] shadow-xs'
+    : 'text-[#1a1410] bg-[#1a1410]/8';
+
   const inactive = mobile
-    ? 'text-slate-600 hover:bg-slate-50'
-    : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50';
+    ? 'text-[#5c4d37] hover:bg-[#1a1410]/5 hover:text-[#1a1410]'
+    : 'text-[#5c4d37] hover:text-[#1a1410] hover:bg-[#1a1410]/5';
 
   return (
-    <Link href={href} onClick={onClick}
+    <Link
+      href={href}
+      onClick={onClick}
       className={[base, isActive ? active : inactive, className || ''].join(' ')}
-      aria-current={isActive ? 'page' : undefined}>
+      aria-current={isActive ? 'page' : undefined}
+    >
       {children}
     </Link>
   );
 };
 
-// ─── Desktop Explore Dropdown ─────────────────────────────────────────────────
+// ─── Desktop Explore Dropdown ────────────────────────────────────────────────
 const ExploreDropdown: React.FC<{ user: any }> = ({ user }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -141,55 +96,84 @@ const ExploreDropdown: React.FC<{ user: any }> = ({ user }) => {
   const isAnyActive = visible.some((i) => pathname.startsWith(i.href));
 
   useEffect(() => {
-    const h = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
     };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   return (
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-1 text-sm font-semibold transition-all duration-200
-                    px-3 py-1.5 rounded-lg
-                    ${isAnyActive
-            ? 'text-blue-700 bg-blue-50'
-            : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'}`}
+        className={`flex items-center gap-1.5 text-sm font-semibold transition-all duration-200 px-3 py-1.5 rounded-lg cursor-pointer ${
+          isAnyActive
+            ? 'text-[#1a1410] bg-[#1a1410]/8'
+            : 'text-[#5c4d37] hover:text-[#1a1410] hover:bg-[#1a1410]/5'
+        }`}
+        aria-expanded={open}
+        aria-label="Explore network resources"
       >
-        Explore
-        <span className={`mt-0.5 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
-          {Icons.chevron}
-        </span>
+        <span>Explore</span>
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-[#7d6a4f] transition-transform duration-200 ${
+            open ? 'rotate-180 text-[#1a1410]' : ''
+          }`}
+        />
       </button>
 
-      {/* Dropdown */}
-      <div className={`absolute left-1/2 -translate-x-1/2 top-full mt-2.5 w-56
-                       bg-white rounded-xl shadow-lg border border-slate-100
-                       py-1.5 z-50 transition-all duration-150 origin-top
-                       ${open
-          ? 'opacity-100 scale-y-100 translate-y-0 pointer-events-auto'
-          : 'opacity-0 scale-y-95 -translate-y-1 pointer-events-none'}`}>
-        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2
-                        bg-white border-l border-t border-slate-100 rotate-45" />
+      {/* Dropdown Card */}
+      <div
+        className={`absolute left-1/2 -translate-x-1/2 top-full mt-2.5 w-64 bg-white rounded-2xl shadow-xl border border-[#1a1410]/12 py-2 z-50 transition-all duration-200 origin-top ${
+          open
+            ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
+            : 'opacity-0 scale-95 -translate-y-1.5 pointer-events-none'
+        }`}
+      >
+        <div className="px-3 py-1.5 mb-1 border-b border-[#1a1410]/8">
+          <p className="text-[10px] font-mono uppercase tracking-widest text-[#7d6a4f] font-medium">
+            Network Resources
+          </p>
+        </div>
+
         {visible.map((item) => {
           const isActive = pathname.startsWith(item.href);
+          const Icon = item.icon;
+
           return (
-            <Link key={item.href} href={item.href} onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 px-4 py-2.5 mx-1 rounded-lg
-                              transition-colors duration-150 group
-                              ${isActive
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}>
-              <span className={`flex-shrink-0 ${isActive ? 'text-blue-500' : 'text-slate-400 group-hover:text-blue-400'}`}>
-                {item.icon}
-              </span>
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className={`flex items-start gap-3 px-3.5 py-2.5 mx-1.5 rounded-xl transition-all duration-150 group ${
+                isActive
+                  ? 'bg-[#f4efe6] text-[#1a1410]'
+                  : 'text-[#5c4d37] hover:bg-[#f4efe6]/70 hover:text-[#1a1410]'
+              }`}
+            >
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                  isActive
+                    ? 'bg-[#1a1410] text-[#e8a93c]'
+                    : 'bg-[#1a1410]/5 text-[#7d6a4f] group-hover:bg-[#1a1410] group-hover:text-[#e8a93c]'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+              </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold leading-tight">{item.label}</p>
-                <p className="text-[11px] text-slate-400 mt-0.5 truncate">{item.desc}</p>
+                <p className="text-xs font-serif font-semibold text-[#1a1410] leading-snug group-hover:text-[#c4821a] transition-colors">
+                  {item.label}
+                </p>
+                <p className="text-[11px] text-[#7d6a4f] mt-0.5 leading-tight truncate">
+                  {item.desc}
+                </p>
               </div>
             </Link>
           );
@@ -199,7 +183,7 @@ const ExploreDropdown: React.FC<{ user: any }> = ({ user }) => {
   );
 };
 
-// ─── Navbar ───────────────────────────────────────────────────────────────────
+// ─── Navbar Main Component ───────────────────────────────────────────────────
 const Navbar: React.FC = () => {
   const { user, logout, loading } = useAuth();
   const pathname = usePathname();
@@ -207,253 +191,288 @@ const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const h = () => setScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', h, { passive: true });
-    return () => window.removeEventListener('scroll', h);
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => { setMenuOpen(false); }, [pathname]);
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : 'unset';
-    return () => { document.body.style.overflow = 'unset'; };
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [menuOpen]);
 
-  const handleLogout = async () => { await logout(); setMenuOpen(false); };
+  const handleLogout = async () => {
+    await logout();
+    setMenuOpen(false);
+  };
 
   const userInitial = user?.name?.charAt(0).toUpperCase() || '?';
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
   const rawPhoto = user?.alumniProfile?.photoUrl;
   const photoUrl = rawPhoto
-    ? (rawPhoto.startsWith('http')
+    ? rawPhoto.startsWith('http')
       ? rawPhoto
-      : `${API_URL}/${rawPhoto.replace(/^\/+/, '').replace(/\\/g, '/')}`)
+      : `${API_URL}/${rawPhoto.replace(/^\/+/, '').replace(/\\/g, '/')}`
     : null;
 
   return (
     <nav
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200/80'
-          : 'bg-white/80 backdrop-blur-sm border-b border-slate-100'
+          ? 'bg-white/95 backdrop-blur-md shadow-xs border-b border-[#1a1410]/12'
+          : 'bg-[#f4efe6]/90 backdrop-blur-md border-b border-[#1a1410]/10'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
 
-          {/* Logo */}
-          {/* <Link href="/" className="flex-shrink-0 flex items-center gap-2.5 group">
-            <div className="relative w-8 h-8 transition-transform duration-200
-                            group-hover:scale-110 group-hover:rotate-3">
-              <Image src="/xavier-logo.png" alt="Xavier AlumniConnect"
-                     fill className="object-contain" priority />
-            </div>
-            <span className="text-base sm:text-lg font-extrabold
-                             bg-gradient-to-r from-blue-700 to-indigo-600
-                             bg-clip-text text-transparent whitespace-nowrap tracking-tight">
-              Xavier AlumniConnect
-            </span>
-          </Link> */}
-
-          {/* Logo */}
-          <Link href="/" className="flex-shrink-0 flex items-center gap-2 group">
+          {/* Brand Logo & Editorial Title */}
+          <Link
+            href="/"
+            className="flex-shrink-0 flex items-center gap-2.5 group py-1 focus:outline-none"
+            aria-label="Xavier AlumniConnect Home"
+          >
             <img
               src="/xavier-logo.png"
               alt="Xavier AlumniConnect"
               className="w-7 h-7 sm:w-8 sm:h-8 object-contain transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3"
             />
-            <span className="text-sm sm:text-base md:text-lg font-extrabold
-                   bg-gradient-to-r from-blue-700 to-indigo-600
-                   bg-clip-text text-transparent tracking-tight">
-              Xavier AlumniConnect
-            </span>
+            <div className="flex flex-col">
+              <span className="text-base sm:text-lg font-serif font-semibold text-[#1a1410] tracking-tight leading-none group-hover:text-[#c4821a] transition-colors">
+                Xavier <span className="font-normal italic text-[#5c4d37]">Alumni</span>Connect
+              </span>
+              <span className="text-[9px] font-mono uppercase tracking-widest text-[#7d6a4f] mt-0.5">
+                St. Xavier&apos;s College
+              </span>
+            </div>
           </Link>
 
-          {/* Desktop Nav */}
-          <div className="hidden lg:flex items-center gap-0.5">
+          {/* Desktop Navigation Links */}
+          <div className="hidden lg:flex items-center gap-1">
             <NavLink href="/directory">Directory</NavLink>
             <ExploreDropdown user={user} />
-            {user?.role === 'ADMIN' && <NavLink href="/admin">Admin</NavLink>}
+            {user?.role === 'ADMIN' && <NavLink href="/admin">Admin Portal</NavLink>}
             {user && <NavLink href="/dashboard">Dashboard</NavLink>}
           </div>
 
-          {/* Actions Container */}
+          {/* Desktop Actions & User Controls */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {user && <NotificationBell isLoggedIn={true} />}
+            {user && (
+              <div className="relative">
+                <NotificationBell isLoggedIn={true} />
+              </div>
+            )}
 
             {!loading && user && (
               <div className="hidden lg:flex items-center gap-3">
-                <Link href="/dashboard/profile"
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl
-                                 hover:bg-slate-50 transition-colors group">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500
-                                  to-indigo-600 flex items-center justify-center
-                                  border-2 border-white shadow-sm overflow-hidden
-                                  group-hover:shadow-md transition-shadow">
+                <Link
+                  href="/dashboard/profile"
+                  className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/70 border border-[#1a1410]/10 hover:border-[#c4821a]/50 hover:bg-white transition-all shadow-2xs group"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-[#1a1410] text-[#e8a93c] flex items-center justify-center font-serif font-bold text-xs shadow-xs overflow-hidden flex-shrink-0">
                     {photoUrl ? (
                       <img src={photoUrl} alt={user.name} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-[11px] font-black text-white">{userInitial}</span>
+                      <span>{userInitial}</span>
                     )}
                   </div>
-                  <span className="text-sm font-semibold text-slate-700
-                                   group-hover:text-blue-600 transition-colors
-                                   max-w-[120px] truncate">
+                  <span className="text-xs font-serif font-semibold text-[#1a1410] group-hover:text-[#c4821a] transition-colors max-w-[120px] truncate">
                     {user.name}
                   </span>
                 </Link>
-                <div className="w-px h-5 bg-slate-200" />
-                <button onClick={logout}
-                  className="text-sm font-semibold text-slate-500
-                                   hover:text-red-500 hover:bg-red-50
-                                   px-3 py-1.5 rounded-lg transition-all duration-200">
-                  Logout
+
+                <div className="w-px h-4 bg-[#1a1410]/15" />
+
+                <button
+                  onClick={logout}
+                  className="text-xs font-mono font-medium text-[#7d6a4f] hover:text-rose-600 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+                  title="Sign out"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Logout</span>
                 </button>
               </div>
             )}
 
             {!loading && !user && (
-              <div className="hidden lg:flex items-center gap-2">
-                <Link href="/login"
-                  className="text-sm font-semibold text-slate-600
-                                 hover:text-blue-600 px-3 py-1.5 rounded-lg
-                                 hover:bg-slate-50 transition-all duration-200">
-                  Login
+              <div className="hidden lg:flex items-center gap-2.5">
+                <Link
+                  href="/login"
+                  className="text-xs font-semibold text-[#1a1410] hover:text-[#c4821a] px-3.5 py-2 rounded-xl hover:bg-[#1a1410]/5 transition-all"
+                >
+                  Sign In
                 </Link>
-                <Link href="/register"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white
-                                 text-sm font-semibold px-5 py-2 rounded-full
-                                 hover:shadow-md hover:shadow-blue-200
-                                 hover:-translate-y-0.5 active:translate-y-0
-                                 transition-all duration-200 shadow-sm">
-                  Join Community
+                <Link
+                  href="/register"
+                  className="bg-[#1a1410] text-[#f4efe6] text-xs font-semibold px-4 py-2 rounded-xl hover:bg-[#3d3222] active:bg-[#1a1410] border border-[#3d3222]/50 shadow-sm hover:shadow hover:-translate-y-0.5 transition-all flex items-center gap-1.5 group cursor-pointer"
+                >
+                  <span>Join Community</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-[#e8a93c] transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </div>
             )}
 
-            {/* Mobile Hamburger */}
-            <button onClick={() => setMenuOpen(!menuOpen)}
-              className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100
-                               focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-              aria-expanded={menuOpen} aria-label="Toggle menu">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              {menuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
-                  d="M6 18L18 6M6 6l12 12" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
-                  d="M4 6h16M4 12h16M4 18h16" />
-              )}
-            </svg>
-          </button>
+            {/* Mobile Hamburger Toggle Button */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="lg:hidden p-2 rounded-xl text-[#1a1410] hover:bg-[#1a1410]/8 focus:outline-none transition-colors cursor-pointer border border-[#1a1410]/10"
+              aria-expanded={menuOpen}
+              aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            >
+              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    {/* ══ MOBILE MENU ══════════════════════════════════════════════════════ */}
+      {/* ══ MOBILE DRAWER & BACKDROP ════════════════════════════════════════ */}
 
       {/* Backdrop */}
-      <div className={`lg:hidden fixed inset-0 top-16 bg-black/20 backdrop-blur-sm z-40
-                       transition-opacity duration-300
-                       ${menuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={() => setMenuOpen(false)} aria-hidden="true" />
+      <div
+        className={`lg:hidden fixed inset-0 top-16 bg-[#1a1410]/50 backdrop-blur-xs z-40 transition-opacity duration-300 ${
+          menuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setMenuOpen(false)}
+        aria-hidden="true"
+      />
 
       {/* Drawer */}
-      <div className={`lg:hidden fixed inset-x-0 top-16 z-50 bg-white border-b
-                       border-slate-200 shadow-lg transition-all duration-300 ease-in-out
-                       ${menuOpen
-          ? 'opacity-100 translate-y-0'
-          : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
-        <div className="max-h-[calc(100vh-4rem)] overflow-y-auto py-4 px-4 space-y-0.5">
+      <div
+        className={`lg:hidden fixed inset-x-0 top-16 z-50 bg-[#fbf9f5] border-b border-[#1a1410]/15 shadow-2xl transition-all duration-300 ease-in-out ${
+          menuOpen
+            ? 'opacity-100 translate-y-0'
+            : 'opacity-0 -translate-y-2 pointer-events-none'
+        }`}
+      >
+        <div className="max-h-[calc(100vh-4.5rem)] overflow-y-auto py-5 px-4 sm:px-6 space-y-1">
 
           {user ? (
             <>
-              {/* User header */}
-              <div className="flex items-center gap-3 px-4 py-3 bg-slate-50
-                              rounded-xl mb-3">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center
-                                justify-center border border-blue-200 overflow-hidden flex-shrink-0">
+              {/* User Identity Header Card */}
+              <div className="flex items-center gap-3.5 p-3.5 bg-white border border-[#1a1410]/10 rounded-2xl mb-4 shadow-2xs">
+                <div className="w-11 h-11 rounded-xl bg-[#1a1410] text-[#e8a93c] flex items-center justify-center font-serif font-bold text-sm border border-[#1a1410]/20 overflow-hidden flex-shrink-0 shadow-xs">
                   {photoUrl ? (
                     <img src={photoUrl} alt={user.name} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-sm font-bold text-blue-700">{userInitial}</span>
+                    <span>{userInitial}</span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 truncate">{user.name}</p>
-                  <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-serif font-semibold text-[#1a1410] truncate">
+                      {user.name}
+                    </p>
+                    <span
+                      className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-medium uppercase tracking-wider ${
+                        user.role === 'ADMIN'
+                          ? 'bg-[#c4821a]/15 text-[#c4821a] border border-[#c4821a]/25'
+                          : 'bg-[#3a5c3e]/10 text-[#3a5c3e] border border-[#3a5c3e]/20'
+                      }`}
+                    >
+                      {user.role}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#7d6a4f] font-mono truncate mt-0.5">{user.email}</p>
                 </div>
               </div>
 
-              {/* My Profile */}
-              <NavLink href="/dashboard/profile" mobile onClick={() => setMenuOpen(false)}>
-                <span className="text-slate-400">{Icons.profile}</span>
-                My Profile
-              </NavLink>
-
-              {/* Admin */}
-              {user.role === 'ADMIN' && (
-                <NavLink href="/admin" mobile onClick={() => setMenuOpen(false)}>
-                  <span className="text-slate-400">{Icons.admin}</span>
-                  Admin
+              {/* Navigation Items */}
+              <div className="space-y-1">
+                <NavLink href="/dashboard/profile" mobile onClick={() => setMenuOpen(false)}>
+                  <UserIcon className="w-4 h-4 text-[#7d6a4f]" />
+                  <span>My Profile</span>
                 </NavLink>
-              )}
 
-              {/* Dashboard */}
-              <NavLink href="/dashboard" mobile onClick={() => setMenuOpen(false)}>
-                <span className="text-slate-400">{Icons.dashboard}</span>
-                Dashboard
-              </NavLink>
+                {user.role === 'ADMIN' && (
+                  <NavLink href="/admin" mobile onClick={() => setMenuOpen(false)}>
+                    <Shield className="w-4 h-4 text-[#c4821a]" />
+                    <span>Admin Portal</span>
+                  </NavLink>
+                )}
 
-              <hr className="my-2 border-slate-100" />
+                <NavLink href="/dashboard" mobile onClick={() => setMenuOpen(false)}>
+                  <LayoutDashboard className="w-4 h-4 text-[#7d6a4f]" />
+                  <span>Dashboard</span>
+                </NavLink>
 
-              {/* Directory */}
-              <NavLink href="/directory" mobile onClick={() => setMenuOpen(false)}>
-                <span className="text-slate-400">{Icons.directory}</span>
-                Directory
-              </NavLink>
+                <div className="my-2 border-t border-[#1a1410]/10" />
 
-              {/* Jobs */}
-              <NavLink href="/jobs" mobile onClick={() => setMenuOpen(false)}>
-                <span className="text-slate-400">{Icons.jobs}</span>
-                Jobs
-              </NavLink>
+                <NavLink href="/directory" mobile onClick={() => setMenuOpen(false)}>
+                  <Users className="w-4 h-4 text-[#7d6a4f]" />
+                  <span>Alumni Directory</span>
+                </NavLink>
 
-              {/* Events */}
-              <NavLink href="/events" mobile onClick={() => setMenuOpen(false)}>
-                <span className="text-slate-400">{Icons.events}</span>
-                Events
-              </NavLink>
+                <NavLink href="/jobs" mobile onClick={() => setMenuOpen(false)}>
+                  <Briefcase className="w-4 h-4 text-[#7d6a4f]" />
+                  <span>Jobs &amp; Referrals</span>
+                </NavLink>
 
-              {/* Messages */}
-              <NavLink href="/chat" mobile onClick={() => setMenuOpen(false)}>
-                <span className="text-slate-400">{Icons.messages}</span>
-                Messages
-              </NavLink>
+                <NavLink href="/events" mobile onClick={() => setMenuOpen(false)}>
+                  <Calendar className="w-4 h-4 text-[#7d6a4f]" />
+                  <span>Events &amp; Reunions</span>
+                </NavLink>
 
-              {/* Logout */}
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl
-                           text-sm font-medium text-red-500 hover:bg-red-50
-                           transition-colors mt-1"
-              >
-                <span className="text-red-400">{Icons.logout}</span>
-                Logout
-              </button>
+                <NavLink href="/stories" mobile onClick={() => setMenuOpen(false)}>
+                  <BookOpen className="w-4 h-4 text-[#7d6a4f]" />
+                  <span>Alumni Stories</span>
+                </NavLink>
+
+                <NavLink href="/chat" mobile onClick={() => setMenuOpen(false)}>
+                  <MessageSquare className="w-4 h-4 text-[#7d6a4f]" />
+                  <span>Messages &amp; Chat</span>
+                </NavLink>
+
+                {/* Logout Action */}
+                <div className="pt-2">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4 text-rose-500" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </div>
             </>
           ) : (
-            <div className="flex flex-col gap-3 p-2">
-              <Link href="/login" onClick={() => setMenuOpen(false)}
-                className="w-full text-center py-3 font-medium text-slate-700
-                               bg-slate-100 rounded-xl hover:bg-slate-200 transition">
-                Login
-              </Link>
-              <Link href="/register" onClick={() => setMenuOpen(false)}
-                className="w-full text-center py-3 font-medium text-white
-                               bg-blue-600 rounded-xl shadow-md hover:bg-blue-700 transition">
-                Join Community
-              </Link>
+            <div className="space-y-3 pt-2">
+              <NavLink href="/directory" mobile onClick={() => setMenuOpen(false)}>
+                <Users className="w-4 h-4 text-[#7d6a4f]" />
+                <span>Alumni Directory</span>
+              </NavLink>
+
+              <NavLink href="/events" mobile onClick={() => setMenuOpen(false)}>
+                <Calendar className="w-4 h-4 text-[#7d6a4f]" />
+                <span>Events</span>
+              </NavLink>
+
+              <NavLink href="/stories" mobile onClick={() => setMenuOpen(false)}>
+                <BookOpen className="w-4 h-4 text-[#7d6a4f]" />
+                <span>Alumni Stories</span>
+              </NavLink>
+
+              <div className="pt-4 flex flex-col gap-2.5 border-t border-[#1a1410]/10">
+                <Link
+                  href="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="w-full text-center py-3 font-semibold text-sm text-[#1a1410] bg-white border border-[#1a1410]/15 rounded-xl hover:bg-[#f4efe6] transition shadow-xs"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  onClick={() => setMenuOpen(false)}
+                  className="w-full text-center py-3 font-semibold text-sm text-[#f4efe6] bg-[#1a1410] rounded-xl hover:bg-[#3d3222] active:bg-[#1a1410] border border-[#3d3222]/50 transition shadow-sm"
+                >
+                  Join Community
+                </Link>
+              </div>
             </div>
           )}
         </div>
