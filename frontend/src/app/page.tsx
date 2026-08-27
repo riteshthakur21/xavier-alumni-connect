@@ -176,7 +176,7 @@ const SPOTLIGHT_ALUMNI = [
   {
     name: 'Ananya Sharma',
     batch: 'Batch of 2019',
-    degree: 'B.Tech Computer Science',
+    degree: 'BCA · Computer Science',
     role: 'Senior AI Engineer',
     company: 'Google',
     location: 'Bengaluru / Mountain View',
@@ -202,7 +202,7 @@ const SPOTLIGHT_ALUMNI = [
   {
     name: 'Priya Mukherjee',
     batch: 'Batch of 2021',
-    degree: 'B.Sc Statistics & Data',
+    degree: 'BBA · Management',
     role: 'Management Consultant',
     company: 'Deloitte',
     location: 'Mumbai / London',
