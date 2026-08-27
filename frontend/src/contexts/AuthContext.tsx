@@ -54,7 +54,7 @@ interface AlumniProfile {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User | void>;
   register: (data: any) => Promise<void>;
   logout: () => void;
   updateUser: (user: User) => void;
@@ -115,6 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(user);
 
       toast.success('Login successful!');
+      return user;
     } catch (error: any) {
       const message = error.response?.data?.error || 'Login failed';
       const code = error.response?.data?.code;

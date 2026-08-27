@@ -32,9 +32,43 @@ module.exports = {
           800: '#1e293b',
           900: '#0f172a',
         },
+        ink: {
+          DEFAULT: '#1a1410',
+          50: '#f7f4ef',
+          100: '#ede8df',
+          200: '#d8cfc0',
+          300: '#bfb09a',
+          400: '#a08c6e',
+          500: '#7d6a4f',
+          600: '#5c4d37',
+          700: '#3d3222',
+          800: '#261f15',
+          900: '#1a1410',
+        },
+        cream: {
+          DEFAULT: '#f4efe6',
+          dark: '#e8dfd0',
+          deeper: '#d9ccba',
+        },
+        navy: {
+          DEFAULT: '#152744',
+          light: '#1e3a6e',
+          pale: '#dde8f7',
+        },
+        amber: {
+          DEFAULT: '#c4821a',
+          light: '#e8a93c',
+          pale: '#fdf3e3',
+        },
+        moss: {
+          DEFAULT: '#3a5c3e',
+          light: '#4e7a53',
+        },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        serif: ['"DM Serif Display"', 'Georgia', 'serif'],
+        sans: ['"DM Sans"', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'monospace'],
       },
       keyframes: {
         fadeIn: {
