@@ -14,27 +14,76 @@ const prisma = new PrismaClient();
 
 const generateEmailOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-const buildEmailOtpTemplate = (otpCode, recipientName = 'Student') => `
-  <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; max-width: 600px; margin: auto; color: #334155;">
-    <h2 style="color: #09192E; margin-top: 0;">Xavier AlumniConnect</h2>
-    <p style="font-size: 16px; line-height: 1.6;">Hello ${recipientName},</p>
-    <p style="font-size: 16px; line-height: 1.6;">Welcome to <b>Xavier AlumniConnect</b> for <b>St. Xavier's, Patna</b>. Please verify your email address using the OTP below:</p>
-    
-    <div style="text-align: center; margin: 30px 0;">
-      <div style="display: inline-block; letter-spacing: 8px; font-size: 30px; font-weight: 700; color: #09192E; background: #FDF8ED; border: 1px solid #C9A84C; border-radius: 10px; padding: 12px 24px;">
-        ${otpCode}
-      </div>
-    </div>
+const buildEmailOtpTemplate = (otpCode, recipientName = 'Member') => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify your Xavier AlumniConnect account</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4efe6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1a1410;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f4efe6; padding: 32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 560px; background-color: #ffffff; border: 1px solid rgba(26, 20, 16, 0.12); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(26, 20, 16, 0.04);">
+          <!-- Header Banner -->
+          <tr>
+            <td style="padding: 32px 36px 20px 36px; border-bottom: 1px solid rgba(26, 20, 16, 0.08); background-color: #ffffff;">
+              <div style="font-family: 'Courier New', Courier, monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #c4821a; font-weight: 600; margin-bottom: 4px;">
+                Portal Authentication
+              </div>
+              <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: normal; color: #1a1410; letter-spacing: -0.5px;">
+                Xavier AlumniConnect
+              </div>
+            </td>
+          </tr>
 
-    <p style="font-size: 14px; line-height: 1.6; color: #475569; margin-bottom: 0;">
-      This OTP expires in <b>10 minutes</b>. If you did not initiate this registration, please ignore this email.
-    </p>
-    
-    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;" />
-    <p style="font-size: 12px; color: #94a3b8; text-align: center;">
-      &copy; ${new Date().getFullYear()} Xavier AlumniConnect, St. Xavier's, Patna
-    </p>
-  </div>
+          <!-- Main Content -->
+          <tr>
+            <td style="padding: 32px 36px;">
+              <p style="font-size: 16px; font-weight: 600; color: #1a1410; margin-top: 0; margin-bottom: 12px; font-family: Georgia, serif;">
+                Hello ${recipientName},
+              </p>
+              <p style="font-size: 14px; line-height: 1.6; color: #5c4d37; margin: 0 0 24px 0;">
+                Welcome to <strong>Xavier AlumniConnect</strong> for St. Xavier&apos;s College, Patna. To verify your email address and continue registration, please enter the security verification code below:
+              </p>
+
+              <!-- OTP Code Display -->
+              <div style="text-align: center; margin: 28px 0;">
+                <div style="display: inline-block; letter-spacing: 10px; font-size: 32px; font-family: 'Courier New', Courier, monospace; font-weight: 700; color: #1a1410; background-color: #fdf8ed; border: 1px solid #c4821a; border-radius: 12px; padding: 14px 28px; box-shadow: 0 2px 8px rgba(196, 130, 26, 0.12);">
+                  ${otpCode}
+                </div>
+                <div style="font-size: 11px; font-family: 'Courier New', monospace; color: #7d6a4f; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px;">
+                  Valid for 10 minutes
+                </div>
+              </div>
+
+              <div style="background-color: #fcfbf9; border-left: 3px solid #c4821a; padding: 12px 16px; border-radius: 6px; margin-top: 24px;">
+                <p style="font-size: 12px; line-height: 1.5; color: #7d6a4f; margin: 0;">
+                  <strong>Security Note:</strong> If you did not initiate this request, please ignore this email. Never share your verification code with anyone.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 36px; background-color: #fcfbf9; border-top: 1px solid rgba(26, 20, 16, 0.08); text-align: center;">
+              <p style="font-size: 12px; color: #7d6a4f; margin: 0 0 4px 0; font-family: Georgia, serif;">
+                St. Xavier&apos;s College, Patna
+              </p>
+              <p style="font-size: 11px; color: #a08c6e; margin: 0; font-family: 'Courier New', monospace;">
+                &copy; ${new Date().getFullYear()} Xavier AlumniConnect &middot; All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
 `;
 
 const resendOtpLimiter = rateLimit({
@@ -461,42 +510,92 @@ router.post('/forgot-password', async (req, res) => {
 
     // const resetUrl = `http://localhost:3000/reset-password?token=${resetToken}`;
 
-    // Sundar HTML Message
+    // Academic Heritage Styled HTML Message
     const message = `
-  <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; max-width: 600px; margin: auto; color: #334155;">
-    <h2 style="color: #2563eb; margin-top: 0;">Xavier AlumniConnect 🎓</h2>
-    <p style="font-size: 16px; line-height: 1.6;">Hello,</p>
-    <p style="font-size: 16px; line-height: 1.6;">We received a request to reset the password for your account. Please click the button below to set a new password:</p>
-    
-    <div style="text-align: center; margin: 35px 0;">
-      <a href="${resetUrl}" style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; display: inline-block; shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-        Reset Password
-      </a>
-    </div>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Reset Request</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4efe6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1a1410;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f4efe6; padding: 32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 560px; background-color: #ffffff; border: 1px solid rgba(26, 20, 16, 0.12); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(26, 20, 16, 0.04);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 32px 36px 20px 36px; border-bottom: 1px solid rgba(26, 20, 16, 0.08); background-color: #ffffff;">
+              <div style="font-family: 'Courier New', Courier, monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #c4821a; font-weight: 600; margin-bottom: 4px;">
+                Account Security
+              </div>
+              <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: normal; color: #1a1410; letter-spacing: -0.5px;">
+                Xavier AlumniConnect
+              </div>
+            </td>
+          </tr>
 
-    <p style="font-size: 14px; line-height: 1.6; color: #64748b;">
-      <strong>Note:</strong> This link is valid for <b>1 hour</b> only. If you did not request this change, you can safely ignore this email.
-    </p>
-    
-    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;" />
-    
-    <p style="font-size: 12px; color: #94a3b8; text-align: center;">
-      &copy; ${new Date().getFullYear()} Xavier AlumniConnect. All rights reserved.
-    </p>
-  </div>
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px 36px;">
+              <p style="font-size: 16px; font-weight: 600; color: #1a1410; margin-top: 0; margin-bottom: 12px; font-family: Georgia, serif;">
+                Password Reset Request
+              </p>
+              <p style="font-size: 14px; line-height: 1.6; color: #5c4d37; margin: 0 0 24px 0;">
+                We received a request to reset the password for your <strong>Xavier AlumniConnect</strong> account. Click the button below to choose a new password:
+              </p>
+
+              <!-- CTA Button -->
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${resetUrl}" style="background-color: #1a1410; color: #f4efe6; padding: 14px 32px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px; display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; border: 1px solid #3d3222; box-shadow: 0 2px 8px rgba(26, 20, 16, 0.12);">
+                  Reset Your Password &rarr;
+                </a>
+              </div>
+
+              <div style="background-color: #fcfbf9; border-left: 3px solid #c4821a; padding: 12px 16px; border-radius: 6px; margin-top: 24px;">
+                <p style="font-size: 12px; line-height: 1.5; color: #7d6a4f; margin: 0;">
+                  <strong>Note:</strong> This link is valid for <strong>1 hour</strong> only. If you did not request this change, you can safely ignore this email; your account credentials remain unchanged.
+                </p>
+              </div>
+
+              <p style="font-size: 11px; line-height: 1.4; color: #a08c6e; margin-top: 20px; margin-bottom: 0; word-break: break-all;">
+                If the button above does not work, copy and paste this link into your browser:<br />
+                <a href="${resetUrl}" style="color: #c4821a; text-decoration: underline;">${resetUrl}</a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 36px; background-color: #fcfbf9; border-top: 1px solid rgba(26, 20, 16, 0.08); text-align: center;">
+              <p style="font-size: 12px; color: #7d6a4f; margin: 0 0 4px 0; font-family: Georgia, serif;">
+                St. Xavier&apos;s College, Patna
+              </p>
+              <p style="font-size: 11px; color: #a08c6e; margin: 0; font-family: 'Courier New', monospace;">
+                &copy; ${new Date().getFullYear()} Xavier AlumniConnect &middot; All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
 `;
 
     // Email bhej do!
     await sendEmail({
       email: user.email,
-      subject: 'Password Reset Request',
+      subject: 'Password Reset Request · Xavier AlumniConnect',
       message,
     });
 
-    res.json({ message: 'Reset link sent to your email! 📧' });
+    res.json({ message: 'Reset link sent to your email.' });
   } catch (error) {
     console.error('Email error:', error);
-    res.status(500).json({ error: 'Email not send. Pls check Server .' });
+    res.status(500).json({ error: 'Email not sent. Please check server configuration.' });
   }
 });
 
@@ -513,7 +612,7 @@ router.post('/reset-password', async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ error: 'Invalid or expired token! ❌' });
+      return res.status(400).json({ error: 'Invalid or expired token.' });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -528,29 +627,83 @@ router.post('/reset-password', async (req, res) => {
       }
     });
 
+    const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login`;
+
     // --- 🛡️ SUCCESS EMAIL TEMPLATE ---
     const successMessage = `
-      <div style="font-family: sans-serif; padding: 30px; border: 1px solid #e2e8f0; border-radius: 12px; max-width: 600px; margin: auto; color: #334155;">
-        <h2 style="color: #10b981; margin-top: 0;">Password Changed Successfully! ✅</h2>
-        <p style="font-size: 16px; line-height: 1.6;">Hello,</p>
-        <p style="font-size: 16px; line-height: 1.6;">This is a confirmation that the password for your <b>Xavier AlumniConnect</b> account has been successfully changed.</p>
-        
-        <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981; margin: 25px 0;">
-          <p style="margin: 0; font-size: 14px; color: #475569;">
-            <b>Security Alert:</b> If you did not make this change, please contact our support team immediately or secure your account.
-          </p>
-        </div>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Changed Successfully</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4efe6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1a1410;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f4efe6; padding: 32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 560px; background-color: #ffffff; border: 1px solid rgba(26, 20, 16, 0.12); border-radius: 16px; overflow: hidden; box-shadow: 0 4px 16px rgba(26, 20, 16, 0.04);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 32px 36px 20px 36px; border-bottom: 1px solid rgba(26, 20, 16, 0.08); background-color: #ffffff;">
+              <div style="font-family: 'Courier New', Courier, monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #3a5c3e; font-weight: 600; margin-bottom: 4px;">
+                Security Confirmation
+              </div>
+              <div style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: normal; color: #1a1410; letter-spacing: -0.5px;">
+                Xavier AlumniConnect
+              </div>
+            </td>
+          </tr>
 
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/login" style="background-color: #2563eb; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-            Go to Login
-          </a>
-        </div>
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px 36px;">
+              <div style="background-color: #f3f7f4; border: 1px solid rgba(58, 92, 62, 0.25); border-left: 4px solid #3a5c3e; border-radius: 8px; padding: 16px; margin: 0 0 20px 0;">
+                <p style="margin: 0; font-size: 14px; font-weight: 600; color: #2d4530; font-family: Georgia, serif;">
+                  Password Changed Successfully
+                </p>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: #3d5c41; line-height: 1.5;">
+                  The password for your account has been updated securely.
+                </p>
+              </div>
 
-        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 25px 0;" />
-        <p style="font-size: 12px; color: #94a3b8; text-align: center;">&copy; ${new Date().getFullYear()} Xavier AlumniConnect. Security first.</p>
-      </div>
-    `;
+              <p style="font-size: 14px; line-height: 1.6; color: #5c4d37; margin: 0 0 24px 0;">
+                You can now use your new password to sign in to the Xavier AlumniConnect portal:
+              </p>
+
+              <!-- CTA Button -->
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="${loginUrl}" style="background-color: #1a1410; color: #f4efe6; padding: 14px 32px; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 14px; display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; border: 1px solid #3d3222; box-shadow: 0 2px 8px rgba(26, 20, 16, 0.12);">
+                  Sign In to Your Account &rarr;
+                </a>
+              </div>
+
+              <div style="background-color: #fcfbf9; border: 1px solid rgba(26, 20, 16, 0.08); padding: 12px 16px; border-radius: 6px; margin-top: 24px;">
+                <p style="font-size: 12px; line-height: 1.5; color: #7d6a4f; margin: 0;">
+                  <strong>Security Advisory:</strong> If you did not make this change, please contact the alumni administrator immediately to protect your profile.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 36px; background-color: #fcfbf9; border-top: 1px solid rgba(26, 20, 16, 0.08); text-align: center;">
+              <p style="font-size: 12px; color: #7d6a4f; margin: 0 0 4px 0; font-family: Georgia, serif;">
+                St. Xavier&apos;s College, Patna
+              </p>
+              <p style="font-size: 11px; color: #a08c6e; margin: 0; font-family: 'Courier New', monospace;">
+                &copy; ${new Date().getFullYear()} Xavier AlumniConnect &middot; Security first.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`;
 
     // Email bhej do!
     await sendEmail({

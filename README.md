@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Xavier AlumniConnect Logo](../frontend/public/xavier-logo.png)
+![Xavier AlumniConnect Logo](frontend/public/xavier-logo.png)
 
 ### **Next-Generation Alumni Networking & Career Platform**
 *Dedicated to the students, graduates, and faculty of St. Xavier's College, Patna*
@@ -37,7 +37,7 @@
 *Living constellation node canvas, verified network badges, 60fps spotlight carousel, and community metrics panel.*
 
 <div align="center">
-  <img src="../frontend/public/Images/Screenshot 2026-08-27 220458.png" alt="Xavier AlumniConnect Hero Section" width="100%" />
+  <img src="frontend/public/Images/Screenshot 2026-08-27 220458.png" alt="Xavier AlumniConnect Hero Section" width="100%" />
 </div>
 
 ---
@@ -46,7 +46,7 @@
 *Secure registration and sign-in with 2-step verification, warm parchment editorial panels, and institutional trust signals.*
 
 <div align="center">
-  <img src="../frontend/public/Images/Screenshot 2026-08-27 220534.png" alt="Xavier AlumniConnect Authentication Portal" width="100%" />
+  <img src="frontend/public/Images/Screenshot 2026-08-27 220534.png" alt="Xavier AlumniConnect Authentication Portal" width="100%" />
 </div>
 
 ---
@@ -55,7 +55,7 @@
 *Long-form narrative publishing, class year distinctions, verified member badges, and smooth modal-driven interactions.*
 
 <div align="center">
-  <img src="../frontend/public/Images/Screenshot 2026-08-27 220634.png" alt="Xavier AlumniConnect Story Article" width="100%" />
+  <img src="frontend/public/Images/Screenshot 2026-08-27 220634.png" alt="Xavier AlumniConnect Story Article" width="100%" />
 </div>
 
 ---
@@ -64,7 +64,7 @@
 *Warm linen 404 experience with curated quick-jump portals and institutional aesthetics.*
 
 <div align="center">
-  <img src="../frontend/public/Images/Screenshot 2026-08-27 220857.png" alt="Xavier AlumniConnect 404 Page" width="100%" />
+  <img src="frontend/public/Images/Screenshot 2026-08-27 220857.png" alt="Xavier AlumniConnect 404 Page" width="100%" />
 </div>
 
 ---
@@ -331,6 +331,6 @@ NEXT_PUBLIC_API_URL=http://localhost:5000
 <div align="center">
 
 **Developed with precision for St. Xavier's College Alumni Community**  
-*Built by Ritesh Thakur · Class of 2024*
+*Built by Ritesh Thakur · Batch of 2024*
 
 </div>

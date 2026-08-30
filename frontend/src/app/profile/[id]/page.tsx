@@ -356,7 +356,7 @@ export default function App() {
                   </span>
                   {profile.batchYear && (
                     <span className="flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-semibold">
-                      Class of {profile.batchYear}
+                      Batch of {profile.batchYear}
                     </span>
                   )}
                   {profile.location && (
@@ -396,7 +396,7 @@ export default function App() {
                   </span>
                   {profile.batchYear && (
                     <span className="text-slate-500 flex items-center gap-1.5">
-                      <span className="hidden sm:inline">•</span>Class of {profile.batchYear}
+                      <span className="hidden sm:inline">•</span>Batch of {profile.batchYear}
                     </span>
                   )}
                 </div>

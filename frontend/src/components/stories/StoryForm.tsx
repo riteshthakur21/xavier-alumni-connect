@@ -3,6 +3,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { PenTool, ArrowRight, CheckCircle2 } from 'lucide-react';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 interface StoryFormProps {
   onSuccess?: () => void;
@@ -13,9 +16,10 @@ export default function StoryForm({ onSuccess }: StoryFormProps) {
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!title.trim() || !content.trim()) {
-      toast.error('Title and content are required');
+      toast.error('Title and story content are required');
       return;
     }
     if (title.length > 100) {
@@ -29,8 +33,8 @@ export default function StoryForm({ onSuccess }: StoryFormProps) {
 
     setSubmitting(true);
     try {
-      await axios.post('http://localhost:5000/api/stories', { title, content });
-      toast.success('Story submitted! It will appear after admin approval.');
+      await axios.post(`${API_URL}/api/stories`, { title: title.trim(), content: content.trim() });
+      toast.success('Story submitted for review! It will appear once approved by admin.');
       setTitle('');
       setContent('');
       onSuccess?.();
@@ -43,20 +47,29 @@ export default function StoryForm({ onSuccess }: StoryFormProps) {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-      <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-        <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-        Share Your Story
-      </h3>
+    <div className="bg-white rounded-2xl border border-[#1a1410]/12 shadow-sm p-6 sm:p-8">
+      <div className="flex items-center gap-2.5 mb-6 pb-4 border-b border-[#1a1410]/10">
+        <div className="w-9 h-9 rounded-xl bg-[#1a1410]/5 text-[#c4821a] flex items-center justify-center">
+          <PenTool className="w-4 h-4" />
+        </div>
+        <div>
+          <h3 className="text-lg sm:text-xl font-serif font-semibold text-[#1a1410]">
+            Share Your Alumni Journey
+          </h3>
+          <p className="text-xs text-[#5c4d37] font-mono mt-0.5">
+            Published stories inspire students and fellow alumni across batches.
+          </p>
+        </div>
+      </div>
 
-      <div className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {/* Title */}
         <div>
           <div className="flex justify-between items-center mb-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Title</label>
-            <span className={`text-xs font-medium ${title.length > 100 ? 'text-red-500' : 'text-slate-400'}`}>
+            <label className="text-[11px] font-mono font-medium text-[#3d3222] uppercase tracking-wider">
+              Story Headline / Title
+            </label>
+            <span className={`text-[11px] font-mono ${title.length > 100 ? 'text-rose-600 font-bold' : 'text-[#7d6a4f]'}`}>
               {title.length}/100
             </span>
           </div>
@@ -64,46 +77,60 @@ export default function StoryForm({ onSuccess }: StoryFormProps) {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Give your story a compelling title..."
+            placeholder="e.g. From Campus Hackathons to Senior Engineering Lead"
             maxLength={100}
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            required
+            className="w-full px-4 py-3 rounded-xl bg-white border border-[#1a1410]/15 text-sm text-[#1a1410] placeholder-[#7d6a4f]/60 shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#c4821a]/20 focus:border-[#1a1410] transition-all"
           />
         </div>
 
         {/* Content */}
         <div>
           <div className="flex justify-between items-center mb-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Your Story</label>
-            <span className={`text-xs font-medium ${content.length > 2000 ? 'text-red-500' : 'text-slate-400'}`}>
+            <label className="text-[11px] font-mono font-medium text-[#3d3222] uppercase tracking-wider">
+              Your Narrative &amp; Advice
+            </label>
+            <span className={`text-[11px] font-mono ${content.length > 2000 ? 'text-rose-600 font-bold' : 'text-[#7d6a4f]'}`}>
               {content.length}/2000
             </span>
           </div>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Share your journey, experience, or advice with the community..."
+            placeholder="Share key turning points in your career, lessons learned, and words of wisdom for current students..."
             maxLength={2000}
-            rows={5}
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            rows={6}
+            required
+            className="w-full px-4 py-3 rounded-xl bg-white border border-[#1a1410]/15 text-sm text-[#1a1410] placeholder-[#7d6a4f]/60 shadow-2xs resize-none focus:outline-none focus:ring-2 focus:ring-[#c4821a]/20 focus:border-[#1a1410] transition-all leading-relaxed"
           />
         </div>
 
-        {/* Submit */}
-        <button
-          onClick={handleSubmit}
-          disabled={submitting || !title.trim() || !content.trim()}
-          className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {submitting ? (
-            <span className="flex items-center justify-center gap-2">
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-              Submitting...
-            </span>
-          ) : (
-            'Submit Story for Review'
-          )}
-        </button>
-      </div>
+        {/* Submit Action */}
+        <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-1.5 text-xs text-[#7d6a4f] font-mono">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#3a5c3e]" />
+            <span>Reviewed by community moderation before publishing</span>
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting || !title.trim() || !content.trim()}
+            className="w-full sm:w-auto px-7 py-3 bg-[#1a1410] text-[#f4efe6] text-sm font-semibold rounded-xl hover:bg-[#3d3222] active:bg-[#1a1410] border border-[#3d3222]/50 shadow-sm hover:shadow hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {submitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Submitting for Review...</span>
+              </span>
+            ) : (
+              <>
+                <span>Submit Story</span>
+                <ArrowRight className="w-4 h-4 text-[#e8a93c]" />
+              </>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

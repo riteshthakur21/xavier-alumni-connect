@@ -324,7 +324,7 @@ export default function Directory() {
                         {profile.role}
                       </span>
                       {profile.alumniProfile?.batchYear && (
-                        <span className="text-[10px] font-bold text-slate-400">Class of {profile.alumniProfile.batchYear}</span>
+                        <span className="text-[10px] font-bold text-slate-400">Batch of {profile.alumniProfile.batchYear}</span>
                       )}
                     </div>
                   </div>
@@ -431,7 +431,7 @@ export default function Directory() {
                       </span>
                       {profile.alumniProfile?.batchYear && (
                         <span className="text-[9px] sm:text-[10px] font-bold text-slate-400">
-                          Class of {profile.alumniProfile.batchYear}
+                          Batch of {profile.alumniProfile.batchYear}
                         </span>
                       )}
                     </div>
