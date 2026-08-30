@@ -1,22 +1,27 @@
-# 🎓 Xavier AlumniConnect
-
-<div align="center">
-
-![Xavier AlumniConnect Logo](frontend/public/xavier-logo.png)
-
-### **Next-Generation Alumni Networking & Career Platform**
-*Dedicated to the students, graduates, and faculty of St. Xavier's College, Patna*
-
-[![Next.js](https://img.shields.io/badge/Next.js-14.0.3-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-18.x-blue?style=flat-square&logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.3-38bdf8?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
-[![Express.js](https://img.shields.io/badge/Express.js-4.18-lightgrey?style=flat-square&logo=express)](https://expressjs.com/)
-[![Prisma ORM](https://img.shields.io/badge/Prisma-5.1-2D3748?style=flat-square&logo=prisma)](https://www.prisma.io/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon_DB-4169E1?style=flat-square&logo=postgresql)](https://neon.tech/)
-[![Socket.IO](https://img.shields.io/badge/Socket.IO-4.8.3-010101?style=flat-square&logo=socket.io)](https://socket.io/)
-
-</div>
+<table>
+  <tr>
+    <td width="100" align="center" valign="middle">
+      <img src="frontend/public/xavier_favicon.png" alt="Xavier AlumniConnect Logo" width="85" />
+    </td>
+    <td valign="middle">
+      <h1 style="margin: 0; border-bottom: none;">🎓 Xavier AlumniConnect</h1>
+      <p style="margin: 4px 0 8px 0;">
+        <strong>Next-Generation Alumni Networking & Career Platform</strong><br>
+        <em>Dedicated to the students, graduates, and faculty of St. Xavier's College, Patna</em>
+      </p>
+      <div>
+        <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-14.0.3-black?style=flat-square&logo=next.js" alt="Next.js" /></a>
+        <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-18.x-blue?style=flat-square&logo=react" alt="React" /></a>
+        <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript" alt="TypeScript" /></a>
+        <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_CSS-3.3-38bdf8?style=flat-square&logo=tailwind-css" alt="Tailwind CSS" /></a>
+        <a href="https://expressjs.com/"><img src="https://img.shields.io/badge/Express.js-4.18-lightgrey?style=flat-square&logo=express" alt="Express.js" /></a>
+        <a href="https://www.prisma.io/"><img src="https://img.shields.io/badge/Prisma-5.1-2D3748?style=flat-square&logo=prisma" alt="Prisma ORM" /></a>
+        <a href="https://neon.tech/"><img src="https://img.shields.io/badge/PostgreSQL-Neon_DB-4169E1?style=flat-square&logo=postgresql" alt="PostgreSQL" /></a>
+        <a href="https://socket.io/"><img src="https://img.shields.io/badge/Socket.IO-4.8.3-010101?style=flat-square&logo=socket.io" alt="Socket.IO" /></a>
+      </div>
+    </td>
+  </tr>
+</table>
 
 ---
 
