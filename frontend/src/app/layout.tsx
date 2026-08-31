@@ -15,14 +15,29 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'Xavier AlumniConnect · Alumni Management System',
   description: 'Connect, Network, and Grow with Your Alumni Community',
+  applicationName: 'Xavier AlumniConnect',
   icons: {
     icon: [
       { url: '/xavier_favicon.png', type: 'image/png' },
+      { url: '/xavier_favicon.png', sizes: '32x32', type: 'image/png' },
       { url: '/xavier_favicon.png', sizes: '192x192', type: 'image/png' },
       { url: '/xavier_favicon.png', sizes: '512x512', type: 'image/png' },
     ],
-    shortcut: '/xavier_favicon.png',
-    apple: '/xavier_favicon.png',
+    shortcut: [{ url: '/favicon_icon.png', type: 'image/png' }],
+    apple: [
+      { url: '/favicon_icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    other: [
+      {
+        rel: 'apple-touch-icon-precomposed',
+        url: '/favicon_icon.png',
+      },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Xavier AlumniConnect',
   },
   manifest: '/manifest.webmanifest',
 }
