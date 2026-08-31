@@ -106,8 +106,9 @@ export default function Login() {
       const rawName = loggedInUser?.name || '';
       const firstName = rawName ? rawName.trim().split(' ')[0] : '';
       setLoginSuccess({ name: firstName });
+      const targetRedirect = searchParams.get('redirect') || '/dashboard';
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push(targetRedirect);
       }, 900);
     } catch (error: any) {
       setLoginSuccess(null);
