@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import { moduleCache } from '@/lib/moduleCache';
 import {
   BookOpen,
   ChevronLeft,
@@ -50,8 +51,9 @@ interface StoriesFeedProps {
 }
 
 export default function StoriesFeed({ previewMode, currentUser, refreshKey }: StoriesFeedProps) {
-  const [stories, setStories] = useState<Story[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedStories = moduleCache.get<Story[]>('alumni-stories');
+  const [stories, setStories] = useState<Story[]>(() => cachedStories || []);
+  const [loading, setLoading] = useState<boolean>(() => !cachedStories);
   const [activeIndex, setActiveIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [storyToDelete, setStoryToDelete] = useState<{ id: string; title: string } | null>(null);
@@ -60,11 +62,23 @@ export default function StoriesFeed({ previewMode, currentUser, refreshKey }: St
 
   // ── Fetch ─────────────────────────────────────────────────────────────────
   useEffect(() => {
+    // If refreshKey is passed (e.g. forced refresh) or no cache, fetch from API
+    const cached = moduleCache.get<Story[]>('alumni-stories');
+    if (cached && !refreshKey) {
+      setStories(cached);
+      setLoading(false);
+      return;
+    }
+
     const fetchStories = async () => {
-      setLoading(true);
+      if (!moduleCache.has('alumni-stories')) {
+        setLoading(true);
+      }
       try {
         const res = await axios.get(`${API_URL}/api/stories`);
-        setStories(res.data.stories || []);
+        const loadedStories = res.data.stories || [];
+        setStories(loadedStories);
+        moduleCache.set('alumni-stories', loadedStories);
       } catch {
         toast.error('Failed to load stories');
       } finally {
@@ -115,7 +129,11 @@ export default function StoriesFeed({ previewMode, currentUser, refreshKey }: St
     setIsDeleting(true);
     try {
       await axios.delete(`${API_URL}/api/stories/${storyToDelete.id}`);
-      setStories((prev) => prev.filter((s) => s.id !== storyToDelete.id));
+      setStories((prev) => {
+        const next = prev.filter((s) => s.id !== storyToDelete.id);
+        moduleCache.set('alumni-stories', next);
+        return next;
+      });
       toast.success('Story deleted successfully');
       setStoryToDelete(null);
     } catch {
