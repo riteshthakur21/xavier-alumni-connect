@@ -5,6 +5,7 @@ import axios from 'axios';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { moduleCache } from '@/lib/moduleCache';
 import {
   Calendar,
   MapPin,
@@ -231,8 +232,9 @@ function AudienceModal({ event, onClose }: { event: any; onClose: () => void }) 
 // ── Main Page Component ───────────────────────────────────────────────────────
 export default function Events() {
   const { user, loading: authLoading } = useAuth();
-  const [events, setEvents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedEvents = moduleCache.get<any[]>('events');
+  const [events, setEvents] = useState<any[]>(() => cachedEvents || []);
+  const [loading, setLoading] = useState<boolean>(() => !cachedEvents);
   const [audienceModal, setAudienceModal] = useState<any | null>(null);
 
   // Confirm Registration Modal state
@@ -269,10 +271,21 @@ export default function Events() {
     return `${API_URL}/${path.replace(/\\/g, '/').replace(/^\/+/, '')}`;
   };
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (forceRefetch = false) => {
+    if (!forceRefetch) {
+      const cached = moduleCache.get<any[]>('events');
+      if (cached) {
+        setEvents(cached);
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       const res = await axios.get(`${API_URL}/api/events`);
-      setEvents(res.data.events || []);
+      const loadedEvents = res.data.events || [];
+      setEvents(loadedEvents);
+      moduleCache.set('events', loadedEvents);
     } catch {
       toast.error('Could not load events');
     } finally {
@@ -293,7 +306,7 @@ export default function Events() {
     try {
       await axios.post(`${API_URL}/api/events/${eventId}/register`);
       toast.success('Registration confirmed for this event!');
-      fetchEvents();
+      fetchEvents(true);
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
@@ -308,8 +321,12 @@ export default function Events() {
     try {
       await axios.delete(`${API_URL}/api/events/${deleteConfirmModal.eventId}`);
       toast.success('Event deleted successfully');
+      setEvents((prev) => {
+        const next = prev.filter((ev) => ev.id !== deleteConfirmModal.eventId);
+        moduleCache.set('events', next);
+        return next;
+      });
       setDeleteConfirmModal(null);
-      fetchEvents();
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to delete event');
     } finally {

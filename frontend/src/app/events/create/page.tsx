@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import Cookies from 'js-cookie';
 import Link from 'next/link';
+import { moduleCache } from '@/lib/moduleCache';
 import {
   Users,
   GraduationCap,
@@ -205,6 +206,7 @@ export default function CreateEvent() {
         },
       });
 
+      moduleCache.invalidate('events');
       toast.success('Event published successfully!', { id: toastId });
       router.push('/events');
     } catch (error: any) {
