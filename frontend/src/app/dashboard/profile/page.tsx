@@ -94,8 +94,15 @@ export default function EditProfile() {
       }
     };
 
-    if (!authLoading && user) fetchProfile();
-  }, [user, authLoading]);
+    if (!authLoading) {
+      if (!user) {
+        toast.error('Please sign in to edit your profile');
+        router.push('/login?redirect=/dashboard/profile');
+      } else {
+        fetchProfile();
+      }
+    }
+  }, [user, authLoading, router]);
 
   // ── Input change ───────────────────────────────────────────────────────────
   const handleChange = (

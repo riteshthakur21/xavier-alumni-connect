@@ -6,6 +6,7 @@ axios.defaults.baseURL = 'http://localhost:5000';
 import Cookies from 'js-cookie';
 import toast from 'react-hot-toast';
 import { disconnectSocket } from '@/lib/socket';
+import { moduleCache } from '@/lib/moduleCache';
 
 // 🌟 THE MAGIC INTERCEPTOR 🌟
 axios.interceptors.request.use((config) => {
@@ -151,6 +152,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     disconnectSocket(); // Close socket connection on logout
+    moduleCache.clear(); // Clear in-memory explore module caches
     Cookies.remove('token', { path: '/' });
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);

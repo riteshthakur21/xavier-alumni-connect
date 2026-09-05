@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { moduleCache } from '@/lib/moduleCache';
 import { PenTool, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -34,6 +35,7 @@ export default function StoryForm({ onSuccess }: StoryFormProps) {
     setSubmitting(true);
     try {
       await axios.post(`${API_URL}/api/stories`, { title: title.trim(), content: content.trim() });
+      moduleCache.invalidate('alumni-stories');
       toast.success('Story submitted for review! It will appear once approved by admin.');
       setTitle('');
       setContent('');
