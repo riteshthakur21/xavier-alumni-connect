@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import { moduleCache } from '@/lib/moduleCache';
 import {
   Briefcase,
   MapPin,
@@ -32,8 +33,9 @@ const jobTypeBadgeStyles: Record<string, string> = {
 
 export default function JobsPage() {
   const { user, loading: authLoading } = useAuth();
-  const [jobs, setJobs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedJobs = moduleCache.get<any[]>('career-referrals');
+  const [jobs, setJobs] = useState<any[]>(() => cachedJobs || []);
+  const [loading, setLoading] = useState<boolean>(() => !cachedJobs);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -41,10 +43,20 @@ export default function JobsPage() {
   useEffect(() => {
     if (!authLoading) {
       if (user) {
+        // If data is already in cache, do not make another API request on revisit
+        const cached = moduleCache.get<any[]>('career-referrals');
+        if (cached) {
+          setJobs(cached);
+          setLoading(false);
+          return;
+        }
+
         const fetchJobs = async () => {
           try {
             const res = await axios.get(`${API_URL}/api/jobs`);
-            setJobs(res.data.jobs || []);
+            const loadedJobs = res.data.jobs || [];
+            setJobs(loadedJobs);
+            moduleCache.set('career-referrals', loadedJobs);
           } catch (error) {
             console.error('Error fetching jobs:', error);
             toast.error('Failed to load job listings');
@@ -112,7 +124,11 @@ export default function JobsPage() {
     setDeletingId(jobId);
     try {
       await axios.delete(`${API_URL}/api/jobs/${jobId}`);
-      setJobs((prev) => prev.filter((job) => job.id !== jobId));
+      setJobs((prev) => {
+        const next = prev.filter((job) => job.id !== jobId);
+        moduleCache.set('career-referrals', next);
+        return next;
+      });
       toast.success('Job listing removed');
     } catch (error) {
       console.error('Error deleting job:', error);

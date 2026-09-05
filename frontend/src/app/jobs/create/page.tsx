@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import { moduleCache } from '@/lib/moduleCache';
 import {
   Briefcase,
   Building2,
@@ -147,6 +148,7 @@ export default function CreateJob() {
             }
           : undefined
       );
+      moduleCache.invalidate('career-referrals');
       toast.success('Job opportunity published successfully');
       router.push('/jobs');
     } catch (error: any) {
