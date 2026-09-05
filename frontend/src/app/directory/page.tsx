@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { moduleCache } from '@/lib/moduleCache';
 import {
   Search,
   GraduationCap,
@@ -32,8 +33,8 @@ export default function Directory() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<any[]>(() => moduleCache.get<any[]>('directory') || []);
+  const [loading, setLoading] = useState(() => !moduleCache.get('directory'));
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDept, setSelectedDept] = useState('');
@@ -45,19 +46,33 @@ export default function Directory() {
   const [connLoadingIds, setConnLoadingIds] = useState<Record<string, boolean>>({});
 
   // 1. Fetch Users Logic
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/api/alumni`);
-        setUsers(res.data.alumni || []);
-      } catch (error) {
-        toast.error('Failed to load alumni directory');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
+  const fetchUsers = useCallback(async (force = false) => {
+    const cachedUsers = moduleCache.get<any[]>('directory');
+    if (cachedUsers && !force) {
+      setUsers(cachedUsers);
+      setLoading(false);
+      return;
+    }
+
+    if (!cachedUsers) {
+      setLoading(true);
+    }
+
+    try {
+      const res = await axios.get(`${API_URL}/api/alumni`);
+      const loaded = res.data.alumni || [];
+      setUsers(loaded);
+      moduleCache.set('directory', loaded);
+    } catch (error) {
+      toast.error('Failed to load alumni directory');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   // 2. Batch-fetch connection statuses once users are loaded
   useEffect(() => {
@@ -111,6 +126,7 @@ export default function Directory() {
       );
       toast.success('Connection request sent');
       setConnStatuses((p) => ({ ...p, [targetId]: 'pending_sent' }));
+      if (user?.id) moduleCache.invalidate(`dashboard:${user.id}`);
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.error : 'Failed to send request';
       toast.error(msg || 'Failed to send request');
@@ -136,6 +152,7 @@ export default function Directory() {
       toast.success('Connection request cancelled');
       setConnStatuses((p) => ({ ...p, [targetId]: 'not_connected' }));
       setConnRequestIds((p) => ({ ...p, [targetId]: null }));
+      if (user?.id) moduleCache.invalidate(`dashboard:${user.id}`);
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.error : 'Failed to cancel request';
       toast.error(msg || 'Failed to cancel request');
@@ -161,6 +178,7 @@ export default function Directory() {
       toast.success('Connection established');
       setConnStatuses((p) => ({ ...p, [targetId]: 'connected' }));
       setConnRequestIds((p) => ({ ...p, [targetId]: null }));
+      if (user?.id) moduleCache.invalidate(`dashboard:${user.id}`);
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.error : 'Failed to accept connection';
       toast.error(msg || 'Failed to accept connection');
