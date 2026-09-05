@@ -2,6 +2,7 @@ const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
 const sendEmail = require('../utils/email');
+const { promoteEligibleStudents } = require('../services/graduation.service');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -214,6 +215,58 @@ router.get('/users', authMiddleware, adminMiddleware, async (req, res) => {
   } catch (error) {
     console.error('SERVER ERROR:', error);
     res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// 6. Manual / Simulation Trigger for Student -> Alumni Graduation Promotion 🎓
+router.post('/promote-graduates', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    console.log('[promote-graduates] Received request:');
+    console.log('  typeof req.body:', typeof req.body, 'req.body:', req.body);
+
+    let testDate = null;
+
+    if (req.body) {
+      if (typeof req.body === 'object' && req.body.testDate) {
+        testDate = req.body.testDate;
+      } else if (typeof req.body === 'string') {
+        try {
+          const parsed = JSON.parse(req.body);
+          testDate = parsed.testDate || req.body;
+        } catch {
+          const match = req.body.match(/(\d{4}-\d{2}-\d{2})/);
+          testDate = match ? match[1] : req.body.trim();
+        }
+      }
+    }
+
+    // Also support ?testDate=YYYY-MM-DD query param
+    if (!testDate && req.query?.testDate) {
+      testDate = req.query.testDate;
+    }
+
+    const targetDate = testDate ? new Date(testDate) : new Date();
+
+    if (isNaN(targetDate.getTime())) {
+      return res.status(400).json({ error: 'Invalid testDate format. Please use YYYY-MM-DD (e.g. 2028-08-01).' });
+    }
+
+    const result = await promoteEligibleStudents(targetDate);
+
+    res.json({
+      message: `Graduation promotion completed for simulation date: ${result.targetDate}`,
+      result,
+    });
+  } catch (error) {
+    console.error('[Admin Route Error] Manual graduate promotion failed:');
+    console.error('Error Name:', error.name);
+    console.error('Error Message:', error.message);
+    console.error('Stack Trace:', error.stack);
+
+    res.status(500).json({
+      error: 'Failed to run graduation promotion',
+      ...(process.env.NODE_ENV !== 'production' && { details: error.message }),
+    });
   }
 });
 

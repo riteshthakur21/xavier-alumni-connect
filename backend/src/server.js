@@ -30,6 +30,9 @@ const pgSession = require('connect-pg-simple')(session);
 
 require('./config/passport');
 
+// ── Background Jobs / Schedulers ──────────────────────────────────────────────
+const { initSchedulers } = require('./services/scheduler.service');
+
 // ── Socket.io layer ────────────────────────────────────────────────────────────
 const socketAuthMiddleware      = require('./middleware/socketAuth');
 const { registerSocketHandlers } = require('./socket/socket');
@@ -73,7 +76,31 @@ app.use(cors({ origin: FRONTEND_URL, credentials: true }));
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 app.use('/api/', limiter);
 
-app.use(express.json({ limit: '10mb' }));
+// ── Resilient JSON & URL-encoded body parsing ─────────────────────────────────
+app.use((req, res, next) => {
+  express.json({ limit: '10mb' })(req, res, (err) => {
+    if (err) {
+      if (err instanceof SyntaxError && 'body' in err) {
+        try {
+          const raw = err.body;
+          if (typeof raw === 'string') {
+            // Repair unquoted keys or unquoted values from PowerShell/curl
+            const repaired = raw
+              .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
+              .replace(/:\s*([a-zA-Z0-9_-]+)(\s*[,}])/g, ':"$1"$2');
+            req.body = JSON.parse(repaired);
+            return next();
+          }
+        } catch {
+          req.body = err.body;
+          return next();
+        }
+      }
+      return next(err);
+    }
+    next();
+  });
+});
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
@@ -127,8 +154,19 @@ app.get('/ping', (req, res) => res.status(200).send('Server is awake!'));
 
 // ── Error & 404 handlers ───────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  console.error('[Global Error Handler]');
+  console.error('Error Name:', err.name);
+  console.error('Error Message:', err.message);
+  console.error('Stack Trace:', err.stack);
+
+  // Handle malformed JSON body errors from express.json()
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ error: 'Invalid JSON payload. Please ensure valid JSON formatting (e.g. quoted keys and strings).' });
+  }
+
+  res.status(err.status || 500).json({
+    error: process.env.NODE_ENV === 'production' ? 'Something went wrong!' : (err.message || 'Something went wrong!'),
+  });
 });
 
 app.use('*', (req, res) => {
@@ -141,4 +179,7 @@ httpServer.listen(PORT, () => {
   console.log(`Socket.io ready`);
   console.log(`Message encryption: AES-256-GCM enabled`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+
+  // ── Initialize background cron schedulers ────────────────────────────────────
+  initSchedulers();
 });
