@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
@@ -29,6 +29,7 @@ import {
   Camera,
   Sparkles,
   ShieldCheck,
+  Clock,
 } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
@@ -37,6 +38,76 @@ const inputCls =
   'w-full px-4 py-2.5 bg-white border border-[#1a1410]/15 text-[#1a1410] placeholder-[#7d6a4f]/60 rounded-xl text-sm shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-[#c4821a]/20 focus:border-[#1a1410] hover:border-[#1a1410]/30';
 const labelCls =
   'block text-[11px] font-mono font-medium text-[#3d3222] uppercase tracking-wider mb-1.5';
+
+/**
+ * Calculates academic graduation journey milestones and dynamic countdown
+ * for 3-year collegiate degree programs.
+ */
+function getAcademicJourneyData(batchYearInput: string | number | undefined, role: string | undefined) {
+  const batchYear = typeof batchYearInput === 'string' ? parseInt(batchYearInput, 10) : batchYearInput;
+
+  if (!batchYear || isNaN(batchYear)) {
+    return null;
+  }
+
+  const transitionYear = batchYear + 3;
+  // Month 7 is August in JavaScript Date (0-indexed)
+  const startDate = new Date(batchYear, 7, 1);
+  const transitionDate = new Date(transitionYear, 7, 1);
+  const now = new Date();
+
+  const isCompleted = now >= transitionDate || role === 'ALUMNI';
+  const totalMs = transitionDate.getTime() - startDate.getTime();
+  const elapsedMs = Math.max(0, now.getTime() - startDate.getTime());
+  const progressPct = isCompleted
+    ? 100
+    : Math.min(100, Math.max(0, Math.round((elapsedMs / totalMs) * 100)));
+
+  // Calculate year, month, day difference
+  let remainingText = '';
+  if (now >= transitionDate) {
+    remainingText = 'Graduation transition due';
+  } else {
+    let years = transitionDate.getFullYear() - now.getFullYear();
+    let months = transitionDate.getMonth() - now.getMonth();
+    let days = transitionDate.getDate() - now.getDate();
+
+    if (days < 0) {
+      months -= 1;
+      const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+      days += prevMonth.getDate();
+    }
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+
+    const parts: string[] = [];
+    if (years > 0) {
+      parts.push(`${years} ${years === 1 ? 'year' : 'years'}`);
+    }
+    if (months > 0) {
+      parts.push(`${months} ${months === 1 ? 'month' : 'months'}`);
+    }
+    if (years === 0 && months === 0) {
+      const remainingDays = Math.max(1, Math.ceil((transitionDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+      parts.push(`${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}`);
+    }
+
+    remainingText = parts.length > 0 ? `${parts.join(' ')} remaining` : 'Transition approaching';
+  }
+
+  const formattedTransitionDate = `01 August ${transitionYear}`;
+
+  return {
+    batchYear,
+    transitionYear,
+    formattedTransitionDate,
+    remainingText,
+    progressPct,
+    isCompleted,
+  };
+}
 
 export default function EditProfile() {
   const { user, loading: authLoading } = useAuth();
@@ -66,6 +137,12 @@ export default function EditProfile() {
   const [skillInput, setSkillInput] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // ── Academic Journey Calculation ──────────────────────────────────────────
+  const journeyData = useMemo(
+    () => getAcademicJourneyData(formData.batchYear || user?.alumniProfile?.batchYear, user?.role),
+    [formData.batchYear, user?.alumniProfile?.batchYear, user?.role]
+  );
 
   // ── Fetch & prefill ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -388,6 +465,139 @@ export default function EditProfile() {
                   Batch year, department, and university roll number are verified credentials and cannot be altered.
                 </p>
               </div>
+
+              {/* Academic Journey / Graduation Timeline (STUDENT / ALUMNI) */}
+              {journeyData && user?.role !== 'ADMIN' && (
+                <div
+                  className={`rounded-2xl border shadow-xs p-5 sm:p-6 transition-all ${
+                    user?.role === 'STUDENT'
+                      ? 'bg-[#faf7f2] border-[#c4821a]/30'
+                      : 'bg-[#faf7f2] border-[#3a5c3e]/25'
+                  }`}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-[#1a1410]/8">
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                          user?.role === 'STUDENT'
+                            ? 'bg-[#261f15] border border-[#3d3222] text-[#e8a93c]'
+                            : 'bg-[#3a5c3e]/15 border border-[#3a5c3e]/30 text-[#3a5c3e]'
+                        }`}
+                      >
+                        {user?.role === 'STUDENT' ? (
+                          <GraduationCap className="w-4 h-4" />
+                        ) : (
+                          <CheckCircle2 className="w-4 h-4" />
+                        )}
+                      </div>
+                      <div>
+                        <h2 className="text-base sm:text-lg font-serif font-normal text-[#1a1410]">
+                          Academic Journey
+                        </h2>
+                        <p className="text-[11px] text-[#7d6a4f] font-mono">
+                          {user?.role === 'STUDENT'
+                            ? '3-Year Academic Session Timeline'
+                            : 'Graduated Alumni Member'}
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-mono font-semibold tracking-wider uppercase border ${
+                        user?.role === 'STUDENT'
+                          ? 'bg-[#261f15] text-[#e8a93c] border-[#3d3222]'
+                          : 'bg-[#3a5c3e]/15 text-[#3a5c3e] border-[#3a5c3e]/30'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          user?.role === 'STUDENT' ? 'bg-[#e8a93c]' : 'bg-[#3a5c3e]'
+                        }`}
+                      />
+                      {user?.role || 'STUDENT'}
+                    </span>
+                  </div>
+
+                  {user?.role === 'STUDENT' ? (
+                    <div className="space-y-4">
+                      {/* Metric cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="bg-white rounded-xl p-3.5 border border-[#1a1410]/10 shadow-xs">
+                          <p className="text-[10px] font-mono uppercase tracking-wider text-[#7d6a4f] mb-1">
+                            Alumni Transition Date
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-[#c4821a] flex-shrink-0" />
+                            <p className="text-xs sm:text-sm font-semibold text-[#1a1410]">
+                              {journeyData.formattedTransitionDate}
+                            </p>
+                          </div>
+                          <p className="text-[10px] text-[#7d6a4f] font-mono mt-1">
+                            Batch {journeyData.batchYear} (3-Year Program)
+                          </p>
+                        </div>
+
+                        <div className="bg-white rounded-xl p-3.5 border border-[#1a1410]/10 shadow-xs">
+                          <p className="text-[10px] font-mono uppercase tracking-wider text-[#7d6a4f] mb-1">
+                            Time Remaining
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-[#3a5c3e] flex-shrink-0" />
+                            <p className="text-xs sm:text-sm font-semibold text-[#1a1410]">
+                              {journeyData.remainingText}
+                            </p>
+                          </div>
+                          <p className="text-[10px] text-[#7d6a4f] font-mono mt-1">
+                            Until automatic role transition
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Progress bar */}
+                      <div className="bg-white rounded-xl p-4 border border-[#1a1410]/10 shadow-xs">
+                        <div className="flex items-center justify-between text-[11px] font-mono text-[#7d6a4f] mb-2">
+                          <span>Session Start ({journeyData.batchYear})</span>
+                          <span className="font-semibold text-[#1a1410]">
+                            {journeyData.progressPct}% Elapsed
+                          </span>
+                          <span>Transition ({journeyData.transitionYear})</span>
+                        </div>
+                        <div className="h-2.5 w-full bg-[#1a1410]/10 rounded-full overflow-hidden p-0.5">
+                          <div
+                            className="h-full bg-gradient-to-r from-[#c4821a] to-[#3a5c3e] rounded-full transition-all duration-700 ease-out"
+                            style={{ width: `${journeyData.progressPct}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Informational banner */}
+                      <div className="bg-white/80 rounded-xl p-3 border border-[#1a1410]/8 flex items-start gap-2.5">
+                        <Sparkles className="w-4 h-4 text-[#c4821a] flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-[#3d3222] leading-relaxed">
+                          Your profile will automatically graduate to <strong className="text-[#1a1410] font-semibold">ALUMNI</strong> status on <span className="font-mono font-medium text-[#1a1410]">{journeyData.formattedTransitionDate}</span> at the conclusion of your 3-year academic tenure.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    /* ALUMNI State */
+                    <div className="bg-white rounded-xl p-4 border border-[#1a1410]/10 shadow-xs space-y-3">
+                      <div className="flex items-center gap-3">
+                        <BadgeCheck className="w-5 h-5 text-[#3a5c3e] flex-shrink-0" />
+                        <div>
+                          <p className="text-xs sm:text-sm font-semibold text-[#1a1410]">
+                            Academic Journey Completed
+                          </p>
+                          <p className="text-[11px] text-[#7d6a4f] font-mono">
+                            Batch of {journeyData.batchYear} • Graduated Class of {journeyData.transitionYear}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="h-1.5 w-full bg-[#3a5c3e]/20 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#3a5c3e] w-full rounded-full" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Personal info */}
               <div className="bg-white rounded-2xl border border-[#1a1410]/12 shadow-xs p-5 sm:p-7">
