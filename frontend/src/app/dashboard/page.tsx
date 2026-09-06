@@ -300,42 +300,49 @@ export default function Dashboard() {
       desc: 'Update credentials',
       href: '/dashboard/profile',
       icon: PenLine,
+      iconStyle: 'bg-[#fdf3e3] border-[#c4821a]/25 text-[#c4821a]',
     },
     {
       label: 'Browse Directory',
       desc: 'Explore alumni',
       href: '/directory',
       icon: Search,
+      iconStyle: 'bg-[#f4efe6] border-[#3d3222]/20 text-[#3d3222]',
     },
     {
       label: 'Messages',
       desc: 'Chat with members',
       href: '/chat',
       icon: MessageSquare,
+      iconStyle: 'bg-[#3a5c3e]/10 border-[#3a5c3e]/25 text-[#3a5c3e]',
     },
     {
       label: 'Career & Referrals',
       desc: 'Browse opportunities',
       href: '/jobs',
       icon: Briefcase,
+      iconStyle: 'bg-[#fdf3e3] border-[#c4821a]/25 text-[#c4821a]',
     },
     {
       label: 'Events & Reunions',
       desc: 'Upcoming summits',
       href: '/events',
       icon: Calendar,
+      iconStyle: 'bg-[#fdf8ed] border-[#e8a93c]/30 text-[#c4821a]',
     },
     {
       label: 'Your Network',
       desc: 'View connections',
       href: '/connections',
       icon: Users,
+      iconStyle: 'bg-[#3a5c3e]/10 border-[#3a5c3e]/25 text-[#3a5c3e]',
     },
     {
       label: 'Alumni Stories',
       desc: 'Share reflections',
       href: '/stories',
       icon: BookOpen,
+      iconStyle: 'bg-[#f4efe6] border-[#7d6a4f]/25 text-[#5c4d37]',
     },
     ...(user.role === 'ALUMNI' || user.role === 'ADMIN'
       ? [
@@ -344,6 +351,7 @@ export default function Dashboard() {
             desc: 'Share openings',
             href: '/jobs/create',
             icon: TrendingUp,
+            iconStyle: 'bg-[#fdf3e3] border-[#c4821a]/25 text-[#c4821a]',
           },
         ]
       : []),
@@ -354,6 +362,7 @@ export default function Dashboard() {
             desc: 'Manage platform',
             href: '/admin',
             icon: Shield,
+            iconStyle: 'bg-[#261f15]/10 border-[#3d3222]/30 text-[#3d3222]',
           },
         ]
       : []),
@@ -513,9 +522,11 @@ export default function Dashboard() {
                   <Link
                     key={action.href + action.label}
                     href={action.href}
-                    className="flex flex-col p-3 rounded-xl border border-[#1a1410]/10 bg-[#fcfbf9] hover:bg-white hover:border-[#c4821a]/50 hover:shadow-xs transition-all duration-200 group"
+                    className="flex flex-col p-3 rounded-xl border border-[#1a1410]/10 bg-[#fcfbf9] hover:bg-white hover:border-[#c4821a]/30 hover:-translate-y-0.5 hover:shadow-xs transition-all duration-200 group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-[#261f15] border border-[#3d3222] text-[#e8a93c] flex items-center justify-center mb-2.5 transition-transform group-hover:scale-105">
+                    <div
+                      className={`w-8 h-8 rounded-xl border flex items-center justify-center mb-2.5 transition-all duration-200 group-hover:scale-105 shadow-2xs ${action.iconStyle}`}
+                    >
                       <action.icon className="w-4 h-4" />
                     </div>
                     <p className="text-xs sm:text-sm font-semibold text-[#1a1410] group-hover:text-[#c4821a] transition-colors leading-snug">
