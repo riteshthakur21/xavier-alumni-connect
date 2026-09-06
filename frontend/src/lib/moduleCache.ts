@@ -1,20 +1,28 @@
 /**
- * In-Memory Client Cache for Explore Modules:
+ * In-Memory Client Cache for Xavier AlumniConnect Modules:
  * 1. Career & Referrals ('career-referrals')
  * 2. Events & Reunions ('events')
  * 3. Alumni Stories ('alumni-stories')
+ * 4. Alumni Directory ('directory')
+ * 5. User-Scoped Dashboard ('dashboard:<userId>')
  *
  * Survives client-side route transitions during the active browser session.
  */
 
-export type ModuleCacheKey = 'career-referrals' | 'events' | 'alumni-stories';
+export type ModuleCacheKey =
+  | 'career-referrals'
+  | 'events'
+  | 'alumni-stories'
+  | 'directory'
+  | `dashboard:${string}`
+  | string;
 
 interface CacheEntry<T> {
   data: T;
   timestamp: number;
 }
 
-const memoryStore = new Map<ModuleCacheKey, CacheEntry<any>>();
+const memoryStore = new Map<string, CacheEntry<any>>();
 
 export const moduleCache = {
   /**
@@ -37,7 +45,7 @@ export const moduleCache = {
   },
 
   /**
-   * Invalidate a specific module cache (e.g. after create/delete/register mutations).
+   * Invalidate a specific module cache (e.g. after mutations).
    */
   invalidate(key: ModuleCacheKey): void {
     memoryStore.delete(key);

@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { moduleCache } from '@/lib/moduleCache';
 import {
   Search,
   GraduationCap,
@@ -22,6 +23,7 @@ import {
   Users,
   Sparkles,
   ArrowUpRight,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 type ConnStatus = 'idle' | 'self' | 'not_connected' | 'pending_sent' | 'pending_received' | 'connected';
@@ -32,12 +34,13 @@ export default function Directory() {
   const { user } = useAuth();
   const router = useRouter();
 
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<any[]>(() => moduleCache.get<any[]>('directory') || []);
+  const [loading, setLoading] = useState(() => !moduleCache.get('directory'));
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDept, setSelectedDept] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // ── Connection state (per-card) ──────────────────────────────────────────────
   const [connStatuses, setConnStatuses] = useState<Record<string, ConnStatus>>({});
@@ -45,19 +48,33 @@ export default function Directory() {
   const [connLoadingIds, setConnLoadingIds] = useState<Record<string, boolean>>({});
 
   // 1. Fetch Users Logic
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/api/alumni`);
-        setUsers(res.data.alumni || []);
-      } catch (error) {
-        toast.error('Failed to load alumni directory');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
+  const fetchUsers = useCallback(async (force = false) => {
+    const cachedUsers = moduleCache.get<any[]>('directory');
+    if (cachedUsers && !force) {
+      setUsers(cachedUsers);
+      setLoading(false);
+      return;
+    }
+
+    if (!cachedUsers) {
+      setLoading(true);
+    }
+
+    try {
+      const res = await axios.get(`${API_URL}/api/alumni`);
+      const loaded = res.data.alumni || [];
+      setUsers(loaded);
+      moduleCache.set('directory', loaded);
+    } catch (error) {
+      toast.error('Failed to load alumni directory');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   // 2. Batch-fetch connection statuses once users are loaded
   useEffect(() => {
@@ -111,6 +128,7 @@ export default function Directory() {
       );
       toast.success('Connection request sent');
       setConnStatuses((p) => ({ ...p, [targetId]: 'pending_sent' }));
+      if (user?.id) moduleCache.invalidate(`dashboard:${user.id}`);
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.error : 'Failed to send request';
       toast.error(msg || 'Failed to send request');
@@ -136,6 +154,7 @@ export default function Directory() {
       toast.success('Connection request cancelled');
       setConnStatuses((p) => ({ ...p, [targetId]: 'not_connected' }));
       setConnRequestIds((p) => ({ ...p, [targetId]: null }));
+      if (user?.id) moduleCache.invalidate(`dashboard:${user.id}`);
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.error : 'Failed to cancel request';
       toast.error(msg || 'Failed to cancel request');
@@ -161,6 +180,7 @@ export default function Directory() {
       toast.success('Connection established');
       setConnStatuses((p) => ({ ...p, [targetId]: 'connected' }));
       setConnRequestIds((p) => ({ ...p, [targetId]: null }));
+      if (user?.id) moduleCache.invalidate(`dashboard:${user.id}`);
     } catch (err: unknown) {
       const msg = axios.isAxiosError(err) ? err.response?.data?.error : 'Failed to accept connection';
       toast.error(msg || 'Failed to accept connection');
@@ -200,6 +220,7 @@ export default function Directory() {
   const departments = ['BBA', 'BCA', 'BCOM (P)', 'BBA (IB)', 'BA (JMC)'];
 
   const hasActiveFilters = Boolean(searchTerm || selectedDept || selectedYear);
+  const activeDropdownCount = (selectedDept ? 1 : 0) + (selectedYear ? 1 : 0);
 
   // ── SKELETON LOADING STATE ──────────────────────────────────────────────────
   if (loading) {
@@ -254,51 +275,148 @@ export default function Directory() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4efe6] text-[#1a1410] py-8 sm:py-12 px-4 sm:px-6 lg:px-8 selection:bg-[#c4821a]/20 selection:text-[#1a1410]">
+    <div className="min-h-screen bg-[#f4efe6] text-[#1a1410] py-6 sm:py-12 px-4 sm:px-6 lg:px-8 selection:bg-[#c4821a]/20 selection:text-[#1a1410]">
       <div className="max-w-7xl mx-auto">
         {/* ─── EDITORIAL HEADER ────────────────────────────────────────────── */}
-        <div className="text-center mb-8 sm:mb-12">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#3a5c3e]/30 bg-[#3a5c3e]/10 text-[#3a5c3e] font-mono text-[11px] uppercase tracking-wider mb-3 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-[#3a5c3e] animate-pulse" />
+        <div className="text-center mb-5 sm:mb-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full border border-[#3a5c3e]/30 bg-[#3a5c3e]/10 text-[#3a5c3e] font-mono text-[10px] sm:text-[11px] uppercase tracking-wider mb-2.5 sm:mb-3 shadow-sm">
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#3a5c3e] animate-pulse" />
             <span>Alumni Registry &middot; St. Xavier&apos;s</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-normal font-serif text-[#1a1410] tracking-tight">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-normal font-serif text-[#1a1410] tracking-tight">
             Alumni &amp; Student Directory
           </h1>
-          <p className="text-xs sm:text-sm md:text-base text-[#5c4d37] font-normal mt-2.5 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm md:text-base text-[#5c4d37] font-normal mt-1.5 sm:mt-2.5 max-w-2xl mx-auto leading-relaxed">
             Discover, connect, and collaborate with graduates, scholars, and industry professionals across departments and batches.
           </p>
         </div>
 
         {/* ─── STICKY GLASS FILTER BAR ─────────────────────────────────────── */}
-        <div className="bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl border border-[#1a1410]/12 shadow-sm mb-6 sm:mb-8 sticky top-4 z-30 transition-all">
-          <div className="flex flex-col md:flex-row gap-2.5 sm:gap-3 items-stretch md:items-center">
-            {/* Search Input */}
-            <div className="relative flex-1 group">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7d6a4f] group-focus-within:text-[#c4821a] transition-colors">
-                <Search className="w-4 h-4" />
+        <div className="bg-white/95 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-[#1a1410]/12 shadow-sm mb-5 sm:mb-8 sticky top-3 sm:top-4 z-30 transition-all">
+          <div className="flex flex-col md:flex-row gap-2 sm:gap-3 items-stretch md:items-center">
+            {/* Search Input + Mobile Filters Button (Same row on mobile, flex-1 on desktop) */}
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {/* Search Input */}
+              <div className="relative flex-1 min-w-0 group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#7d6a4f] group-focus-within:text-[#c4821a] transition-colors">
+                  <Search className="w-4 h-4" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search name, role, dept..."
+                  className="w-full pl-10 pr-9 py-2.5 sm:py-3 bg-[#fcfbf9] border border-[#1a1410]/15 text-xs sm:text-sm text-[#1a1410] rounded-xl placeholder-[#7d6a4f]/60 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#c4821a]/20 focus:border-[#1a1410] hover:border-[#1a1410]/30"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    aria-label="Clear search"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#7d6a4f] hover:text-[#1a1410]"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
-              <input
-                type="text"
-                placeholder="Search by name, company, role, or department..."
-                className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-[#fcfbf9] border border-[#1a1410]/15 text-sm text-[#1a1410] rounded-xl placeholder-[#7d6a4f]/60 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#c4821a]/20 focus:border-[#1a1410] hover:border-[#1a1410]/30"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#7d6a4f] hover:text-[#1a1410]"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+
+              {/* Mobile Filter Toggle Button (Mobile only: md:hidden) */}
+              <button
+                type="button"
+                onClick={() => setMobileFiltersOpen((prev) => !prev)}
+                aria-expanded={mobileFiltersOpen}
+                className={`md:hidden shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium border transition-all shadow-2xs h-[42px] ${
+                  activeDropdownCount > 0 || mobileFiltersOpen
+                    ? 'bg-[#fdf8ed] border-[#c4821a]/40 text-[#c4821a]'
+                    : 'bg-[#fcfbf9] border-[#1a1410]/15 text-[#3d3222] hover:border-[#1a1410]/30'
+                }`}
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5 text-[#c4821a]" />
+                <span>Filters</span>
+                {activeDropdownCount > 0 && (
+                  <span className="inline-flex items-center justify-center min-w-[17px] h-4 px-1 rounded-full text-[10px] font-mono font-bold bg-[#c4821a] text-white">
+                    {activeDropdownCount}
+                  </span>
+                )}
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-[#7d6a4f] transition-transform duration-200 ${
+                    mobileFiltersOpen ? 'rotate-180 text-[#c4821a]' : ''
+                  }`}
+                />
+              </button>
             </div>
 
-            {/* Controls Row */}
-            <div className="flex items-center gap-2 sm:gap-3 w-full md:w-auto">
+            {/* Mobile Collapsible Dropdowns Panel (Mobile only: md:hidden) */}
+            {mobileFiltersOpen && (
+              <div className="md:hidden mt-2 p-3 bg-[#fcfbf9] rounded-xl border border-[#1a1410]/12 space-y-2.5 shadow-2xs">
+                <div className="flex items-center justify-between pb-1.5 border-b border-[#1a1410]/8">
+                  <p className="text-[10px] font-mono uppercase tracking-wider text-[#7d6a4f] font-semibold">
+                    Filter Registry
+                  </p>
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setSelectedDept('');
+                        setSelectedYear('');
+                      }}
+                      className="text-[10px] font-mono text-[#c4821a] hover:underline"
+                    >
+                      Clear all filters
+                    </button>
+                  )}
+                </div>
+
+                {/* Department Dropdown Mobile */}
+                <div>
+                  <label className="block text-[10px] font-mono uppercase tracking-wider text-[#7d6a4f] mb-1">
+                    Department
+                  </label>
+                  <div className="relative">
+                    <select
+                      className="w-full pl-3 pr-8 py-2 bg-white border border-[#1a1410]/15 text-xs text-[#1a1410] font-medium rounded-lg shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#c4821a]/20 focus:border-[#1a1410] cursor-pointer appearance-none"
+                      value={selectedDept}
+                      onChange={(e) => setSelectedDept(e.target.value)}
+                    >
+                      <option value="">All Departments</option>
+                      {departments.map((dept) => (
+                        <option key={dept} value={dept}>
+                          {dept}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7d6a4f] pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Batch Year Dropdown Mobile */}
+                <div>
+                  <label className="block text-[10px] font-mono uppercase tracking-wider text-[#7d6a4f] mb-1">
+                    Graduation Batch
+                  </label>
+                  <div className="relative">
+                    <select
+                      className="w-full pl-3 pr-8 py-2 bg-white border border-[#1a1410]/15 text-xs text-[#1a1410] font-medium rounded-lg shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#c4821a]/20 focus:border-[#1a1410] cursor-pointer appearance-none"
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(e.target.value)}
+                    >
+                      <option value="">All Batches</option>
+                      {years.map((year) => (
+                        <option key={year} value={year}>
+                          Batch of {year}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7d6a4f] pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Desktop Controls Row (Desktop only: hidden md:flex) */}
+            <div className="hidden md:flex items-center gap-2 sm:gap-3 w-auto">
               {/* Department Dropdown */}
-              <div className="relative flex-1 md:w-44">
+              <div className="relative w-44">
                 <select
                   className="w-full pl-3.5 pr-8 py-2.5 sm:py-3 bg-[#fcfbf9] border border-[#1a1410]/15 text-xs sm:text-sm text-[#1a1410] font-medium rounded-xl shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#c4821a]/20 focus:border-[#1a1410] hover:border-[#1a1410]/30 cursor-pointer appearance-none"
                   value={selectedDept}
@@ -315,7 +433,7 @@ export default function Directory() {
               </div>
 
               {/* Batch Year Dropdown */}
-              <div className="relative flex-1 md:w-36">
+              <div className="relative w-36">
                 <select
                   className="w-full pl-3.5 pr-8 py-2.5 sm:py-3 bg-[#fcfbf9] border border-[#1a1410]/15 text-xs sm:text-sm text-[#1a1410] font-medium rounded-xl shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#c4821a]/20 focus:border-[#1a1410] hover:border-[#1a1410]/30 cursor-pointer appearance-none"
                   value={selectedYear}
@@ -350,15 +468,15 @@ export default function Directory() {
           </div>
 
           {/* Results Counter & Active Filter Indicators */}
-          <div className="mt-3 pt-2.5 border-t border-[#1a1410]/8 flex flex-wrap items-center justify-between text-xs text-[#7d6a4f] gap-2">
-            <div className="font-mono">
+          <div className="mt-2.5 sm:mt-3 pt-2 sm:pt-2.5 border-t border-[#1a1410]/8 flex flex-wrap items-center justify-between text-xs text-[#7d6a4f] gap-2">
+            <div className="font-mono text-[11px] sm:text-xs">
               Showing <span className="font-bold text-[#1a1410]">{filteredUsers.length}</span> of{' '}
               <span className="font-bold text-[#1a1410]">{users.length}</span> members
             </div>
             {hasActiveFilters && (
-              <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#c4821a]">
-                <Sparkles className="w-3 h-3" />
-                <span>Filters applied</span>
+              <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono text-[#c4821a]">
+                <Sparkles className="w-3 h-3 flex-shrink-0" />
+                <span>Filters active</span>
               </div>
             )}
           </div>

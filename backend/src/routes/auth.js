@@ -8,6 +8,7 @@ const { authMiddleware } = require('../middleware/auth');
 const { upload } = require('../utils/cloudinary');
 const crypto = require('crypto');
 const sendEmail = require('../utils/email');
+const { isEligibleForAlumni } = require('../services/graduation.service');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -262,13 +263,18 @@ router.post('/register', upload.single('photo'), registerValidation, async (req,
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
+    // Determine role: must satisfy graduation criteria to register as ALUMNI
+    const requestedAlumni = role === 'ALUMNI';
+    const eligibleForAlumni = isEligibleForAlumni(parseInt(batchYear));
+    const assignedRole = (requestedAlumni && eligibleForAlumni) ? 'ALUMNI' : 'STUDENT';
+
     // Create user
     const user = await prisma.user.create({
       data: {
         name,
         email,
         passwordHash,
-        role: role === 'ALUMNI' ? 'ALUMNI' : 'STUDENT',
+        role: assignedRole,
 
         // 👇 CHANGE 2: Roll Number ab User table me save hoga
         rollNo: rollNo,

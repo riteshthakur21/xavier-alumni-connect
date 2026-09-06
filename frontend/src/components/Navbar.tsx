@@ -57,11 +57,14 @@ interface NavLinkProps {
   className?: string;
   onClick?: () => void;
   mobile?: boolean;
+  exact?: boolean;
 }
 
-const NavLink: React.FC<NavLinkProps> = ({ href, children, className, onClick, mobile }) => {
+const NavLink: React.FC<NavLinkProps> = ({ href, children, className, onClick, mobile, exact }) => {
   const pathname = usePathname();
-  const isActive = pathname === href || pathname.startsWith(href + '/');
+  const isActive = exact
+    ? pathname === href
+    : pathname === href || (href !== '/' && pathname.startsWith(href + '/'));
 
   const base = mobile
     ? 'flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-sm'
@@ -190,6 +193,17 @@ const Navbar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
+  const isProfileActive = pathname === '/dashboard/profile' || pathname.startsWith('/dashboard/profile/');
+  const isDashboardActive = pathname === '/dashboard';
+  const [dashboardSubmenuOpen, setDashboardSubmenuOpen] = useState(isProfileActive);
+
+  // Auto-expand Dashboard submenu whenever on profile route
+  useEffect(() => {
+    if (isProfileActive) {
+      setDashboardSubmenuOpen(true);
+    }
+  }, [isProfileActive]);
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -258,7 +272,7 @@ const Navbar: React.FC = () => {
             <NavLink href="/directory">Directory</NavLink>
             <ExploreDropdown user={user} />
             {user?.role === 'ADMIN' && <NavLink href="/admin">Admin Portal</NavLink>}
-            {user && <NavLink href="/dashboard">Dashboard</NavLink>}
+            {user && <NavLink href="/dashboard" exact>Dashboard</NavLink>}
           </div>
 
           {/* Desktop Actions & User Controls */}
@@ -273,16 +287,32 @@ const Navbar: React.FC = () => {
               <div className="hidden lg:flex items-center gap-3">
                 <Link
                   href="/dashboard/profile"
-                  className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/70 border border-[#1a1410]/10 hover:border-[#c4821a]/50 hover:bg-white transition-all shadow-2xs group"
+                  className={`flex items-center gap-2.5 px-3 py-1.5 rounded-xl transition-all shadow-2xs group ${
+                    isProfileActive
+                      ? 'bg-[#1a1410] text-[#f4efe6] border border-[#3d3222]'
+                      : 'bg-white/70 border border-[#1a1410]/10 hover:border-[#c4821a]/50 hover:bg-white text-[#1a1410]'
+                  }`}
                 >
-                  <div className="w-7 h-7 rounded-lg bg-[#1a1410] text-[#e8a93c] flex items-center justify-center font-serif font-bold text-xs shadow-xs overflow-hidden flex-shrink-0">
+                  <div
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center font-serif font-bold text-xs shadow-xs overflow-hidden flex-shrink-0 ${
+                      isProfileActive
+                        ? 'bg-[#261f15] text-[#e8a93c] border border-[#3d3222]'
+                        : 'bg-[#1a1410] text-[#e8a93c]'
+                    }`}
+                  >
                     {photoUrl ? (
                       <img src={photoUrl} alt={user.name} className="w-full h-full object-cover" />
                     ) : (
                       <span>{userInitial}</span>
                     )}
                   </div>
-                  <span className="text-xs font-serif font-semibold text-[#1a1410] group-hover:text-[#c4821a] transition-colors max-w-[120px] truncate">
+                  <span
+                    className={`text-xs font-serif font-semibold transition-colors max-w-[120px] truncate ${
+                      isProfileActive
+                        ? 'text-[#f4efe6]'
+                        : 'text-[#1a1410] group-hover:text-[#c4821a]'
+                    }`}
+                  >
                     {user.name}
                   </span>
                 </Link>
@@ -354,9 +384,24 @@ const Navbar: React.FC = () => {
 
           {user ? (
             <>
-              {/* User Identity Header Card */}
-              <div className="flex items-center gap-3.5 p-3.5 bg-white border border-[#1a1410]/10 rounded-2xl mb-4 shadow-2xs">
-                <div className="w-11 h-11 rounded-xl bg-[#1a1410] text-[#e8a93c] flex items-center justify-center font-serif font-bold text-sm border border-[#1a1410]/20 overflow-hidden flex-shrink-0 shadow-xs">
+              {/* User Identity Header Card (Clickable link to /dashboard/profile) */}
+              <Link
+                href="/dashboard/profile"
+                onClick={() => setMenuOpen(false)}
+                className={`flex items-center gap-3.5 p-3.5 rounded-2xl mb-4 transition-all group cursor-pointer ${
+                  isProfileActive
+                    ? 'bg-[#fdf8ed] border border-[#c4821a]/40 shadow-xs ring-1 ring-[#c4821a]/20'
+                    : 'bg-white border border-[#1a1410]/10 hover:border-[#c4821a]/40 hover:bg-[#fcfbf9] shadow-2xs'
+                }`}
+                aria-label={`View profile for ${user.name}`}
+              >
+                <div
+                  className={`w-11 h-11 rounded-xl flex items-center justify-center font-serif font-bold text-sm border overflow-hidden flex-shrink-0 shadow-xs transition-transform group-hover:scale-105 ${
+                    isProfileActive
+                      ? 'bg-[#261f15] text-[#e8a93c] border-[#3d3222]'
+                      : 'bg-[#1a1410] text-[#e8a93c] border-[#1a1410]/20'
+                  }`}
+                >
                   {photoUrl ? (
                     <img src={photoUrl} alt={user.name} className="w-full h-full object-cover" />
                   ) : (
@@ -365,7 +410,13 @@ const Navbar: React.FC = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-serif font-semibold text-[#1a1410] truncate">
+                    <p
+                      className={`text-sm font-serif font-semibold truncate transition-colors ${
+                        isProfileActive
+                          ? 'text-[#c4821a]'
+                          : 'text-[#1a1410] group-hover:text-[#c4821a]'
+                      }`}
+                    >
                       {user.name}
                     </p>
                     <span
@@ -380,15 +431,10 @@ const Navbar: React.FC = () => {
                   </div>
                   <p className="text-xs text-[#7d6a4f] font-mono truncate mt-0.5">{user.email}</p>
                 </div>
-              </div>
+              </Link>
 
               {/* Navigation Items */}
               <div className="space-y-1">
-                <NavLink href="/dashboard/profile" mobile onClick={() => setMenuOpen(false)}>
-                  <UserIcon className="w-4 h-4 text-[#7d6a4f]" />
-                  <span>My Profile</span>
-                </NavLink>
-
                 {user.role === 'ADMIN' && (
                   <NavLink href="/admin" mobile onClick={() => setMenuOpen(false)}>
                     <Shield className="w-4 h-4 text-[#c4821a]" />
@@ -396,10 +442,74 @@ const Navbar: React.FC = () => {
                   </NavLink>
                 )}
 
-                <NavLink href="/dashboard" mobile onClick={() => setMenuOpen(false)}>
-                  <LayoutDashboard className="w-4 h-4 text-[#7d6a4f]" />
-                  <span>Dashboard</span>
-                </NavLink>
+                {/* Dashboard with Submenu */}
+                <div className="space-y-1">
+                  <div
+                    className={`flex items-center justify-between rounded-xl transition-all text-sm ${
+                      isDashboardActive
+                        ? 'bg-[#1a1410] text-[#f4efe6] shadow-xs'
+                        : 'text-[#5c4d37] hover:bg-[#1a1410]/5 hover:text-[#1a1410]'
+                    }`}
+                  >
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex-1 flex items-center gap-3 px-4 py-3 font-medium cursor-pointer"
+                      aria-current={isDashboardActive ? 'page' : undefined}
+                    >
+                      <LayoutDashboard
+                        className={`w-4 h-4 ${
+                          isDashboardActive ? 'text-[#e8a93c]' : 'text-[#7d6a4f]'
+                        }`}
+                      />
+                      <span>Dashboard</span>
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDashboardSubmenuOpen((prev) => !prev);
+                      }}
+                      className={`p-3 mr-1 rounded-lg transition-colors cursor-pointer ${
+                        isDashboardActive
+                          ? 'text-[#f4efe6]/70 hover:text-white hover:bg-white/10'
+                          : 'text-[#7d6a4f] hover:text-[#1a1410] hover:bg-[#1a1410]/10'
+                      }`}
+                      aria-expanded={dashboardSubmenuOpen}
+                      aria-label="Toggle Dashboard submenu"
+                    >
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          dashboardSubmenuOpen ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Submenu: My Profile */}
+                  {dashboardSubmenuOpen && (
+                    <div className="ml-4 pl-3.5 border-l-2 border-[#1a1410]/15 space-y-1 py-1 transition-all">
+                      <Link
+                        href="/dashboard/profile"
+                        onClick={() => setMenuOpen(false)}
+                        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm transition-all cursor-pointer ${
+                          isProfileActive
+                            ? 'bg-[#1a1410] text-[#f4efe6] shadow-xs font-semibold'
+                            : 'text-[#5c4d37] hover:bg-[#1a1410]/5 hover:text-[#1a1410]'
+                        }`}
+                        aria-current={isProfileActive ? 'page' : undefined}
+                      >
+                        <UserIcon
+                          className={`w-4 h-4 ${
+                            isProfileActive ? 'text-[#e8a93c]' : 'text-[#7d6a4f]'
+                          }`}
+                        />
+                        <span>My Profile</span>
+                      </Link>
+                    </div>
+                  )}
+                </div>
 
                 <div className="my-2 border-t border-[#1a1410]/10" />
 

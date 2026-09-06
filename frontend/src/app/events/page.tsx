@@ -236,6 +236,7 @@ export default function Events() {
   const [events, setEvents] = useState<any[]>(() => cachedEvents || []);
   const [loading, setLoading] = useState<boolean>(() => !cachedEvents);
   const [audienceModal, setAudienceModal] = useState<any | null>(null);
+  const [registeredEventIds, setRegisteredEventIds] = useState<Set<string>>(new Set());
 
   // Confirm Registration Modal state
   const [confirmModal, setConfirmModal] = useState<{
@@ -306,9 +307,34 @@ export default function Events() {
     try {
       await axios.post(`${API_URL}/api/events/${eventId}/register`);
       toast.success('Registration confirmed for this event!');
+      setRegisteredEventIds((prev) => new Set(prev).add(eventId));
+      setEvents((prev) => {
+        const next = prev.map((ev) => {
+          if (ev.id === eventId) {
+            const newReg = {
+              id: 'local-' + Date.now(),
+              userId: user?.id,
+              eventId,
+              user: { id: user?.id, name: user?.name, role: user?.role },
+            };
+            const currentRegs = ev.registrations || [];
+            return { ...ev, registrations: [...currentRegs, newReg] };
+          }
+          return ev;
+        });
+        moduleCache.set('events', next);
+        return next;
+      });
       fetchEvents(true);
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Registration failed. Please try again.');
+      const errorMsg = error.response?.data?.error || '';
+      if (errorMsg.toLowerCase().includes('already registered')) {
+        // Gracefully mark as registered on client without showing error toast
+        setRegisteredEventIds((prev) => new Set(prev).add(eventId));
+        fetchEvents(true);
+      } else {
+        toast.error(errorMsg || 'Registration failed. Please try again.');
+      }
     } finally {
       setConfirmModal(null);
     }
@@ -500,6 +526,12 @@ export default function Events() {
                     const batches = parseBatches(event.targetBatches);
                     const hasDepts = batches.departments?.length > 0;
                     const isExternal = !!event.registrationLink?.trim();
+                    const isUserRegistered =
+                      registeredEventIds.has(event.id) ||
+                      (!!user &&
+                        event.registrations?.some(
+                          (r: any) => r.userId === user.id || r.user?.id === user.id
+                        ));
 
                     return (
                       <div
@@ -594,29 +626,41 @@ export default function Events() {
                         {/* Footer & Actions */}
                         <div className="px-5 pb-5 sm:px-6 sm:pb-6 pt-0">
                           <div className="pt-3 border-t border-[#1a1410]/8 flex items-center gap-2">
-                            <button
-                              onClick={() =>
-                                setConfirmModal({
-                                  eventId: event.id,
-                                  eventTitle: event.title,
-                                  isExternal,
-                                  externalLink: event.registrationLink || undefined,
-                                })
-                              }
-                              className="flex-1 py-2.5 sm:py-3 px-3 bg-[#1a1410] hover:bg-[#3d3222] active:bg-[#1a1410] text-[#f4efe6] text-xs sm:text-sm font-semibold rounded-xl border border-[#3d3222]/50 shadow-xs hover:shadow transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer"
-                            >
-                              {isExternal ? (
-                                <>
-                                  <span>Register via Form</span>
-                                  <ExternalLink className="w-3.5 h-3.5 text-[#e8a93c]" />
-                                </>
-                              ) : (
-                                <>
-                                  <Ticket className="w-3.5 h-3.5 text-[#e8a93c]" />
-                                  <span>Register Now</span>
-                                </>
-                              )}
-                            </button>
+                            {isUserRegistered ? (
+                              <button
+                                type="button"
+                                disabled
+                                aria-disabled="true"
+                                className="flex-1 py-2.5 sm:py-3 px-3 bg-[#3a5c3e]/10 text-[#3a5c3e] text-xs sm:text-sm font-semibold rounded-xl border border-[#3a5c3e]/30 shadow-2xs inline-flex items-center justify-center gap-1.5 cursor-default select-none"
+                              >
+                                <Check className="w-3.5 h-3.5 text-[#3a5c3e] stroke-[2.5]" />
+                                <span>Already Registered</span>
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() =>
+                                  setConfirmModal({
+                                    eventId: event.id,
+                                    eventTitle: event.title,
+                                    isExternal,
+                                    externalLink: event.registrationLink || undefined,
+                                  })
+                                }
+                                className="flex-1 py-2.5 sm:py-3 px-3 bg-[#1a1410] hover:bg-[#3d3222] active:bg-[#1a1410] text-[#f4efe6] text-xs sm:text-sm font-semibold rounded-xl border border-[#3d3222]/50 shadow-xs hover:shadow transition-all inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                              >
+                                {isExternal ? (
+                                  <>
+                                    <span>Register via Form</span>
+                                    <ExternalLink className="w-3.5 h-3.5 text-[#e8a93c]" />
+                                  </>
+                                ) : (
+                                  <>
+                                    <Ticket className="w-3.5 h-3.5 text-[#e8a93c]" />
+                                    <span>Register Now</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
 
                             {user?.role === 'ADMIN' && (
                               <button
