@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Conversation } from '@/hooks/useChatSocket';
 import { MessageSquare } from 'lucide-react';
+import { formatConversationTimestamp } from '@/lib/date';
 
 interface Props {
   conversations: Conversation[];
@@ -13,16 +14,6 @@ interface Props {
   theme?: 'light' | 'dark';
 }
 
-const timeAgo = (iso: string) => {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-};
-
 export default function ConversationList({
   conversations,
   currentUserId,
@@ -32,6 +23,15 @@ export default function ConversationList({
   theme = 'light',
 }: Props) {
   const isDark = theme === 'dark';
+
+  // Periodic ticker to automatically refresh relative timestamps as time passes
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 30000); // 30s interval
+    return () => clearInterval(timer);
+  }, []);
 
   if (conversations.length === 0) {
     return (
@@ -144,7 +144,7 @@ export default function ConversationList({
                       isDark ? 'text-[#a8977e]' : 'text-[#7d6a4f]'
                     }`}
                   >
-                    {timeAgo(conv.lastMessage.createdAt)}
+                    {formatConversationTimestamp(conv.lastMessage.createdAt)}
                   </span>
                 )}
               </div>
