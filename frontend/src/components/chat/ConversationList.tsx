@@ -10,6 +10,7 @@ interface Props {
   activeConversationId: string | null;
   onlineUsers: Set<string>;
   onSelect: (conv: Conversation) => void;
+  theme?: 'light' | 'dark';
 }
 
 const timeAgo = (iso: string) => {
@@ -28,15 +29,38 @@ export default function ConversationList({
   activeConversationId,
   onlineUsers,
   onSelect,
+  theme = 'light',
 }: Props) {
+  const isDark = theme === 'dark';
+
   if (conversations.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center px-6 py-12 text-[#5c4d37]">
-        <div className="w-12 h-12 rounded-2xl bg-[#f4efe6] border border-[#1a1410]/10 flex items-center justify-center text-[#7d6a4f] mb-3 shadow-2xs">
+      <div
+        className={`flex flex-col items-center justify-center h-full text-center px-6 py-12 ${
+          isDark ? 'text-[#e8dfd0]/80' : 'text-[#5c4d37]'
+        }`}
+      >
+        <div
+          className={`w-12 h-12 rounded-2xl border flex items-center justify-center mb-3 shadow-2xs ${
+            isDark
+              ? 'bg-[#261f15] border-[#3d3222] text-[#e8a93c]'
+              : 'bg-[#f4efe6] border-[#1a1410]/10 text-[#7d6a4f]'
+          }`}
+        >
           <MessageSquare className="w-6 h-6 stroke-[1.5] text-[#c4821a]" />
         </div>
-        <h3 className="font-serif text-sm font-semibold text-[#1a1410] mb-1">No Active Dialogues</h3>
-        <p className="text-xs text-[#7d6a4f] max-w-[210px] leading-relaxed">
+        <h3
+          className={`font-serif text-sm font-semibold mb-1 ${
+            isDark ? 'text-[#f4efe6]' : 'text-[#1a1410]'
+          }`}
+        >
+          No Active Dialogues
+        </h3>
+        <p
+          className={`text-xs max-w-[210px] leading-relaxed ${
+            isDark ? 'text-[#a8977e]' : 'text-[#7d6a4f]'
+          }`}
+        >
           Open an alumni profile and click &quot;Message&quot; to initiate a correspondence.
         </p>
       </div>
@@ -44,7 +68,11 @@ export default function ConversationList({
   }
 
   return (
-    <ul className="divide-y divide-[#1a1410]/8 overflow-y-auto">
+    <ul
+      className={`divide-y overflow-y-auto ${
+        isDark ? 'divide-[#3d3222]/60 bg-[#1a1410]' : 'divide-[#1a1410]/8 bg-white'
+      }`}
+    >
       {conversations.map((conv) => {
         const isActive = conv.id === activeConversationId;
         const isOnline = conv.participant ? onlineUsers.has(conv.participant.id) : false;
@@ -61,13 +89,23 @@ export default function ConversationList({
             onClick={() => onSelect(conv)}
             className={`flex items-center gap-3 px-4 py-3.5 cursor-pointer transition-all ${
               isActive
-                ? 'bg-[#f4efe6] shadow-2xs'
+                ? isDark
+                  ? 'bg-[#261f15] shadow-2xs'
+                  : 'bg-[#f4efe6] shadow-2xs'
+                : isDark
+                ? 'bg-[#1a1410] hover:bg-[#261f15]/70'
                 : 'bg-white hover:bg-[#faf7f2]'
             }`}
           >
             {/* Avatar */}
             <div className="relative flex-shrink-0">
-              <div className="w-11 h-11 rounded-full overflow-hidden bg-[#261f15] border border-[#3d3222] text-[#e8a93c] flex items-center justify-center font-serif font-bold text-base select-none shadow-2xs">
+              <div
+                className={`w-11 h-11 rounded-full overflow-hidden border flex items-center justify-center font-serif font-bold text-base select-none shadow-2xs ${
+                  isDark
+                    ? 'bg-[#14100c] border-[#3d3222] text-[#e8a93c]'
+                    : 'bg-[#261f15] border-[#3d3222] text-[#e8a93c]'
+                }`}
+              >
                 {conv.participant?.alumniProfile?.photoUrl ? (
                   <img
                     src={conv.participant.alumniProfile.photoUrl}
@@ -80,7 +118,9 @@ export default function ConversationList({
               </div>
               {isOnline && (
                 <span
-                  className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#3a5c3e] border-2 border-white"
+                  className={`absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#3a5c3e] border-2 ${
+                    isDark ? 'border-[#1a1410]' : 'border-white'
+                  }`}
                   title="Online"
                 />
               )}
@@ -91,20 +131,30 @@ export default function ConversationList({
               <div className="flex items-center justify-between mb-0.5">
                 <p
                   className={`text-sm truncate ${
-                    unread ? 'font-semibold text-[#1a1410]' : 'font-medium text-[#1a1410]'
+                    unread
+                      ? `font-semibold ${isDark ? 'text-[#f4efe6]' : 'text-[#1a1410]'}`
+                      : `font-medium ${isDark ? 'text-[#e8dfd0]' : 'text-[#1a1410]'}`
                   }`}
                 >
                   {conv.participant?.name ?? 'Unknown'}
                 </p>
                 {conv.lastMessage && (
-                  <span className="text-[10px] font-mono text-[#7d6a4f] flex-shrink-0 ml-1.5">
+                  <span
+                    className={`text-[10px] font-mono flex-shrink-0 ml-1.5 ${
+                      isDark ? 'text-[#a8977e]' : 'text-[#7d6a4f]'
+                    }`}
+                  >
                     {timeAgo(conv.lastMessage.createdAt)}
                   </span>
                 )}
               </div>
               <p
                 className={`text-xs truncate ${
-                  unread ? 'text-[#1a1410] font-semibold' : 'text-[#5c4d37]'
+                  unread
+                    ? `font-semibold ${isDark ? 'text-[#f4efe6]' : 'text-[#1a1410]'}`
+                    : isDark
+                    ? 'text-[#a8977e]'
+                    : 'text-[#5c4d37]'
                 }`}
               >
                 {conv.lastMessage

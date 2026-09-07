@@ -33,6 +33,7 @@ interface Props {
   inputValue: string;
   setInputValue: (v: string) => void;
   onBack?: () => void; // Mobile back button
+  theme?: 'light' | 'dark';
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -85,7 +86,9 @@ export default function ChatWindow({
   inputValue,
   setInputValue,
   onBack,
+  theme = 'light',
 }: Props) {
+  const isDark = theme === 'dark';
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -125,7 +128,11 @@ export default function ChatWindow({
   const canSend = inputValue.trim().length > 0 && isUserConnected;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-[#f4efe6]">
+    <div
+      className={`flex flex-col h-full overflow-hidden transition-colors ${
+        isDark ? 'bg-[#14100c]' : 'bg-[#f4efe6]'
+      }`}
+    >
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-4 py-3 bg-[#1a1410] border-b border-[#3d3222] flex-shrink-0 min-h-[62px] shadow-sm">
         {/* Back arrow — mobile only */}
@@ -195,7 +202,13 @@ export default function ChatWindow({
       <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 space-y-1">
         {/* Disconnected warning banner */}
         {!isUserConnected && (
-          <div className="mx-1 sm:mx-4 mt-1 mb-3 flex items-center gap-2.5 bg-[#fdf3e3] border border-[#c4821a]/30 text-[#5c4d37] text-xs sm:text-sm px-4 py-3 rounded-xl shadow-2xs text-center justify-center">
+          <div
+            className={`mx-1 sm:mx-4 mt-1 mb-3 flex items-center gap-2.5 border text-xs sm:text-sm px-4 py-3 rounded-xl shadow-2xs text-center justify-center ${
+              isDark
+                ? 'bg-[#2d2113] border-[#c4821a]/40 text-[#fdf3e3]'
+                : 'bg-[#fdf3e3] border-[#c4821a]/30 text-[#5c4d37]'
+            }`}
+          >
             <ShieldAlert className="w-4 h-4 flex-shrink-0 text-[#c4821a]" />
             <span>
               You are no longer connected with this member.
@@ -211,7 +224,11 @@ export default function ChatWindow({
               type="button"
               onClick={onLoadMore}
               disabled={loadingMessages}
-              className="flex items-center gap-1.5 bg-white/95 hover:bg-[#1a1410] text-[#1a1410] hover:text-[#f4efe6] border border-[#1a1410]/12 text-xs font-semibold px-4 py-1.5 rounded-full shadow-2xs hover:shadow-xs transition-all disabled:opacity-60 cursor-pointer"
+              className={`flex items-center gap-1.5 border text-xs font-semibold px-4 py-1.5 rounded-full shadow-2xs transition-all disabled:opacity-60 cursor-pointer ${
+                isDark
+                  ? 'bg-[#261f15] hover:bg-[#3d3222] text-[#f4efe6] border-[#3d3222]'
+                  : 'bg-white/95 hover:bg-[#1a1410] text-[#1a1410] hover:text-[#f4efe6] border-[#1a1410]/12'
+              }`}
             >
               {loadingMessages ? (
                 <>
@@ -231,12 +248,26 @@ export default function ChatWindow({
         {/* Empty state */}
         {messages.length === 0 && !loadingMessages && (
           <div className="flex justify-center items-center h-40">
-            <div className="bg-white/95 border border-[#1a1410]/10 text-[#5c4d37] text-xs px-5 py-3.5 rounded-2xl shadow-xs text-center max-w-xs space-y-1">
-              <div className="flex items-center justify-center gap-1.5 text-[#1a1410] font-serif font-semibold text-xs">
+            <div
+              className={`border text-xs px-5 py-3.5 rounded-2xl shadow-xs text-center max-w-xs space-y-1 ${
+                isDark
+                  ? 'bg-[#261f15] border-[#3d3222] text-[#e8dfd0]'
+                  : 'bg-white/95 border-[#1a1410]/10 text-[#5c4d37]'
+              }`}
+            >
+              <div
+                className={`flex items-center justify-center gap-1.5 font-serif font-semibold text-xs ${
+                  isDark ? 'text-[#f4efe6]' : 'text-[#1a1410]'
+                }`}
+              >
                 <Lock className="w-3.5 h-3.5 text-[#c4821a]" />
                 <span>Confidential Correspondence</span>
               </div>
-              <p className="text-[#7d6a4f] text-[11px] leading-relaxed">
+              <p
+                className={`text-[11px] leading-relaxed ${
+                  isDark ? 'text-[#a8977e]' : 'text-[#7d6a4f]'
+                }`}
+              >
                 Messages are private and securely delivered within Xavier AlumniConnect.
               </p>
             </div>
@@ -248,7 +279,13 @@ export default function ChatWindow({
           <div key={group.label}>
             {/* Date separator */}
             <div className="flex justify-center my-2.5">
-              <span className="bg-[#e8dfd0]/80 backdrop-blur-xs text-[#5c4d37] border border-[#1a1410]/10 text-[10px] font-mono uppercase tracking-wider px-3 py-0.5 rounded-full shadow-2xs select-none">
+              <span
+                className={`backdrop-blur-xs border text-[10px] font-mono uppercase tracking-wider px-3 py-0.5 rounded-full shadow-2xs select-none ${
+                  isDark
+                    ? 'bg-[#261f15]/90 border-[#3d3222] text-[#e8dfd0]'
+                    : 'bg-[#e8dfd0]/80 border-[#1a1410]/10 text-[#5c4d37]'
+                }`}
+              >
                 {group.label}
               </span>
             </div>
@@ -271,7 +308,7 @@ export default function ChatWindow({
                     <button
                       type="button"
                       onClick={() => onDeleteMessage(msg.id)}
-                      className="opacity-0 group-hover/msg-row:opacity-100 self-center mr-1 p-1 rounded-md text-[#7d6a4f] hover:text-rose-600 hover:bg-rose-50 transition-all flex-shrink-0 cursor-pointer"
+                      className="opacity-0 group-hover/msg-row:opacity-100 self-center mr-1 p-1 rounded-md text-[#7d6a4f] hover:text-rose-600 hover:bg-rose-50/10 transition-all flex-shrink-0 cursor-pointer"
                       title="Delete message"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -284,10 +321,18 @@ export default function ChatWindow({
                       ${
                         isMine
                           ? msg.isDeleted
-                            ? 'bg-[#261f15]/40 text-[#7d6a4f] border border-[#3d3222]/30'
+                            ? isDark
+                              ? 'bg-[#1a1410]/60 text-[#7d6a4f] border border-[#3d3222]/40'
+                              : 'bg-[#261f15]/40 text-[#7d6a4f] border border-[#3d3222]/30'
+                            : isDark
+                            ? 'bg-[#2d2419] text-[#f4efe6] border border-[#4a3a27]'
                             : 'bg-[#1a1410] text-[#f4efe6] border border-[#3d3222]'
                           : msg.isDeleted
-                          ? 'bg-white/60 text-[#7d6a4f] border border-[#1a1410]/10'
+                          ? isDark
+                            ? 'bg-[#1a1410]/60 text-[#7d6a4f] border border-[#3d3222]/40'
+                            : 'bg-white/60 text-[#7d6a4f] border border-[#1a1410]/10'
+                          : isDark
+                          ? 'bg-[#261f15] text-[#f4efe6] border border-[#3d3222]'
                           : 'bg-white text-[#1a1410] border border-[#1a1410]/10'
                       }
                       ${
@@ -308,7 +353,15 @@ export default function ChatWindow({
                     ) : (
                       <div className="flex flex-wrap items-end justify-between gap-x-2.5 gap-y-0.5">
                         {/* Message text */}
-                        <p className="text-[13px] sm:text-sm leading-5 break-words whitespace-pre-wrap font-sans">
+                        <p
+                          className={`text-[13px] sm:text-sm leading-5 break-words whitespace-pre-wrap font-sans ${
+                            isMine
+                              ? 'text-[#f4efe6]'
+                              : isDark
+                              ? 'text-[#f4efe6]'
+                              : 'text-[#1a1410]'
+                          }`}
+                        >
                           {msg.content}
                         </p>
 
@@ -316,7 +369,11 @@ export default function ChatWindow({
                         <div className="flex items-center gap-1 self-end ml-auto shrink-0 select-none">
                           <span
                             className={`text-[10px] font-mono leading-none ${
-                              isMine ? 'text-[#e8a93c]/80' : 'text-[#7d6a4f]'
+                              isMine
+                                ? 'text-[#e8a93c]/80'
+                                : isDark
+                                ? 'text-[#a8977e]'
+                                : 'text-[#7d6a4f]'
                             }`}
                           >
                             {formatTime(msg.createdAt)}
@@ -344,7 +401,13 @@ export default function ChatWindow({
         {/* Typing indicator */}
         {typingUserNames.length > 0 && (
           <div className="flex justify-start mb-1">
-            <div className="bg-white border border-[#1a1410]/10 rounded-xl rounded-tl-xs px-3 py-1.5 shadow-2xs flex items-center gap-1.5">
+            <div
+              className={`border rounded-xl rounded-tl-xs px-3 py-1.5 shadow-2xs flex items-center gap-1.5 ${
+                isDark
+                  ? 'bg-[#261f15] border-[#3d3222] text-[#e8dfd0]'
+                  : 'bg-white border-[#1a1410]/10 text-[#5c4d37]'
+              }`}
+            >
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
@@ -352,7 +415,13 @@ export default function ChatWindow({
                   style={{ animationDelay: `${i * 200}ms` }}
                 />
               ))}
-              <span className="text-[10px] font-mono text-[#7d6a4f] ml-0.5">typing...</span>
+              <span
+                className={`text-[10px] font-mono ml-0.5 ${
+                  isDark ? 'text-[#a8977e]' : 'text-[#7d6a4f]'
+                }`}
+              >
+                typing...
+              </span>
             </div>
           </div>
         )}
@@ -362,12 +431,20 @@ export default function ChatWindow({
 
       {/* ── Input bar ──────────────────────────────────────────────────── */}
       <div
-        className={`flex items-center gap-2.5 px-3 sm:px-4 py-3 bg-[#fcfbf9] border-t border-[#1a1410]/10 flex-shrink-0 ${
-          !isUserConnected ? 'opacity-50 pointer-events-none' : ''
-        }`}
+        className={`flex items-center gap-2.5 px-3 sm:px-4 py-3 border-t flex-shrink-0 ${
+          isDark
+            ? 'bg-[#1a1410] border-[#3d3222]'
+            : 'bg-[#fcfbf9] border-[#1a1410]/10'
+        } ${!isUserConnected ? 'opacity-50 pointer-events-none' : ''}`}
       >
         {/* Text field */}
-        <div className="flex-1 bg-white border border-[#1a1410]/15 focus-within:border-[#1a1410] focus-within:ring-2 focus-within:ring-[#c4821a]/20 rounded-xl px-4 py-2 flex items-center gap-2 shadow-2xs min-h-[46px] transition-all">
+        <div
+          className={`flex-1 border rounded-xl px-4 py-2 flex items-center gap-2 shadow-2xs min-h-[46px] transition-all ${
+            isDark
+              ? 'bg-[#261f15] border-[#3d3222] focus-within:border-[#c4821a]/60 focus-within:ring-2 focus-within:ring-[#c4821a]/20'
+              : 'bg-white border-[#1a1410]/15 focus-within:border-[#1a1410] focus-within:ring-2 focus-within:ring-[#c4821a]/20'
+          }`}
+        >
           <input
             ref={inputRef}
             type="text"
@@ -379,11 +456,19 @@ export default function ChatWindow({
             }
             maxLength={2000}
             disabled={!isUserConnected}
-            className="flex-1 text-sm text-[#1a1410] bg-transparent outline-none placeholder-[#7d6a4f]/70 font-sans disabled:cursor-not-allowed"
+            className={`flex-1 text-sm bg-transparent outline-none font-sans disabled:cursor-not-allowed ${
+              isDark
+                ? 'text-[#f4efe6] placeholder-[#7d6a4f]'
+                : 'text-[#1a1410] placeholder-[#7d6a4f]/70'
+            }`}
           />
           {/* Character counter when approaching limit */}
           {inputValue.length > 1800 && (
-            <span className="text-[10px] font-mono text-[#7d6a4f] flex-shrink-0">
+            <span
+              className={`text-[10px] font-mono flex-shrink-0 ${
+                isDark ? 'text-[#a8977e]' : 'text-[#7d6a4f]'
+              }`}
+            >
               {2000 - inputValue.length}
             </span>
           )}
@@ -400,14 +485,22 @@ export default function ChatWindow({
             transition-all duration-200 border
             ${
               canSend
-                ? 'bg-[#1a1410] hover:bg-[#3d3222] active:scale-95 text-[#f4efe6] border-[#3d3222] shadow-xs cursor-pointer'
+                ? isDark
+                  ? 'bg-[#261f15] hover:bg-[#3d3222] active:scale-95 text-[#f4efe6] border-[#4a3a27] shadow-xs cursor-pointer'
+                  : 'bg-[#1a1410] hover:bg-[#3d3222] active:scale-95 text-[#f4efe6] border-[#3d3222] shadow-xs cursor-pointer'
+                : isDark
+                ? 'bg-[#1a1410] text-[#7d6a4f]/40 border-[#3d3222]/40 cursor-not-allowed'
                 : 'bg-[#e8dfd0] text-[#7d6a4f]/50 border-[#1a1410]/10 cursor-not-allowed'
             }
           `}
         >
           <Send
             className={`w-4 h-4 ml-0.5 stroke-[2] ${
-              canSend ? 'text-[#e8a93c]' : 'text-[#7d6a4f]/50'
+              canSend
+                ? 'text-[#e8a93c]'
+                : isDark
+                ? 'text-[#7d6a4f]/40'
+                : 'text-[#7d6a4f]/50'
             }`}
           />
         </button>
