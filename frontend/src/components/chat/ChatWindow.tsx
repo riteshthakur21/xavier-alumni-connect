@@ -1,8 +1,19 @@
 'use client';
 
-import { useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import type { Message, ChatUser } from '@/hooks/useChatSocket';
+import {
+  ArrowLeft,
+  Send,
+  Lock,
+  Trash2,
+  Clock,
+  Check,
+  CheckCheck,
+  Loader2,
+  ShieldAlert,
+} from 'lucide-react';
 
 interface Props {
   messages: Message[];
@@ -30,13 +41,13 @@ const formatTime = (iso: string) =>
   new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 const getDateLabel = (iso: string): string => {
-  const d         = new Date(iso);
-  const today     = new Date();
+  const d = new Date(iso);
+  const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  if (d.toDateString() === today.toDateString())     return 'Today';
+  if (d.toDateString() === today.toDateString()) return 'Today';
   if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
-  return d.toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' });
+  return d.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 // Group message array into date buckets
@@ -44,7 +55,7 @@ const groupByDate = (msgs: Message[]) => {
   const groups: { label: string; messages: Message[] }[] = [];
   msgs.forEach((msg) => {
     const label = getDateLabel(msg.createdAt);
-    const last  = groups[groups.length - 1];
+    const last = groups[groups.length - 1];
     if (last && last.label === label) {
       last.messages.push(msg);
     } else {
@@ -75,8 +86,8 @@ export default function ChatWindow({
   setInputValue,
   onBack,
 }: Props) {
-  const bottomRef   = useRef<HTMLDivElement>(null);
-  const inputRef    = useRef<HTMLInputElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const messageGroups = useMemo(() => groupByDate(messages), [messages]);
@@ -111,31 +122,21 @@ export default function ChatWindow({
     }
   };
 
-  const headerStatus = typingUserNames.length > 0
-    ? 'typing...'
-    : isOnline ? 'online' : 'offline';
-
   const canSend = inputValue.trim().length > 0 && isUserConnected;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-
+    <div className="flex flex-col h-full overflow-hidden bg-[#f4efe6]">
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div
-        className="flex items-center gap-3 px-3 py-2 flex-shrink-0 min-h-[60px] shadow-md"
-        style={{ background: 'linear-gradient(135deg, #360707 0%, #21218F 55%, #00D4FF 100%)' }}
-      >
-
+      <div className="flex items-center gap-3 px-4 py-3 bg-[#1a1410] border-b border-[#3d3222] flex-shrink-0 min-h-[62px] shadow-sm">
         {/* Back arrow — mobile only */}
         {onBack && (
           <button
+            type="button"
             onClick={onBack}
-            className="md:hidden flex-shrink-0 p-1.5 -ml-1 rounded-full text-white/80 hover:text-white hover:bg-white/10 active:bg-white/20 transition-colors"
+            className="md:hidden flex-shrink-0 p-1.5 -ml-1 rounded-xl text-[#f4efe6]/80 hover:text-[#f4efe6] hover:bg-white/10 active:bg-white/20 transition-colors cursor-pointer"
             aria-label="Back to chats"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-            </svg>
+            <ArrowLeft className="w-5 h-5 text-[#e8a93c]" />
           </button>
         )}
 
@@ -146,7 +147,7 @@ export default function ChatWindow({
         >
           {/* Avatar with photo */}
           <div className="relative flex-shrink-0">
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-blue-200 flex items-center justify-center font-bold text-blue-800 text-base select-none shadow-inner">
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-[#261f15] border border-[#3d3222] flex items-center justify-center font-serif font-bold text-[#e8a93c] text-base select-none shadow-2xs">
               {participant?.alumniProfile?.photoUrl ? (
                 <img
                   src={participant.alumniProfile.photoUrl}
@@ -158,49 +159,47 @@ export default function ChatWindow({
               )}
             </div>
             {isOnline && (
-              <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-400 border-2 border-[#21218F]" />
+              <span
+                className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#3a5c3e] border-2 border-[#1a1410]"
+                title="Online"
+              />
             )}
           </div>
 
           {/* Name + status */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white leading-tight truncate group-hover:underline">
+            <p className="text-sm font-serif text-[#f4efe6] leading-tight truncate group-hover:text-[#e8a93c] transition-colors">
               {participant?.name ?? 'Unknown'}
             </p>
-            <p
-              className={`text-[11px] leading-tight ${
-                typingUserNames.length > 0
-                  ? 'text-blue-200 font-medium'
-                  : isOnline
-                  ? 'text-blue-200'
-                  : 'text-white/50'
-              }`}
-            >
-              {headerStatus}
-            </p>
+            <div className="mt-0.5 flex items-center gap-1.5">
+              {typingUserNames.length > 0 ? (
+                <p className="text-[11px] text-[#e8a93c] font-mono italic animate-pulse">
+                  Typing...
+                </p>
+              ) : isOnline ? (
+                <p className="text-[10px] text-[#7aab7e] font-mono uppercase tracking-wider flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#7aab7e] animate-pulse inline-block" />
+                  Online
+                </p>
+              ) : (
+                <p className="text-[10px] text-[#f4efe6]/50 font-mono uppercase tracking-wider">
+                  Offline
+                </p>
+              )}
+            </div>
           </div>
         </Link>
       </div>
 
       {/* ── Message area ───────────────────────────────────────────────── */}
-      <div
-        className="flex-1 overflow-y-auto px-2 sm:px-4 py-3 space-y-0.5"
-        style={{
-          // WhatsApp-style subtle pattern background
-          backgroundColor: '#e8f0fe',
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='52' height='26' viewBox='0 0 52 26' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23b8cce4' fill-opacity='0.25'%3E%3Cpath d='M10 10c0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6h2c0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4 3.314 0 6 2.686 6 6 0 2.21 1.79 4 4 4v2c-3.314 0-6-2.686-6-6 0-2.21-1.79-4-4-4-3.314 0-6-2.686-6-6zm25.464-1.95l8.486 8.486-1.414 1.414-8.486-8.486 1.414-1.414z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}
-      >
+      <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 space-y-1">
         {/* Disconnected warning banner */}
         {!isUserConnected && (
-          <div className="mx-2 sm:mx-4 mt-2 mb-1 flex items-center gap-2.5 bg-[#fef9c3] border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-xl shadow-sm text-center justify-center">
-            <svg className="w-5 h-5 flex-shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86l-8.5 14.14A1.5 1.5 0 003.07 20h17.86a1.5 1.5 0 001.28-2l-8.5-14.14a1.5 1.5 0 00-2.56 0z" />
-            </svg>
+          <div className="mx-1 sm:mx-4 mt-1 mb-3 flex items-center gap-2.5 bg-[#fdf3e3] border border-[#c4821a]/30 text-[#5c4d37] text-xs sm:text-sm px-4 py-3 rounded-xl shadow-2xs text-center justify-center">
+            <ShieldAlert className="w-4 h-4 flex-shrink-0 text-[#c4821a]" />
             <span>
-              You are no longer connected with this user.
-              <br className="sm:hidden" />{' '}
-              Reconnect to continue messaging.
+              You are no longer connected with this member.
+              <br className="sm:hidden" /> Reconnect to resume correspondence.
             </span>
           </div>
         )}
@@ -209,24 +208,20 @@ export default function ChatWindow({
         {hasMore && (
           <div className="flex justify-center py-2">
             <button
+              type="button"
               onClick={onLoadMore}
               disabled={loadingMessages}
-              className="flex items-center gap-2 bg-white/80 backdrop-blur-sm text-blue-700 text-xs font-medium px-4 py-1.5 rounded-full shadow-sm hover:bg-white disabled:opacity-60 transition"
+              className="flex items-center gap-1.5 bg-white/95 hover:bg-[#1a1410] text-[#1a1410] hover:text-[#f4efe6] border border-[#1a1410]/12 text-xs font-semibold px-4 py-1.5 rounded-full shadow-2xs hover:shadow-xs transition-all disabled:opacity-60 cursor-pointer"
             >
               {loadingMessages ? (
                 <>
-                  <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                  </svg>
-                  Loading...
+                  <Loader2 className="animate-spin w-3.5 h-3.5 text-[#c4821a]" />
+                  <span>Loading dialogue history...</span>
                 </>
               ) : (
                 <>
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                  </svg>
-                  Load older messages
+                  <Clock className="w-3.5 h-3.5 text-[#c4821a]" />
+                  <span>Load older messages</span>
                 </>
               )}
             </button>
@@ -235,10 +230,15 @@ export default function ChatWindow({
 
         {/* Empty state */}
         {messages.length === 0 && !loadingMessages && (
-          <div className="flex justify-center items-center h-32">
-            <div className="bg-[#fef9c3] text-amber-700 text-xs font-medium px-5 py-2.5 rounded-xl shadow-sm text-center max-w-[200px]">
-              🔐 Messages are end-to-end secured.
-              <br />Say hi!
+          <div className="flex justify-center items-center h-40">
+            <div className="bg-white/95 border border-[#1a1410]/10 text-[#5c4d37] text-xs px-5 py-3.5 rounded-2xl shadow-xs text-center max-w-xs space-y-1">
+              <div className="flex items-center justify-center gap-1.5 text-[#1a1410] font-serif font-semibold text-xs">
+                <Lock className="w-3.5 h-3.5 text-[#c4821a]" />
+                <span>Confidential Correspondence</span>
+              </div>
+              <p className="text-[#7d6a4f] text-[11px] leading-relaxed">
+                Messages are private and securely delivered within Xavier AlumniConnect.
+              </p>
             </div>
           </div>
         )}
@@ -246,16 +246,15 @@ export default function ChatWindow({
         {/* Date-grouped messages */}
         {messageGroups.map((group) => (
           <div key={group.label}>
-
             {/* Date separator */}
-            <div className="flex justify-center my-3">
-              <span className="bg-[#e1f3fb]/90 text-[#54656f] text-[11px] font-medium px-3 py-1 rounded-full shadow-sm select-none">
+            <div className="flex justify-center my-2.5">
+              <span className="bg-[#e8dfd0]/80 backdrop-blur-xs text-[#5c4d37] border border-[#1a1410]/10 text-[10px] font-mono uppercase tracking-wider px-3 py-0.5 rounded-full shadow-2xs select-none">
                 {group.label}
               </span>
             </div>
 
             {group.messages.map((msg, idx) => {
-              const isMine     = msg.senderId === currentUserId;
+              const isMine = msg.senderId === currentUserId;
               const isLastInRun =
                 idx === group.messages.length - 1 ||
                 group.messages[idx + 1]?.senderId !== msg.senderId;
@@ -263,83 +262,77 @@ export default function ChatWindow({
               return (
                 <div
                   key={msg.id}
-                  className={`flex mb-0.5 group/msg-row ${isMine ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${isLastInRun ? 'mb-1.5' : 'mb-0.5'} group/msg-row ${
+                    isMine ? 'justify-end' : 'justify-start'
+                  }`}
                 >
                   {/* Delete button — own messages only, shows on hover */}
                   {isMine && !msg.isDeleted && (
                     <button
+                      type="button"
                       onClick={() => onDeleteMessage(msg.id)}
-                      className="opacity-0 group-hover/msg-row:opacity-100 self-center mr-1.5 p-1.5 rounded-full text-[#8696a0] hover:text-red-500 hover:bg-red-50 transition-all flex-shrink-0"
+                      className="opacity-0 group-hover/msg-row:opacity-100 self-center mr-1 p-1 rounded-md text-[#7d6a4f] hover:text-rose-600 hover:bg-rose-50 transition-all flex-shrink-0 cursor-pointer"
                       title="Delete message"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
 
                   <div
                     className={`
-                      relative max-w-[78%] sm:max-w-[65%] px-3 pt-2 pb-1.5 rounded-xl shadow-sm
-                      ${isMine
-                        ? msg.isDeleted ? 'bg-[#dbeafe]/60 text-gray-500' : 'bg-[#dbeafe] text-gray-800'
-                        : msg.isDeleted ? 'bg-white/60 text-gray-500' : 'bg-white text-gray-800'
+                      relative max-w-[80%] sm:max-w-[70%] px-3 py-1.5 rounded-xl shadow-2xs
+                      ${
+                        isMine
+                          ? msg.isDeleted
+                            ? 'bg-[#261f15]/40 text-[#7d6a4f] border border-[#3d3222]/30'
+                            : 'bg-[#1a1410] text-[#f4efe6] border border-[#3d3222]'
+                          : msg.isDeleted
+                          ? 'bg-white/60 text-[#7d6a4f] border border-[#1a1410]/10'
+                          : 'bg-white text-[#1a1410] border border-[#1a1410]/10'
                       }
-                      ${isLastInRun && !msg.isDeleted
-                        ? isMine
-                          ? 'rounded-tr-none'
-                          : 'rounded-tl-none'
-                        : ''
+                      ${
+                        isLastInRun && !msg.isDeleted
+                          ? isMine
+                            ? 'rounded-tr-xs'
+                            : 'rounded-tl-xs'
+                          : ''
                       }
                     `}
                   >
-                    {/* Bubble tail — only on last message in a run, not for deleted */}
-                    {isLastInRun && !msg.isDeleted && (
-                      <div
-                        className={`absolute top-0 w-0 h-0 ${
-                          isMine
-                            ? '-right-[8px] border-l-[8px] border-l-[#dbeafe] border-b-[8px] border-b-transparent'
-                            : '-left-[8px] border-r-[8px] border-r-white border-b-[8px] border-b-transparent'
-                        }`}
-                      />
-                    )}
-
                     {msg.isDeleted ? (
                       /* Deleted message placeholder */
-                      <p className="text-[13px] italic text-[#8696a0] flex items-center gap-1.5 py-0.5">
-                        <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <circle cx="12" cy="12" r="10" strokeWidth={2} />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 9l-6 6M9 9l6 6" />
-                        </svg>
-                        This message was deleted
+                      <p className="text-xs italic text-[#7d6a4f] flex items-center gap-1.5 py-0.5 font-sans">
+                        <Trash2 className="w-3 h-3 flex-shrink-0 opacity-60" />
+                        <span>This message was deleted</span>
                       </p>
                     ) : (
-                      <>
+                      <div className="flex flex-wrap items-end justify-between gap-x-2.5 gap-y-0.5">
                         {/* Message text */}
-                        <p className="text-[14px] leading-relaxed break-words whitespace-pre-wrap pr-10">
+                        <p className="text-[13px] sm:text-sm leading-5 break-words whitespace-pre-wrap font-sans">
                           {msg.content}
                         </p>
 
-                        {/* Timestamp + seen ticks — bottom right */}
-                        <div className="flex items-center justify-end gap-1 -mt-1">
-                          <span className="text-[10px] text-[#8696a0]">
+                        {/* Timestamp + seen ticks */}
+                        <div className="flex items-center gap-1 self-end ml-auto shrink-0 select-none">
+                          <span
+                            className={`text-[10px] font-mono leading-none ${
+                              isMine ? 'text-[#e8a93c]/80' : 'text-[#7d6a4f]'
+                            }`}
+                          >
                             {formatTime(msg.createdAt)}
                           </span>
-                          {isMine && (
-                            <svg
-                              viewBox="0 0 16 11"
-                              className={`w-4 h-3 flex-shrink-0 ${
-                                msg.isSeen ? 'text-blue-500' : 'text-[#8696a0]'
-                              }`}
-                              fill="currentColor"
-                            >
-                              {/* Double tick SVG */}
-                              <path d="M11.071.653a.75.75 0 0 1 .206 1.04l-5.5 8a.75.75 0 0 1-1.197.046L1.08 5.645a.75.75 0 0 1 1.09-1.032l2.94 3.107 4.92-7.16a.75.75 0 0 1 1.04-.207z"/>
-                              <path d="M15.071.653a.75.75 0 0 1 .206 1.04l-5.5 8a.75.75 0 0 1-1.154.09l-.046-.044a.75.75 0 0 1 .996-1.122l.57.504 4.887-7.11a.75.75 0 0 1 1.04-.208z"/>
-                            </svg>
-                          )}
+                          {isMine &&
+                            (msg.isSeen ? (
+                              <span title="Seen" className="inline-flex items-center">
+                                <CheckCheck className="w-3.5 h-3.5 text-[#7aab7e] flex-shrink-0" />
+                              </span>
+                            ) : (
+                              <span title="Delivered" className="inline-flex items-center">
+                                <Check className="w-3.5 h-3.5 text-[#f4efe6]/50 flex-shrink-0" />
+                              </span>
+                            ))}
                         </div>
-                      </>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -351,14 +344,15 @@ export default function ChatWindow({
         {/* Typing indicator */}
         {typingUserNames.length > 0 && (
           <div className="flex justify-start mb-1">
-            <div className="bg-white rounded-xl rounded-tl-none px-4 py-3 shadow-sm flex items-center gap-1.5">
+            <div className="bg-white border border-[#1a1410]/10 rounded-xl rounded-tl-xs px-3 py-1.5 shadow-2xs flex items-center gap-1.5">
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
-                  className="w-2 h-2 rounded-full bg-gray-400 inline-block animate-bounce"
-                  style={{ animationDelay: `${i * 0.18}s`, animationDuration: '0.9s' }}
+                  className="w-1.5 h-1.5 rounded-full bg-[#c4821a] inline-block animate-pulse"
+                  style={{ animationDelay: `${i * 200}ms` }}
                 />
               ))}
+              <span className="text-[10px] font-mono text-[#7d6a4f] ml-0.5">typing...</span>
             </div>
           </div>
         )}
@@ -367,24 +361,29 @@ export default function ChatWindow({
       </div>
 
       {/* ── Input bar ──────────────────────────────────────────────────── */}
-      <div className={`flex items-center gap-2 px-2 py-2 bg-[#f0f2f5] flex-shrink-0 ${!isUserConnected ? 'opacity-50 pointer-events-none' : ''}`}>
-
+      <div
+        className={`flex items-center gap-2.5 px-3 sm:px-4 py-3 bg-[#fcfbf9] border-t border-[#1a1410]/10 flex-shrink-0 ${
+          !isUserConnected ? 'opacity-50 pointer-events-none' : ''
+        }`}
+      >
         {/* Text field */}
-        <div className="flex-1 bg-white rounded-full px-4 py-2 flex items-center gap-2 shadow-sm min-h-[46px]">
+        <div className="flex-1 bg-white border border-[#1a1410]/15 focus-within:border-[#1a1410] focus-within:ring-2 focus-within:ring-[#c4821a]/20 rounded-xl px-4 py-2 flex items-center gap-2 shadow-2xs min-h-[46px] transition-all">
           <input
             ref={inputRef}
             type="text"
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder={isUserConnected ? 'Type a message' : 'You can no longer message this user'}
+            placeholder={
+              isUserConnected ? 'Compose a message...' : 'You can no longer message this member'
+            }
             maxLength={2000}
             disabled={!isUserConnected}
-            className="flex-1 text-sm text-gray-800 bg-transparent outline-none placeholder-gray-400 disabled:cursor-not-allowed"
+            className="flex-1 text-sm text-[#1a1410] bg-transparent outline-none placeholder-[#7d6a4f]/70 font-sans disabled:cursor-not-allowed"
           />
           {/* Character counter when approaching limit */}
           {inputValue.length > 1800 && (
-            <span className="text-[10px] text-gray-400 flex-shrink-0">
+            <span className="text-[10px] font-mono text-[#7d6a4f] flex-shrink-0">
               {2000 - inputValue.length}
             </span>
           )}
@@ -392,26 +391,28 @@ export default function ChatWindow({
 
         {/* Send button */}
         <button
+          type="button"
           onClick={handleSend}
           disabled={!canSend}
           aria-label="Send message"
-          style={canSend ? { background: 'linear-gradient(135deg, #360707 0%, #21218F 55%, #00D4FF 100%)' } : undefined}
           className={`
-            w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0
-            transition-all duration-200 shadow-md
-            ${canSend
-              ? 'active:scale-95 text-white'
-              : 'bg-[#c8c8c8] text-white cursor-not-allowed'
+            w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0
+            transition-all duration-200 border
+            ${
+              canSend
+                ? 'bg-[#1a1410] hover:bg-[#3d3222] active:scale-95 text-[#f4efe6] border-[#3d3222] shadow-xs cursor-pointer'
+                : 'bg-[#e8dfd0] text-[#7d6a4f]/50 border-[#1a1410]/10 cursor-not-allowed'
             }
           `}
         >
-          {/* Paper plane icon */}
-          <svg className="w-5 h-5 ml-0.5" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-          </svg>
+          <Send
+            className={`w-4 h-4 ml-0.5 stroke-[2] ${
+              canSend ? 'text-[#e8a93c]' : 'text-[#7d6a4f]/50'
+            }`}
+          />
         </button>
-
       </div>
     </div>
   );
 }
+

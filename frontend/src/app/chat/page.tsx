@@ -4,21 +4,22 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { useAuth } from '@/contexts/AuthContext';
+import { MessageSquare } from 'lucide-react';
 
 import { useChatSocket, type Conversation } from '@/hooks/useChatSocket';
 import ConversationList from '@/components/chat/ConversationList';
 import ChatWindow from '@/components/chat/ChatWindow';
 
 export default function ChatPage() {
-  const router       = useRouter();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const convParam    = searchParams.get('conv');
+  const convParam = searchParams.get('conv');
   const { user, loading } = useAuth();
 
-  const [token,         setToken]         = useState<string>('');
+  const [token, setToken] = useState<string>('');
   const [currentUserId, setCurrentUserId] = useState<string>('');
-  const [activeConv,    setActiveConv]    = useState<Conversation | null>(null);
-  const [messageInput,  setMessageInput]  = useState('');
+  const [activeConv, setActiveConv] = useState<Conversation | null>(null);
+  const [messageInput, setMessageInput] = useState('');
 
   /**
    * Mobile layout:
@@ -41,9 +42,21 @@ export default function ChatPage() {
   }, [user, loading, router]);
 
   const {
-    connected, messages, conversations, onlineUsers,
-    typingUsers, loadingMessages, hasMore, isUserConnected,
-    sendMessage, sendTyping, sendStopTyping, markSeen, markSeenForConv, loadMoreMessages, deleteMessage,
+    connected,
+    messages,
+    conversations,
+    onlineUsers,
+    typingUsers,
+    loadingMessages,
+    hasMore,
+    isUserConnected,
+    sendMessage,
+    sendTyping,
+    sendStopTyping,
+    markSeen,
+    markSeenForConv,
+    loadMoreMessages,
+    deleteMessage,
   } = useChatSocket({ token, conversationId: activeConv?.id });
 
   // Auto-select conversation from ?conv= query param
@@ -53,20 +66,21 @@ export default function ChatPage() {
     if (found) {
       setActiveConv(found);
       setMobilePanel('chat');
-      // FIX: clear unread dot immediately when conversation is opened via URL param
+      // Clear unread dot immediately when conversation is opened via URL param
       markSeenForConv(found.id);
     }
   }, [convParam, conversations, activeConv, markSeenForConv]);
 
-  const handleSelectConv = useCallback((conv: Conversation) => {
-    setActiveConv(conv);
-    setMessageInput('');
-    setMobilePanel('chat');
-    // FIX: immediately clear the unread dot + optimistically mark isSeen in local
-    // state so the sidebar updates synchronously before the server responds.
-    // This also emits the messageSeen socket event so the DB is updated.
-    markSeenForConv(conv.id);
-  }, [markSeenForConv]);
+  const handleSelectConv = useCallback(
+    (conv: Conversation) => {
+      setActiveConv(conv);
+      setMessageInput('');
+      setMobilePanel('chat');
+      // Clear the unread dot + optimistically mark isSeen in local state
+      markSeenForConv(conv.id);
+    },
+    [markSeenForConv]
+  );
 
   // Mobile back: return to conversation list
   const handleBack = useCallback(() => setMobilePanel('list'), []);
@@ -84,10 +98,12 @@ export default function ChatPage() {
 
   if (!token) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#f0f2f5]">
+      <div className="flex items-center justify-center h-screen bg-[#f4efe6]">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-400">Loading...</p>
+          <div className="w-8 h-8 border-3 border-[#c4821a] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-mono text-[#7d6a4f] uppercase tracking-wider">
+            Establishing Connection...
+          </p>
         </div>
       </div>
     );
@@ -97,34 +113,38 @@ export default function ChatPage() {
   const showChat = mobilePanel === 'chat' && !!activeConv;
 
   return (
-    <div className="flex h-[calc(100dvh-64px)] bg-[#f0f2f5] overflow-hidden">
-
+    <div className="flex h-[calc(100dvh-64px)] bg-[#f4efe6] overflow-hidden">
       {/* ── Sidebar / Conversation List ────────────────────────────────── */}
       <aside
         className={[
-          'flex flex-col bg-white border-r border-gray-200',
+          'flex flex-col bg-white border-r border-[#1a1410]/10',
           // Desktop: always show at fixed width
-          'md:flex md:w-[360px] md:flex-shrink-0',
+          'md:flex md:w-[360px] lg:w-[380px] md:flex-shrink-0',
           // Mobile: full-width when showing, hidden when chat is open
           showList ? 'flex w-full' : 'hidden',
         ].join(' ')}
       >
         {/* Sidebar header */}
-        <div
-          className="flex items-center justify-between px-4 py-3 border-b border-white/10 min-h-[60px]"
-          style={{ background: 'linear-gradient(135deg, #360707 0%, #21218F 55%, #00D4FF 100%)' }}
-        >
-          <h2 className="text-xl font-bold text-white">Chats</h2>
+        <div className="flex items-center justify-between px-4 py-3.5 bg-[#1a1410] border-b border-[#3d3222] min-h-[62px]">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-[#e8a93c]" />
+            <h2 className="text-lg font-serif tracking-wide text-[#f4efe6]">Messages</h2>
+          </div>
           <div className="flex items-center gap-2">
             <div
-              className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                connected ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider font-semibold border ${
+                connected
+                  ? 'bg-[#3a5c3e]/20 text-[#7aab7e] border-[#3a5c3e]/40'
+                  : 'bg-[#fdf3e3] text-[#c4821a] border-[#c4821a]/30'
               }`}
-              title={connected ? 'Connected' : 'Reconnecting...'}
-            />
-            {!connected && (
-              <span className="text-[10px] text-white/70">Reconnecting</span>
-            )}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  connected ? 'bg-[#7aab7e] animate-pulse' : 'bg-[#c4821a] animate-ping'
+                }`}
+              />
+              <span>{connected ? 'Live' : 'Reconnecting'}</span>
+            </div>
           </div>
         </div>
 
@@ -175,21 +195,26 @@ export default function ChatPage() {
           />
         ) : (
           /* Desktop empty state — never shown on mobile (main is hidden) */
-          <div className="hidden md:flex flex-1 flex-col items-center justify-center bg-[#f0f2f5]">
-            <div className="text-center">
-              <div className="w-28 h-28 rounded-full bg-white shadow-sm flex items-center justify-center mx-auto mb-5">
-                <svg className="w-14 h-14 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
+          <div className="hidden md:flex flex-1 flex-col items-center justify-center bg-[#f8f6f0] p-8 text-center">
+            <div className="max-w-md w-full p-8 rounded-3xl bg-white border border-[#1a1410]/10 shadow-xs flex flex-col items-center">
+              <div className="w-16 h-16 rounded-2xl bg-[#261f15] border border-[#3d3222] flex items-center justify-center text-[#e8a93c] mb-4 shadow-sm">
+                <MessageSquare className="w-8 h-8 stroke-[1.5]" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-500 mb-1">Xavier AlumniConnect</h3>
-              <p className="text-sm text-gray-400">Select a conversation to start chatting</p>
+              <h3 className="text-xl font-serif text-[#1a1410] font-normal mb-2">
+                Xavier Alumni Network Dialogue
+              </h3>
+              <p className="text-xs text-[#5c4d37] leading-relaxed mb-6">
+                Connect directly with fellow alumni and students. Select a conversation from the sidebar or reach out to any member via the Alumni Directory.
+              </p>
+              <div className="flex items-center gap-2 text-[11px] font-mono text-[#7d6a4f] bg-[#f4efe6] px-3.5 py-1.5 rounded-full border border-[#1a1410]/8">
+                <span className="w-2 h-2 rounded-full bg-[#3a5c3e]" />
+                <span>End-to-end verified communication</span>
+              </div>
             </div>
           </div>
         )}
       </main>
-
     </div>
   );
 }
+
