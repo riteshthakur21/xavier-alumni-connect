@@ -12,7 +12,7 @@ import {
   Check,
   CheckCheck,
   Loader2,
-  ShieldAlert,
+  UserX,
   X,
 } from 'lucide-react';
 
@@ -340,20 +340,32 @@ export default function ChatWindow({
 
       {/* ── Message area ───────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 space-y-1">
-        {/* Disconnected warning banner */}
+        {/* Compact Disconnected informational panel */}
         {!isUserConnected && (
           <div
-            className={`mx-1 sm:mx-4 mt-1 mb-3 flex items-center gap-2.5 border text-xs sm:text-sm px-4 py-3 rounded-xl shadow-2xs text-center justify-center ${
+            className={`w-[88%] sm:w-[50%] max-w-[520px] mx-auto my-2 sm:my-2.5 px-3.5 py-2.5 sm:px-5 sm:py-3 rounded-xl border flex flex-col items-center text-center shadow-2xs ${
               isDark
-                ? 'bg-[#2d2113] border-[#c4821a]/40 text-[#fdf3e3]'
-                : 'bg-[#fdf3e3] border-[#c4821a]/30 text-[#5c4d37]'
+                ? 'bg-[#261f15]/85 border-[#3d3222] text-[#f4efe6]'
+                : 'bg-[#fdf3e3]/75 border-[#c4821a]/20 text-[#1a1410]'
             }`}
           >
-            <ShieldAlert className="w-4 h-4 flex-shrink-0 text-[#c4821a]" />
-            <span>
-              You are no longer connected with this member.
-              <br className="sm:hidden" /> Reconnect to resume correspondence.
-            </span>
+            <div
+              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center mb-1.5 ${
+                isDark ? 'bg-[#1a1410] text-[#e8a93c]' : 'bg-[#f4efe6] text-[#c4821a]'
+              }`}
+            >
+              <UserX className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </div>
+            <h4 className="font-serif text-xs sm:text-sm font-medium tracking-wide mb-0.5">
+              Connection ended
+            </h4>
+            <p
+              className={`text-[11px] sm:text-xs leading-snug max-w-sm ${
+                isDark ? 'text-[#a8977e]' : 'text-[#7d6a4f]'
+              }`}
+            >
+              You&apos;re no longer connected with this member, so new messages are unavailable.
+            </p>
           </div>
         )}
 
@@ -460,17 +472,17 @@ export default function ChatWindow({
                         isMine
                           ? msg.isDeleted
                             ? isDark
-                              ? 'bg-[#1a1410]/60 text-[#7d6a4f] border border-[#3d3222]/40'
+                              ? 'bg-[#14100c]/80 text-[#7d6a4f] border border-[#2e2317]'
                               : 'bg-[#261f15]/40 text-[#7d6a4f] border border-[#3d3222]/30'
                             : isDark
-                            ? 'bg-[#2d2419] text-[#f4efe6] border border-[#4a3a27]'
+                            ? 'bg-[#17130f] text-[#fbf9f5] border border-[#2e2317]'
                             : 'bg-[#1a1410] text-[#f4efe6] border border-[#3d3222]'
                           : msg.isDeleted
                           ? isDark
-                            ? 'bg-[#1a1410]/60 text-[#7d6a4f] border border-[#3d3222]/40'
+                            ? 'bg-[#261f15]/50 text-[#7d6a4f] border border-[#3d3222]/40'
                             : 'bg-white/60 text-[#7d6a4f] border border-[#1a1410]/10'
                           : isDark
-                          ? 'bg-[#261f15] text-[#f4efe6] border border-[#3d3222]'
+                          ? 'bg-[#2c241b] text-[#f4efe6] border border-[#3d3222]'
                           : 'bg-white text-[#1a1410] border border-[#1a1410]/10'
                       }
                       ${
@@ -499,7 +511,9 @@ export default function ChatWindow({
                         <p
                           className={`text-[13px] sm:text-sm leading-5 break-words whitespace-pre-wrap font-sans ${
                             isMine
-                              ? 'text-[#f4efe6]'
+                              ? isDark
+                                ? 'text-[#fbf9f5]'
+                                : 'text-[#f4efe6]'
                               : isDark
                               ? 'text-[#f4efe6]'
                               : 'text-[#1a1410]'
@@ -578,7 +592,7 @@ export default function ChatWindow({
           isDark
             ? 'bg-[#1a1410] border-[#3d3222]'
             : 'bg-[#fcfbf9] border-[#1a1410]/10'
-        } ${!isUserConnected ? 'opacity-50 pointer-events-none' : ''}`}
+        } ${!isUserConnected ? 'opacity-70' : ''}`}
       >
         {/* Text field */}
         <div
@@ -586,7 +600,7 @@ export default function ChatWindow({
             isDark
               ? 'bg-[#261f15] border-[#3d3222] focus-within:border-[#c4821a]/60 focus-within:ring-2 focus-within:ring-[#c4821a]/20'
               : 'bg-white border-[#1a1410]/15 focus-within:border-[#1a1410] focus-within:ring-2 focus-within:ring-[#c4821a]/20'
-          }`}
+          } ${!isUserConnected ? 'cursor-not-allowed bg-transparent border-dashed' : ''}`}
         >
           <input
             ref={inputRef}
@@ -595,7 +609,7 @@ export default function ChatWindow({
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder={
-              isUserConnected ? 'Compose a message...' : 'You can no longer message this member'
+              isUserConnected ? 'Compose a message...' : 'Messaging unavailable — reconnect to continue'
             }
             maxLength={2000}
             disabled={!isUserConnected}
