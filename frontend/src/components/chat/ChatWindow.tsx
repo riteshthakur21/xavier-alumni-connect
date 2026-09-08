@@ -35,6 +35,8 @@ interface Props {
   setInputValue: (v: string) => void;
   onBack?: () => void; // Mobile back button
   theme?: 'light' | 'dark';
+  isFullscreen?: boolean;
+  isKeyboardOpen?: boolean;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -88,6 +90,8 @@ export default function ChatWindow({
   setInputValue,
   onBack,
   theme = 'light',
+  isFullscreen = false,
+  isKeyboardOpen = false,
 }: Props) {
   const isDark = theme === 'dark';
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -112,6 +116,13 @@ export default function ChatWindow({
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     onMarkSeen();
   }, [messages.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Scroll to bottom when keyboard opens on mobile so latest conversation is visible
+  useEffect(() => {
+    if (isKeyboardOpen) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isKeyboardOpen]);
 
   // Keyboard shortcut: Escape clears selection or closes confirm modal
   useEffect(() => {
@@ -160,52 +171,99 @@ export default function ChatWindow({
     setShowDeleteConfirm(false);
   }, [selectedMessageIds, onDeleteMessage]);
 
-  // Touch handlers for mobile long-press
+  // ── Mobile detection via touch tracking ────────────────────────────────
+  // We track whether the most recent pointer interaction was a touch event
+  // so handleMessageClick can distinguish desktop mouse clicks from
+  // mobile touch-generated synthetic clicks.
+  const lastInteractionWasTouch = useRef(false);
+
+  // Touch handlers for mobile long-press (WhatsApp-style)
   const handleTouchStart = (msg: Message, e: React.TouchEvent) => {
-    if (msg.senderId !== currentUserId || msg.isDeleted) return;
+    lastInteractionWasTouch.current = true;
+    // Guard: only own, non-deleted messages can be selected
+    if (msg.senderId !== currentUserId || msg.isDeleted) {
+      // If already in selection mode, still need to track touch for
+      // preventing click propagation, but don't start a long-press timer
+      isLongPressTriggered.current = false;
+      touchStartCoords.current = null;
+      return;
+    }
+
     isLongPressTriggered.current = false;
     const touch = e.touches[0];
     touchStartCoords.current = { x: touch.clientX, y: touch.clientY };
 
     if (longPressTimer.current) clearTimeout(longPressTimer.current);
+
+    // If already in selection mode, we don't need the long-press timer
+    // because taps will toggle selection via handleTouchEnd
+    if (isSelectionMode) return;
+
     longPressTimer.current = setTimeout(() => {
       isLongPressTriggered.current = true;
+      // Prevent text selection and context menu on the element
+      if (typeof window !== 'undefined') {
+        window.getSelection()?.removeAllRanges();
+      }
       handleToggleSelect(msg.id);
-    }, 450);
+    }, 500);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStartCoords.current || !longPressTimer.current) return;
+    if (!touchStartCoords.current) return;
     const touch = e.touches[0];
     const dx = Math.abs(touch.clientX - touchStartCoords.current.x);
     const dy = Math.abs(touch.clientY - touchStartCoords.current.y);
+    // Cancel long-press if finger moves (scroll detection)
     if (dx > 8 || dy > 8) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+      // Mark that we scrolled, so tap-on-release doesn't toggle
+      touchStartCoords.current = null;
     }
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (msg: Message) => {
     if (longPressTimer.current) {
       clearTimeout(longPressTimer.current);
       longPressTimer.current = null;
     }
-  };
-
-  const handleMessageClick = (msg: Message) => {
-    if (isLongPressTriggered.current) {
-      isLongPressTriggered.current = false;
-      return;
-    }
+    // If long-press already triggered, prevent the synthetic click
+    if (isLongPressTriggered.current) return;
+    // If touch was cancelled (moved/scrolled), don't toggle
+    if (!touchStartCoords.current) return;
+    // If in selection mode, treat tap as toggle (WhatsApp behavior)
     if (isSelectionMode && msg.senderId === currentUserId && !msg.isDeleted) {
+      isLongPressTriggered.current = true; // block the synthetic click
       handleToggleSelect(msg.id);
     }
   };
 
+  // Prevent native context menu on mobile (long-press triggers browser menu)
   const handleContextMenu = (msg: Message, e: React.MouseEvent) => {
     if (msg.senderId !== currentUserId || msg.isDeleted) return;
     e.preventDefault();
-    handleToggleSelect(msg.id);
+    // On desktop (mouse right-click), toggle selection as before
+    if (!lastInteractionWasTouch.current) {
+      handleToggleSelect(msg.id);
+    }
+    // On mobile, the long-press timer handles selection — just prevent the menu
+  };
+
+  // Desktop-only click handler: unchanged behavior
+  const handleMessageClick = (msg: Message) => {
+    // If the last interaction was a touch event, skip — touch handlers manage it
+    if (lastInteractionWasTouch.current) {
+      lastInteractionWasTouch.current = false;
+      isLongPressTriggered.current = false;
+      return;
+    }
+    // Desktop: if in selection mode, click toggles selection (existing behavior)
+    if (isSelectionMode && msg.senderId === currentUserId && !msg.isDeleted) {
+      handleToggleSelect(msg.id);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -232,6 +290,12 @@ export default function ChatWindow({
     }
   };
 
+  const handleInputFocus = () => {
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 150);
+  };
+
   const canSend = inputValue.trim().length > 0 && isUserConnected;
 
   return (
@@ -243,7 +307,11 @@ export default function ChatWindow({
       {/* ── Header / Selection Toolbar ──────────────────────────────────── */}
       {isSelectionMode ? (
         /* Selection Mode Toolbar */
-        <div className="flex items-center justify-between px-4 py-3 bg-[#1a1410] border-b border-[#3d3222] flex-shrink-0 min-h-[62px] shadow-sm animate-in fade-in duration-150 select-none">
+        <div
+          className={`flex items-center justify-between px-4 ${
+            isFullscreen ? 'pt-[max(0.75rem,env(safe-area-inset-top))]' : 'pt-3'
+          } pb-3 bg-[#1a1410] border-b border-[#3d3222] flex-shrink-0 min-h-[62px] shadow-sm animate-in fade-in duration-150 select-none`}
+        >
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -273,7 +341,11 @@ export default function ChatWindow({
         </div>
       ) : (
         /* Standard Header */
-        <div className="flex items-center gap-3 px-4 py-3 bg-[#1a1410] border-b border-[#3d3222] flex-shrink-0 min-h-[62px] shadow-sm">
+        <div
+          className={`flex items-center gap-3 px-4 ${
+            isFullscreen ? 'pt-[max(0.75rem,env(safe-area-inset-top))]' : 'pt-3'
+          } pb-3 bg-[#1a1410] border-b border-[#3d3222] flex-shrink-0 min-h-[62px] shadow-sm`}
+        >
           {/* Back arrow — mobile only */}
           {onBack && (
             <button
@@ -339,7 +411,7 @@ export default function ChatWindow({
       )}
 
       {/* ── Message area ───────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 space-y-1">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-5 py-4 space-y-1">
         {/* Compact Disconnected informational panel */}
         {!isUserConnected && (
           <div
@@ -456,7 +528,7 @@ export default function ChatWindow({
                   onContextMenu={(e) => handleContextMenu(msg, e)}
                   onTouchStart={(e) => handleTouchStart(msg, e)}
                   onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
+                  onTouchEnd={() => handleTouchEnd(msg)}
                   className={`flex ${isLastInRun ? 'mb-1.5' : 'mb-0.5'} group/msg-row ${
                     isMine ? 'justify-end' : 'justify-start'
                   } ${
@@ -588,7 +660,9 @@ export default function ChatWindow({
 
       {/* ── Input bar ──────────────────────────────────────────────────── */}
       <div
-        className={`flex items-center gap-2.5 px-3 sm:px-4 py-3 border-t flex-shrink-0 ${
+        className={`flex items-center gap-2.5 px-3 sm:px-4 pt-3 ${
+          isKeyboardOpen ? 'pb-3' : 'pb-[max(0.75rem,env(safe-area-inset-bottom))]'
+        } border-t flex-shrink-0 ${
           isDark
             ? 'bg-[#1a1410] border-[#3d3222]'
             : 'bg-[#fcfbf9] border-[#1a1410]/10'
@@ -608,6 +682,7 @@ export default function ChatWindow({
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
+            onFocus={handleInputFocus}
             placeholder={
               isUserConnected ? 'Compose a message...' : 'Messaging unavailable — reconnect to continue'
             }

@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { MessageSquare } from 'lucide-react';
 
 import { useChatSocket, type Conversation } from '@/hooks/useChatSocket';
+import { useVisualViewport } from '@/hooks/useVisualViewport';
 import ConversationList from '@/components/chat/ConversationList';
 import ChatWindow from '@/components/chat/ChatWindow';
 import ChatSettings, { type AppearancePref } from '@/components/chat/ChatSettings';
@@ -61,6 +62,7 @@ export default function ChatPage() {
   // ── Fullscreen State & Logic ─────────────────────────────────────────────
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const { height: vpHeight, offsetTop: vpOffsetTop, isKeyboardOpen, isMobile } = useVisualViewport();
 
   useEffect(() => {
     const handleFsChange = () => {
@@ -87,6 +89,18 @@ export default function ChatPage() {
   }, [isFullscreen]);
 
   const handleToggleFullscreen = useCallback(async () => {
+    const isMobileDevice =
+      typeof window !== 'undefined' &&
+      (window.innerWidth < 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent));
+
+    if (isMobileDevice) {
+      // On mobile, native requestFullscreen() causes Android Chrome to lock the element
+      // to the full physical screen height and overlay the IME keyboard over the composer.
+      // An in-app viewport-driven fullscreen gives complete control over VisualViewport resizing.
+      setIsFullscreen((prev) => !prev);
+      return;
+    }
+
     try {
       if (!document.fullscreenElement) {
         if (chatContainerRef.current?.requestFullscreen) {
@@ -208,16 +222,30 @@ export default function ChatPage() {
   return (
     <div
       ref={chatContainerRef}
+      style={
+        isMobile
+          ? isFullscreen
+            ? {
+                height: vpHeight ? `${vpHeight}px` : '100dvh',
+                top: `${vpOffsetTop}px`,
+              }
+            : isKeyboardOpen && vpHeight
+            ? {
+                height: `${Math.max(200, vpHeight - (window.scrollY >= 64 ? 0 : 64))}px`,
+              }
+            : undefined
+          : undefined
+      }
       className={`flex overflow-hidden transition-colors ${
         isFullscreen
-          ? 'fixed inset-0 z-50 h-[100dvh] w-[100dvw] pb-[env(safe-area-inset-bottom)]'
+          ? 'fixed inset-0 z-50 h-[100dvh] w-[100dvw]'
           : 'h-[calc(100dvh-64px)]'
       } ${resolvedTheme === 'dark' ? 'bg-[#14100c]' : 'bg-[#f4efe6]'}`}
     >
       {/* ── Sidebar / Conversation List ────────────────────────────────── */}
       <aside
         className={[
-          'flex flex-col border-r transition-colors',
+          'flex flex-col border-r min-h-0 h-full transition-colors',
           resolvedTheme === 'dark'
             ? 'bg-[#1a1410] border-[#3d3222]'
             : 'bg-white border-[#1a1410]/10',
@@ -228,7 +256,11 @@ export default function ChatPage() {
         ].join(' ')}
       >
         {/* Sidebar header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-[#1a1410] border-b border-[#3d3222] min-h-[62px] relative">
+        <div
+          className={`flex items-center justify-between px-4 ${
+            isFullscreen ? 'pt-[max(0.75rem,env(safe-area-inset-top))]' : 'pt-3'
+          } pb-3 bg-[#1a1410] border-b border-[#3d3222] min-h-[62px] relative flex-shrink-0`}
+        >
           <div className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-[#e8a93c]" />
             <h2 className="text-lg font-serif tracking-wide text-[#f4efe6]">Messages</h2>
@@ -242,7 +274,7 @@ export default function ChatPage() {
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <ConversationList
             conversations={conversations}
             currentUserId={currentUserId}
@@ -257,7 +289,7 @@ export default function ChatPage() {
       {/* ── Chat Window ─────────────────────────────────────────────────── */}
       <main
         className={[
-          'flex flex-col flex-1 overflow-hidden',
+          'flex flex-col flex-1 min-h-0 h-full overflow-hidden',
           // Desktop: always show
           'md:flex',
           // Mobile: show only when chat panel active
@@ -288,6 +320,8 @@ export default function ChatPage() {
             setInputValue={setMessageInput}
             onBack={handleBack}
             theme={resolvedTheme}
+            isFullscreen={isFullscreen}
+            isKeyboardOpen={isKeyboardOpen}
           />
         ) : (
           /* Desktop empty state — never shown on mobile (main is hidden) */

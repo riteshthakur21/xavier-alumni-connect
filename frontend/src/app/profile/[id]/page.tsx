@@ -40,6 +40,160 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 type ConnStatus = 'idle' | 'self' | 'not_connected' | 'pending_sent' | 'pending_received' | 'connected';
 
+const HERITAGE_BANNER_ANIM_STYLES = `
+  /* --- Keyframes --- */
+  @keyframes heritage-spin-cw {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes heritage-spin-ccw {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(-360deg); }
+  }
+
+  @keyframes heritage-glow-breathe {
+    0%, 100% {
+      opacity: 0.45;
+      transform: scale3d(0.96, 0.96, 1);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale3d(1.05, 1.05, 1);
+    }
+  }
+
+  @keyframes heritage-ripple-wave {
+    0% {
+      transform: scale3d(0.55, 0.55, 1);
+      opacity: 0.7;
+    }
+    50% {
+      opacity: 0.35;
+    }
+    100% {
+      transform: scale3d(1.4, 1.4, 1);
+      opacity: 0;
+    }
+  }
+
+  @keyframes heritage-star-twinkle {
+    0%, 100% {
+      opacity: 0.2;
+      transform: scale3d(0.8, 0.8, 1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale3d(1.25, 1.25, 1);
+    }
+  }
+
+  @keyframes heritage-sheen-sweep {
+    0% {
+      transform: translateX(-160%) skewX(-20deg);
+    }
+    35%, 100% {
+      transform: translateX(260%) skewX(-20deg);
+    }
+  }
+
+  /* Organic drift with horizontal wavering and slight rotation */
+  @keyframes heritage-ember-float {
+    0% {
+      opacity: 0;
+      transform: translate3d(0, 16px, 0) scale(0.6) rotate(0deg);
+    }
+    20% {
+      opacity: 0.9;
+      transform: translate3d(-5px, 2px, 0) scale(0.85) rotate(-6deg);
+    }
+    60% {
+      opacity: 0.65;
+      transform: translate3d(6px, -20px, 0) scale(1) rotate(8deg);
+    }
+    100% {
+      opacity: 0;
+      transform: translate3d(-3px, -45px, 0) scale(1.1) rotate(-12deg);
+    }
+  }
+
+  /* --- Base Performance & GPU Layering --- */
+  .anim-heritage-cw,
+  .anim-heritage-ccw,
+  .anim-heritage-glow,
+  .anim-heritage-ripple,
+  .anim-heritage-sheen,
+  .anim-heritage-ember,
+  .anim-star {
+    backface-visibility: hidden;
+    transform-origin: center;
+    will-change: transform, opacity;
+  }
+
+  /* --- Animation Utilities --- */
+  .anim-heritage-cw {
+    animation: heritage-spin-cw 54s linear infinite;
+  }
+
+  .anim-heritage-ccw {
+    animation: heritage-spin-ccw 38s linear infinite;
+  }
+
+  .anim-heritage-glow {
+    animation: heritage-glow-breathe 6s ease-in-out infinite;
+  }
+
+  .anim-heritage-sheen {
+    animation: heritage-sheen-sweep 14s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    will-change: transform;
+  }
+
+  /* Dynamic Ripples (Use standard class or override with CSS variables) */
+  .anim-heritage-ripple {
+    animation: heritage-ripple-wave var(--ripple-dur, 8s) cubic-bezier(0.16, 1, 0.3, 1) infinite var(--ripple-delay, 0s);
+  }
+  .anim-heritage-ripple-1 { animation: heritage-ripple-wave 8s cubic-bezier(0.16, 1, 0.3, 1) infinite 0s; }
+  .anim-heritage-ripple-2 { animation: heritage-ripple-wave 8s cubic-bezier(0.16, 1, 0.3, 1) infinite 4s; }
+
+  /* Embers */
+  .anim-heritage-ember {
+    animation: heritage-ember-float var(--ember-dur, 4.5s) ease-out infinite var(--ember-delay, 0s);
+  }
+
+  /* Dynamic Stars (Configurable via --star-dur and --star-delay or presets) */
+  .anim-star {
+    animation: heritage-star-twinkle var(--star-dur, 3.5s) ease-in-out infinite var(--star-delay, 0s);
+  }
+  .anim-star-1 { animation: heritage-star-twinkle 3.2s ease-in-out infinite 0s; }
+  .anim-star-2 { animation: heritage-star-twinkle 4.5s ease-in-out infinite 1.4s; }
+  .anim-star-3 { animation: heritage-star-twinkle 3.8s ease-in-out infinite 2.2s; }
+  .anim-star-4 { animation: heritage-star-twinkle 5.2s ease-in-out infinite 0.8s; }
+  .anim-star-5 { animation: heritage-star-twinkle 4.8s ease-in-out infinite 3.1s; }
+  .anim-star-6 { animation: heritage-star-twinkle 3.5s ease-in-out infinite 1.8s; }
+
+  /* --- Accessibility --- */
+  @media (prefers-reduced-motion: reduce) {
+    .anim-heritage-cw,
+    .anim-heritage-ccw,
+    .anim-heritage-glow,
+    .anim-heritage-ripple,
+    .anim-heritage-ripple-1,
+    .anim-heritage-ripple-2,
+    .anim-heritage-sheen,
+    .anim-heritage-ember,
+    .anim-star,
+    .anim-star-1,
+    .anim-star-2,
+    .anim-star-3,
+    .anim-star-4,
+    .anim-star-5,
+    .anim-star-6 {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+`;
+
 export default function ProfilePage() {
   const { id } = useParams();
   const router = useRouter();
@@ -449,6 +603,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#f4efe6] text-[#1a1410] selection:bg-[#c4821a]/20 selection:text-[#1a1410]">
+      <style>{HERITAGE_BANNER_ANIM_STYLES}</style>
       {/* ─── EDITORIAL PAGE TOP HEADER (Aligned with Stories & Events) ─────── */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-[#1a1410]/10 px-4 sm:px-6 lg:px-8 py-6 sm:py-8 transition-colors">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -504,10 +659,209 @@ export default function ProfilePage() {
             />
 
             {/* Ambient vignette */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#1a1410]/70 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#1a1410]/70 via-transparent to-transparent pointer-events-none" />
+
+            {/* ══ CELESTIAL CONSTELLATION MAP (Across Whole Banner) ══ */}
+            <svg
+              className="absolute inset-0 w-full h-full pointer-events-none select-none z-0"
+              viewBox="0 0 1200 240"
+              preserveAspectRatio="xMidYMid slice"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              {/* Twinkling Collegiate Star Nodes */}
+              <g className="anim-star-1" style={{ transformOrigin: '220px 50px' }}>
+                <circle cx="220" cy="50" r="2.5" fill="#e8a93c" />
+                <circle cx="220" cy="50" r="6.5" stroke="#e8a93c" strokeOpacity="0.3" strokeWidth="0.5" />
+              </g>
+              <g className="anim-star-2" style={{ transformOrigin: '380px 140px' }}>
+                <circle cx="380" cy="140" r="2" fill="#f4efe6" />
+                <circle cx="380" cy="140" r="5" stroke="#f4efe6" strokeOpacity="0.2" strokeWidth="0.5" />
+              </g>
+              <g className="anim-star-4" style={{ transformOrigin: '720px 150px' }}>
+                <circle cx="720" cy="150" r="2.5" fill="#e8a93c" />
+                <circle cx="720" cy="150" r="6" stroke="#e8a93c" strokeOpacity="0.25" strokeWidth="0.5" />
+              </g>
+              <g className="anim-star-5" style={{ transformOrigin: '880px 50px' }}>
+                <circle cx="880" cy="50" r="2" fill="#f4efe6" />
+                <circle cx="880" cy="50" r="5.5" stroke="#f4efe6" strokeOpacity="0.2" strokeWidth="0.5" />
+              </g>
+              <g className="anim-star-6" style={{ transformOrigin: '900px 75px' }}>
+                <circle cx="900" cy="75" r="2.5" fill="#e8a93c" />
+                <circle cx="900" cy="75" r="7" stroke="#e8a93c" strokeOpacity="0.3" strokeWidth="0.5" />
+              </g>
+              <g className="anim-star-2" style={{ transformOrigin: '1060px 125px' }}>
+                <circle cx="1060" cy="125" r="2" fill="#e8a93c" />
+              </g>
+            </svg>
+
+            {/* Luminous Ambient Horizon Sheen across Whole Banner */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
+              <div
+                className="anim-heritage-sheen absolute top-0 bottom-0 w-1/3"
+                style={{
+                  background:
+                    'linear-gradient(90deg, transparent 0%, rgba(232, 169, 60, 0.08) 50%, transparent 100%)',
+                }}
+              />
+            </div>
+
+            {/* Archival Quadrant Dial (Top Right behind Watermark) */}
+            <div className="anim-heritage-ccw absolute -top-16 -right-16 sm:-top-20 sm:-right-20 w-56 h-56 sm:w-72 sm:h-72 pointer-events-none select-none z-0">
+              <svg viewBox="0 0 240 240" fill="none" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="120" cy="120" r="105" stroke="#e8a93c" strokeOpacity="0.14" strokeWidth="1" strokeDasharray="4 8" />
+                <circle cx="120" cy="120" r="80" stroke="#f4efe6" strokeOpacity="0.08" strokeWidth="0.75" />
+                <circle cx="120" cy="120" r="55" stroke="#e8a93c" strokeOpacity="0.1" strokeWidth="0.75" strokeDasharray="2 4" />
+                <line x1="120" y1="10" x2="120" y2="230" stroke="#e8a93c" strokeOpacity="0.12" strokeWidth="0.75" />
+                <line x1="10" y1="120" x2="230" y2="120" stroke="#e8a93c" strokeOpacity="0.12" strokeWidth="0.75" />
+              </svg>
+            </div>
+
+            {/* ══ CELESTIAL ASTROLABE & AMBER HALO (Behind Profile Picture) ══ */}
+            <div
+              className="absolute left-1/2 sm:left-[104px] lg:left-[136px] bottom-0 -translate-x-1/2 translate-y-6 sm:translate-y-4 lg:translate-y-6 pointer-events-none select-none flex items-center justify-center w-72 h-72 sm:w-96 sm:h-96 lg:w-[440px] lg:h-[440px] z-0"
+              aria-hidden="true"
+            >
+              {/* Expanding Heritage Ripples */}
+              <div className="anim-heritage-ripple-1 absolute w-48 h-48 sm:w-64 sm:h-64 lg:w-72 lg:h-72 rounded-full border border-[#e8a93c]/20" />
+              <div className="anim-heritage-ripple-2 absolute w-48 h-48 sm:w-64 sm:h-64 lg:w-72 lg:h-72 rounded-full border border-[#e8a93c]/20" />
+
+              {/* Breathing Ambient Amber Aura */}
+              <div
+                className="anim-heritage-glow absolute w-56 h-56 sm:w-72 sm:h-72 lg:w-84 lg:h-84 rounded-full"
+                style={{
+                  background:
+                    'radial-gradient(circle, rgba(232, 169, 60, 0.35) 0%, rgba(196, 130, 26, 0.15) 42%, rgba(26, 20, 16, 0) 72%)',
+                  filter: 'blur(24px)',
+                }}
+              />
+
+              {/* Outer Astrolabe Ring (Slow Clockwise Rotation) */}
+              <svg
+                className="anim-heritage-cw absolute w-60 h-60 sm:w-80 sm:h-80 lg:w-96 lg:h-96"
+                viewBox="0 0 320 320"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* Outer Dashed Orbit */}
+                <circle
+                  cx="160"
+                  cy="160"
+                  r="146"
+                  stroke="#e8a93c"
+                  strokeOpacity="0.22"
+                  strokeWidth="1"
+                  strokeDasharray="4 8"
+                />
+                {/* Concentric Accent Ring */}
+                <circle
+                  cx="160"
+                  cy="160"
+                  r="134"
+                  stroke="#f4efe6"
+                  strokeOpacity="0.08"
+                  strokeWidth="0.75"
+                />
+                {/* Cardinal Diamond Star Marks */}
+                <polygon points="160,6 163.5,14 160,22 156.5,14" fill="#e8a93c" fillOpacity="0.55" />
+                <polygon points="160,298 163.5,306 160,314 156.5,306" fill="#e8a93c" fillOpacity="0.55" />
+                <polygon points="314,160 306,163.5 298,160 306,156.5" fill="#e8a93c" fillOpacity="0.55" />
+                <polygon points="22,160 14,163.5 6,160 14,156.5" fill="#e8a93c" fillOpacity="0.55" />
+                {/* 45-degree Astrolabe Dial Ticks */}
+                <line x1="57" y1="57" x2="65" y2="65" stroke="#e8a93c" strokeOpacity="0.32" strokeWidth="1.5" />
+                <line x1="263" y1="57" x2="255" y2="65" stroke="#e8a93c" strokeOpacity="0.32" strokeWidth="1.5" />
+                <line x1="57" y1="263" x2="65" y2="255" stroke="#e8a93c" strokeOpacity="0.32" strokeWidth="1.5" />
+                <line x1="263" y1="263" x2="255" y2="255" stroke="#e8a93c" strokeOpacity="0.32" strokeWidth="1.5" />
+              </svg>
+
+              {/* Inner Harmonic Astrolabe Ring (Counter-Clockwise Rotation) */}
+              <svg
+                className="anim-heritage-ccw absolute w-44 h-44 sm:w-60 sm:h-60 lg:w-72 lg:h-72"
+                viewBox="0 0 240 240"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* Inner Dashed Celestial Track */}
+                <circle
+                  cx="120"
+                  cy="120"
+                  r="106"
+                  stroke="#e8a93c"
+                  strokeOpacity="0.28"
+                  strokeWidth="1.2"
+                  strokeDasharray="10 5 3 5"
+                />
+                <circle
+                  cx="120"
+                  cy="120"
+                  r="78"
+                  stroke="#f4efe6"
+                  strokeOpacity="0.12"
+                  strokeWidth="0.75"
+                  strokeDasharray="3 6"
+                />
+                {/* Celestial Satellite Nodes */}
+                <circle cx="120" cy="14" r="3" fill="#e8a93c" fillOpacity="0.75" />
+                <circle cx="212" cy="173" r="2.5" fill="#e8a93c" fillOpacity="0.65" />
+                <circle cx="28" cy="173" r="2.5" fill="#e8a93c" fillOpacity="0.65" />
+              </svg>
+            </div>
+
+            {/* Distributed Micro-Embers across Whole Banner */}
+            <div className="absolute inset-0 pointer-events-none select-none z-0">
+              <div
+                className="anim-heritage-ember absolute w-1 h-1 rounded-full bg-[#e8a93c]/80 blur-[0.3px]"
+                style={{
+                  left: '12%',
+                  top: '38%',
+                  animation: 'heritage-ember-float 5.2s ease-out infinite 0.4s',
+                }}
+              />
+              <div
+                className="anim-heritage-ember absolute w-1.5 h-1.5 rounded-full bg-[#f4efe6]/70 blur-[0.4px]"
+                style={{
+                  left: '24%',
+                  top: '52%',
+                  animation: 'heritage-ember-float 6.4s ease-out infinite 1.8s',
+                }}
+              />
+              <div
+                className="anim-heritage-ember absolute w-1 h-1 rounded-full bg-[#e8a93c]/70 blur-[0.3px]"
+                style={{
+                  left: '42%',
+                  top: '40%',
+                  animation: 'heritage-ember-float 5.8s ease-out infinite 3.1s',
+                }}
+              />
+              <div
+                className="anim-heritage-ember absolute w-1.5 h-1.5 rounded-full bg-[#e8a93c]/60 blur-[0.4px]"
+                style={{
+                  left: '62%',
+                  top: '34%',
+                  animation: 'heritage-ember-float 7s ease-out infinite 2.3s',
+                }}
+              />
+              <div
+                className="anim-heritage-ember absolute w-1 h-1 rounded-full bg-[#f4efe6]/60 blur-[0.3px]"
+                style={{
+                  left: '78%',
+                  top: '48%',
+                  animation: 'heritage-ember-float 5.5s ease-out infinite 1.1s',
+                }}
+              />
+              <div
+                className="anim-heritage-ember absolute w-1.5 h-1.5 rounded-full bg-[#e8a93c]/70 blur-[0.4px]"
+                style={{
+                  left: '90%',
+                  top: '30%',
+                  animation: 'heritage-ember-float 6.8s ease-out infinite 3.7s',
+                }}
+              />
+            </div>
 
             {/* Collegiate Stamp Watermark (Top Right) */}
-            <div className="absolute top-4 right-4 sm:top-7 sm:right-8 text-right opacity-85 pointer-events-none">
+            <div className="absolute top-4 right-4 sm:top-7 sm:right-8 text-right opacity-85 pointer-events-none z-10">
               <span className="text-[10px] sm:text-xs font-mono uppercase tracking-widest text-[#e8a93c] block font-semibold">
                 St. Xavier&apos;s College
               </span>
@@ -522,7 +876,7 @@ export default function ProfilePage() {
             {/* Avatar & Action Row */}
             <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between -mt-14 sm:-mt-20 lg:-mt-28 gap-4 sm:gap-6 mb-6 sm:mb-8">
               {/* Avatar Box with Lightbox Trigger */}
-              <div className="relative group/avatar shrink-0">
+              <div className="relative group/avatar shrink-0 z-10">
                 <div
                   onClick={() => photoSrc && setPhotoModal(true)}
                   className={`w-28 h-28 sm:w-36 sm:h-36 lg:w-44 lg:h-44 rounded-3xl border-4 sm:border-[6px] border-white bg-[#261f15] text-[#e8a93c] shadow-xl overflow-hidden flex items-center justify-center font-serif text-3xl sm:text-5xl lg:text-6xl font-normal relative ${
