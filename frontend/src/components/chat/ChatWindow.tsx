@@ -35,6 +35,8 @@ interface Props {
   setInputValue: (v: string) => void;
   onBack?: () => void; // Mobile back button
   theme?: 'light' | 'dark';
+  isFullscreen?: boolean;
+  isKeyboardOpen?: boolean;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -88,6 +90,8 @@ export default function ChatWindow({
   setInputValue,
   onBack,
   theme = 'light',
+  isFullscreen = false,
+  isKeyboardOpen = false,
 }: Props) {
   const isDark = theme === 'dark';
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -112,6 +116,13 @@ export default function ChatWindow({
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     onMarkSeen();
   }, [messages.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Scroll to bottom when keyboard opens on mobile so latest conversation is visible
+  useEffect(() => {
+    if (isKeyboardOpen) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isKeyboardOpen]);
 
   // Keyboard shortcut: Escape clears selection or closes confirm modal
   useEffect(() => {
@@ -232,6 +243,12 @@ export default function ChatWindow({
     }
   };
 
+  const handleInputFocus = () => {
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 150);
+  };
+
   const canSend = inputValue.trim().length > 0 && isUserConnected;
 
   return (
@@ -243,7 +260,11 @@ export default function ChatWindow({
       {/* ── Header / Selection Toolbar ──────────────────────────────────── */}
       {isSelectionMode ? (
         /* Selection Mode Toolbar */
-        <div className="flex items-center justify-between px-4 py-3 bg-[#1a1410] border-b border-[#3d3222] flex-shrink-0 min-h-[62px] shadow-sm animate-in fade-in duration-150 select-none">
+        <div
+          className={`flex items-center justify-between px-4 ${
+            isFullscreen ? 'pt-[max(0.75rem,env(safe-area-inset-top))]' : 'pt-3'
+          } pb-3 bg-[#1a1410] border-b border-[#3d3222] flex-shrink-0 min-h-[62px] shadow-sm animate-in fade-in duration-150 select-none`}
+        >
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -273,7 +294,11 @@ export default function ChatWindow({
         </div>
       ) : (
         /* Standard Header */
-        <div className="flex items-center gap-3 px-4 py-3 bg-[#1a1410] border-b border-[#3d3222] flex-shrink-0 min-h-[62px] shadow-sm">
+        <div
+          className={`flex items-center gap-3 px-4 ${
+            isFullscreen ? 'pt-[max(0.75rem,env(safe-area-inset-top))]' : 'pt-3'
+          } pb-3 bg-[#1a1410] border-b border-[#3d3222] flex-shrink-0 min-h-[62px] shadow-sm`}
+        >
           {/* Back arrow — mobile only */}
           {onBack && (
             <button
@@ -339,7 +364,7 @@ export default function ChatWindow({
       )}
 
       {/* ── Message area ───────────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 space-y-1">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-5 py-4 space-y-1">
         {/* Compact Disconnected informational panel */}
         {!isUserConnected && (
           <div
@@ -588,7 +613,9 @@ export default function ChatWindow({
 
       {/* ── Input bar ──────────────────────────────────────────────────── */}
       <div
-        className={`flex items-center gap-2.5 px-3 sm:px-4 py-3 border-t flex-shrink-0 ${
+        className={`flex items-center gap-2.5 px-3 sm:px-4 pt-3 ${
+          isKeyboardOpen ? 'pb-3' : 'pb-[max(0.75rem,env(safe-area-inset-bottom))]'
+        } border-t flex-shrink-0 ${
           isDark
             ? 'bg-[#1a1410] border-[#3d3222]'
             : 'bg-[#fcfbf9] border-[#1a1410]/10'
@@ -608,6 +635,7 @@ export default function ChatWindow({
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
+            onFocus={handleInputFocus}
             placeholder={
               isUserConnected ? 'Compose a message...' : 'Messaging unavailable — reconnect to continue'
             }

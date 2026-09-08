@@ -10,6 +10,10 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const viewport: Viewport = {
   themeColor: '#1a1410',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  interactiveWidget: 'resizes-content',
 }
 
 export const metadata: Metadata = {
